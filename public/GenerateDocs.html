@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DocGen Pro — Study Abroad Document Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --ink:#0e1b2e;--ink2:#1d3557;--gold:#b8860b;--gold2:#d4a017;--gold3:#f0c040;
+  --bg:#f5f3ef;--bg2:#eceae4;--white:#ffffff;--muted:#6b7280;--border:#d1cfc8;
+  --green:#1a6b45;--red:#991b1b;--r:10px;--sha:0 4px 24px rgba(14,27,46,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px}
+
+/* TOP BAR */
+.topbar{background:var(--ink);height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-mark{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold3));border-radius:7px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:#fff;letter-spacing:.01em}
+.brand-tag{font-size:.65rem;color:var(--gold3);letter-spacing:.12em;text-transform:uppercase;display:block;line-height:1;margin-top:1px}
+.pill{background:rgba(212,160,23,.15);color:var(--gold3);font-size:.68rem;padding:4px 10px;border-radius:20px;border:1px solid rgba(212,160,23,.3);letter-spacing:.05em}
+
+/* TOOL TABS */
+.tooltabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 24px;gap:2px;overflow-x:auto}
+.ttab{padding:13px 18px;font-size:.82rem;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:6px;font-family:'Outfit',sans-serif}
+.ttab:hover{color:var(--ink)}
+.ttab.on{color:var(--ink);border-bottom-color:var(--gold);font-weight:600}
+.tag-new{font-size:.6rem;background:var(--gold);color:var(--ink);padding:1px 6px;border-radius:10px;font-weight:700}
+.tag-soon{font-size:.6rem;background:#e5e7eb;color:var(--muted);padding:1px 6px;border-radius:10px}
+
+/* LAYOUT */
+.wrap{max-width:1180px;margin:0 auto;padding:28px 18px;display:flex;gap:24px}
+.sidebar{width:248px;flex-shrink:0}
+.main{flex:1;min-width:0}
+@media(max-width:780px){.wrap{flex-direction:column;padding:14px}.sidebar{width:100%}}
+
+/* PROGRESS */
+.prog-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sha);padding:18px;position:sticky;top:72px}
+.prog-title{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-bottom:14px}
+.pstep{display:flex;align-items:flex-start;gap:9px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:background .15s}
+.pstep:hover{background:var(--bg)}
+.pstep.on .pnum{background:var(--ink);color:#fff}
+.pstep.done .pnum{background:var(--green);color:#fff}
+.pnum{width:22px;height:22px;border-radius:50%;background:var(--bg2);color:var(--muted);font-size:.68rem;font-weight:700;display:grid;place-items:center;flex-shrink:0;transition:all .2s}
+.plabel{font-size:.8rem;font-weight:500;color:var(--ink);line-height:1.3}
+.psub{font-size:.7rem;color:var(--muted);margin-top:1px}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sha);margin-bottom:16px;overflow:hidden}
+.card-hd{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:11px;cursor:pointer;transition:background .15s;user-select:none}
+.card-hd:hover{background:#fafaf9}
+.card-ico{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.ico-a{background:#e8f0fe}.ico-b{background:#e6f4ea}.ico-c{background:#fce8e6}.ico-d{background:#fef3cd}.ico-e{background:#f0f4ff}
+.card-title{font-size:.9rem;font-weight:600;color:var(--ink)}
+.card-sub{font-size:.74rem;color:var(--muted);margin-top:2px}
+.chevron{margin-left:auto;color:var(--muted);font-size:11px;transition:transform .22s}
+.chevron.open{transform:rotate(180deg)}
+.card-body{padding:22px;display:none}
+.card-body.open{display:block}
+
+/* FORM */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g1{display:grid;grid-template-columns:1fr;gap:14px}
+@media(max-width:620px){.g2,.g3{grid-template-columns:1fr}}
+.f{display:flex;flex-direction:column;gap:5px}
+.mt{margin-top:13px}
+label{font-size:.76rem;font-weight:600;color:var(--ink2)}
+.req{color:var(--red);margin-left:2px}
+input[type=text],input[type=email],input[type=tel],textarea,select{
+  border:1.5px solid var(--border);border-radius:7px;padding:8px 11px;
+  font-family:'Outfit',sans-serif;font-size:.83rem;color:var(--ink);
+  background:var(--white);transition:border .18s,box-shadow .18s;outline:none;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(14,27,46,.07)}
+.hint{font-size:.68rem;color:var(--muted);line-height:1.4;margin-top:2px}
+.ibox{background:#f0f7f4;border:1px solid #b7dece;border-radius:7px;padding:10px 14px;font-size:.78rem;color:#1a5c3a;margin-bottom:12px}
+
+/* LOGO */
+.logo-drop{border:2px dashed var(--border);border-radius:9px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#fafaf9}
+.logo-drop:hover{border-color:var(--gold);background:#fffcf2}
+.logo-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#logoPrev{max-height:56px;max-width:140px;margin:0 auto 6px;display:none;object-fit:contain}
+.logo-ico{font-size:26px;margin-bottom:5px}
+.logo-txt{font-size:.76rem;color:var(--muted)}
+.logo-fname{font-size:.76rem;color:var(--green);font-weight:500;margin-top:4px}
+
+/* WATERMARK ROW */
+.wm-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:8px;padding:12px 16px;margin-top:12px;border:1px solid var(--border);gap:12px}
+.wm-t{font-size:.82rem;font-weight:600;color:var(--ink)}
+.wm-s{font-size:.72rem;color:var(--muted);margin-top:2px}
+.tog-wrap{position:relative;width:44px;height:24px;flex-shrink:0}
+.tog-wrap input{opacity:0;width:0;height:0;position:absolute}
+.tog-track{position:absolute;inset:0;background:#ccc;border-radius:12px;cursor:pointer;transition:background .2s}
+.tog-wrap input:checked+.tog-track{background:var(--ink)}
+.tog-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none}
+.tog-wrap input:checked~.tog-thumb{transform:translateX(20px)}
+
+/* LETTERHEAD GRID */
+.lh-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:6px}
+@media(max-width:680px){.lh-grid{grid-template-columns:repeat(2,1fr)}}
+.lh-opt{border:2px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:all .2s;background:white}
+.lh-opt:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.10)}
+.lh-opt.sel{border-color:var(--ink);box-shadow:0 0 0 3px rgba(14,27,46,.12)}
+.lh-thumb{height:82px;padding:7px;display:flex;flex-direction:column;justify-content:flex-start;gap:0;position:relative;overflow:hidden}
+.lh-lbl{font-size:.62rem;font-weight:600;color:var(--ink);text-align:center;padding:4px 2px;border-top:1px solid var(--border);background:#fafaf9;line-height:1.2}
+.sel-badge{position:absolute;top:4px;right:4px;background:var(--ink);color:#fff;font-size:.52rem;font-weight:700;padding:1px 5px;border-radius:10px;display:none}
+.lh-opt.sel .sel-badge{display:block}
+
+/* GEN OPTIONS */
+.gen-opts{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.gopt{flex:1;min-width:140px;border:2px solid var(--border);border-radius:9px;padding:13px 14px;cursor:pointer;transition:all .2s;background:white;display:flex;align-items:center;gap:9px}
+.gopt:hover{border-color:var(--gold)}
+.gopt.on{border-color:var(--ink);background:#f0f4fc}
+.gopt input{accent-color:var(--ink);width:15px;height:15px;flex-shrink:0}
+.gopt-t{font-size:.8rem;font-weight:500}
+.gopt-s{font-size:.68rem;color:var(--muted);margin-top:1px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:7px;font-size:.84rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'Outfit',sans-serif;white-space:nowrap}
+.btn-ink{background:var(--ink);color:#fff}
+.btn-ink:hover{background:var(--ink2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(14,27,46,.25)}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-out{background:#fff;color:var(--ink);border:1.5px solid var(--border)}
+.btn-out:hover{border-color:var(--ink)}
+.btn-sm{padding:7px 14px;font-size:.77rem}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+/* PREVIEW */
+#pvSec{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sha);margin-top:16px}
+.pv-hd{padding:14px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.pv-hdtitle{font-weight:600;font-size:.9rem;color:var(--ink)}
+.pv-tabs{display:flex;gap:3px;padding:10px 16px;border-bottom:1px solid var(--border);overflow-x:auto}
+.ptab{padding:6px 14px;border-radius:6px;font-size:.78rem;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s;font-family:'Outfit',sans-serif;white-space:nowrap}
+.ptab.on{background:var(--ink);color:#fff}
+.pv-body{padding:20px;background:#e0ddd7;overflow-x:auto}
+
+/* LOADING */
+.overlay{position:fixed;inset:0;background:rgba(14,27,46,.65);display:none;place-items:center;z-index:999}
+.overlay.show{display:grid}
+.ov-box{background:#fff;border-radius:14px;padding:36px 44px;text-align:center;max-width:320px;width:90%}
+.spin{width:42px;height:42px;border:3.5px solid var(--bg2);border-top-color:var(--ink);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ov-t{font-size:.92rem;font-weight:600;color:var(--ink)}
+.ov-s{font-size:.78rem;color:var(--muted);margin-top:5px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:11px 18px;border-radius:9px;font-size:.82rem;font-weight:500;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:1001;transform:translateY(70px);opacity:0;transition:all .28s;pointer-events:none;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--green);color:#fff}
+.toast.err{background:var(--red);color:#fff}
+.toast.info{background:var(--ink);color:#fff}
+
+/* COMING SOON */
+.cs{text-align:center;padding:70px 30px}
+.cs-ico{font-size:52px;margin-bottom:14px}
+.cs h3{font-size:1.1rem;color:var(--ink);margin-bottom:7px}
+.cs p{font-size:.82rem;color:var(--muted);max-width:300px;margin:0 auto}
+
+/* ══ A4 PAPER ══
+   210mm × 297mm with 18mm top, 22mm L/R, 16mm bottom
+   At 96dpi: 210mm = 793px, 297mm = 1123px
+*/
+.a4-outer{display:flex;justify-content:center;padding:8px 0}
+.a4{
+  width:210mm;
+  min-height:297mm;
+  background:#fff;
+  padding:18mm 27mm 16mm 27mm;
+  box-shadow:0 6px 40px rgba(0,0,0,.22);
+  position:relative;
+  overflow:hidden;
+  box-sizing:border-box;
+  font-family:'Times New Roman',Times,serif;
+  font-size:10pt;
+  line-height:1.68;
+  color:#111;
+}
+@media(max-width:760px){
+  .a4{width:100%;min-height:unset;padding:20px 23px}
+}
+
+/* Letter content inside A4 */
+.a4-inner{position:relative;z-index:1}
+.lh-section{margin-bottom:0}
+.body-wrap p{margin-bottom:10pt;text-align:justify;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.68;color:#111}
+
+/* Signature */
+.sig-area{margin-top:44pt}
+.sig-line{width:200pt;border-top:1px solid #444;margin-bottom:5pt}
+.sig-name{font-weight:700;font-size:10pt;font-family:'Times New Roman',Times,serif;color:#111}
+.sig-role{font-size:9.5pt;color:#333;line-height:1.5;font-family:'Times New Roman',Times,serif}
+
+/* Watermark */
+.wm-layer{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none}
+
+/* PRINT */
+@media print{
+  body,html{background:#fff}
+  .topbar,.tooltabs,.sidebar,#pvSec .pv-hd,.pv-tabs,.btn,.toast,.overlay{display:none!important}
+  .wrap{padding:0;max-width:100%;display:block}
+  .pv-body{padding:0;background:#fff}
+  .a4{box-shadow:none;margin:0 auto;page-break-after:always}
+  @page{size:A4;margin:0}
+}
+</style>
+</head>
+<body>
+
+<!-- OVERLAY -->
+<div class="overlay" id="ov">
+  <div class="ov-box">
+    <div class="spin"></div>
+    <div class="ov-t" id="ovT">Generating…</div>
+    <div class="ov-s" id="ovS">AI is crafting your document</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <a class="brand" href="#">
+    <div class="brand-mark">📄</div>
+    <div>
+      <span class="brand-name">DocGen Pro</span>
+      <span class="brand-tag">Study Abroad Document Generator</span>
+    </div>
+  </a>
+  <span class="pill">✦ AI-Powered</span>
+</header>
+
+<!-- TABS -->
+<nav class="tooltabs">
+  <button class="ttab on" onclick="switchTool('lor',this)">📝 LOR &amp; MOI Generator <span class="tag-new">ACTIVE</span></button>
+  <button class="ttab" onclick="switchTool('bank',this)">🏦 Bank Statement <span class="tag-soon">Soon</span></button>
+</nav>
+
+<!-- LOR TOOL -->
+<div id="lorTool">
+<div class="wrap">
+
+  <aside class="sidebar">
+    <div class="prog-card">
+      <div class="prog-title">Your Progress</div>
+      <div class="pstep on" onclick="goSec('s1')"><div class="pnum">1</div><div><div class="plabel">Institution</div><div class="psub">School &amp; logo</div></div></div>
+      <div class="pstep" onclick="goSec('s2')"><div class="pnum">2</div><div><div class="plabel">Student Details</div><div class="psub">Name, degree, field</div></div></div>
+      <div class="pstep" onclick="goSec('s3')"><div class="pnum">3</div><div><div class="plabel">LOR 1 Teacher</div><div class="psub">First recommender</div></div></div>
+      <div class="pstep" onclick="goSec('s4')"><div class="pnum">4</div><div><div class="plabel">LOR 2 Teacher</div><div class="psub">Second recommender</div></div></div>
+      <div class="pstep" onclick="goSec('s5')"><div class="pnum">5</div><div><div class="plabel">MOI Issuer</div><div class="psub">Registrar / Dean / Principal</div></div></div>
+      <div class="pstep" onclick="goSec('s6')"><div class="pnum">6</div><div><div class="plabel">Letterhead Style</div><div class="psub">10 unique designs</div></div></div>
+      <div class="pstep" onclick="goSec('s7')"><div class="pnum">7</div><div><div class="plabel">Generate &amp; Download</div><div class="psub">Preview &amp; export .docx</div></div></div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- §1 INSTITUTION -->
+    <div class="card" id="s1">
+      <div class="card-hd" onclick="tog('b1',this)">
+        <div class="card-ico ico-a">🏛️</div>
+        <div><div class="card-title">Institution Information</div><div class="card-sub">Appears on every letterhead</div></div>
+        <span class="chevron open">▼</span>
+      </div>
+      <div class="card-body open" id="b1">
+        <div class="g2">
+          <div class="f"><label>University / School Name <span class="req">*</span></label><input type="text" id="sName" placeholder="North Western University"/></div>
+          <div class="f"><label>Department</label><input type="text" id="sDept" placeholder="Dept. of Computer Science &amp; Engineering"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Phone</label><input type="tel" id="sPhone" placeholder="+880 247 726064"/></div>
+          <div class="f"><label>Email</label><input type="email" id="sEmail" placeholder="info@university.edu"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Full Address</label><input type="text" id="sAddr" placeholder="236 M.A. Bari Road, Khulna-9100, Bangladesh"/></div>
+          <div class="f"><label>Website</label><input type="text" id="sWeb" placeholder="www.university.edu"/></div>
+        </div>
+        <div class="g1 mt">
+          <div class="f">
+            <label>School Logo <span class="hint">(PNG/JPG — transparent or white background)</span></label>
+            <div class="logo-drop" id="logoDrop">
+              <input type="file" id="logoFile" accept="image/*" onchange="handleLogo(this)"/>
+              <img id="logoPrev"/>
+              <div id="logoPlaceholder"><div class="logo-ico">🖼️</div><div class="logo-txt">Click or drag logo here</div></div>
+              <div id="logoFname" class="logo-fname"></div>
+            </div>
+          </div>
+        </div>
+        <div class="wm-row" id="wmRow" style="display:none">
+          <div>
+            <div class="wm-t">Use logo as document watermark?</div>
+            <div class="wm-s">Logo placed at 20% opacity behind body text, standard margins, background auto-removed</div>
+          </div>
+          <label class="tog-wrap">
+            <input type="checkbox" id="wmToggle"/>
+            <div class="tog-track"></div>
+            <div class="tog-thumb"></div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- §2 STUDENT -->
+    <div class="card" id="s2">
+      <div class="card-hd" onclick="tog('b2',this)">
+        <div class="card-ico ico-b">🎓</div>
+        <div><div class="card-title">Student Details</div><div class="card-sub">Used across all documents</div></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="card-body" id="b2">
+        <div class="g2">
+          <div class="f"><label>Full Name <span class="req">*</span></label><input type="text" id="stName" placeholder="Ms. Shampa Das"/></div>
+          <div class="f"><label>Student ID (optional)</label><input type="text" id="stId" placeholder="201311059"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Completed Degree <span class="req">*</span></label><input type="text" id="stDeg" placeholder="Bachelor of Science (B.Sc.)"/></div>
+          <div class="f"><label>Major / Field <span class="req">*</span></label><input type="text" id="stMaj" placeholder="Computer Science and Engineering"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Graduation Semester / Year</label><input type="text" id="stGrad" placeholder="Spring 2024"/></div>
+          <div class="f"><label>CGPA</label><input type="text" id="stCgpa" placeholder="3.65 out of 4.00"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Gender (controls pronouns in letters)</label>
+            <select id="stGen"><option value="female">Female — She / Her</option><option value="male">Male — He / Him</option></select>
+          </div>
+          <div class="f"><label>Applying to Programme <span class="req">*</span></label>
+            <select id="stTarget">
+              <option value="diploma">Diploma Programme</option>
+              <option value="bachelor">Bachelor's Degree</option>
+              <option value="masters" selected>Master's Degree</option>
+              <option value="phd">PhD / Doctoral Programme</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- §3 LOR1 -->
+    <div class="card" id="s3">
+      <div class="card-hd" onclick="tog('b3',this)">
+        <div class="card-ico ico-c">👩‍🏫</div>
+        <div><div class="card-title">Recommendation Letter 1 — Teacher</div><div class="card-sub">First recommender</div></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="card-body" id="b3">
+        <div class="g2">
+          <div class="f"><label>Full Name <span class="req">*</span></label><input type="text" id="l1n" placeholder="Dr. Md. Mahedi Hasan"/></div>
+          <div class="f"><label>Position / Title <span class="req">*</span></label><input type="text" id="l1p" placeholder="Head &amp; Associate Professor"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Department</label><input type="text" id="l1d" placeholder="Computer Science and Engineering"/></div>
+          <div class="f"><label>Phone</label><input type="tel" id="l1ph" placeholder="+88 01714 615916"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Email</label><input type="email" id="l1e" placeholder="teacher@university.edu"/></div>
+          <div class="f"><label>Reference Number</label><input type="text" id="l1r" placeholder="NWU/BSE/R.L/2025/56"/></div>
+        </div>
+        <div class="g1 mt">
+          <div class="f"><label>Your Relationship to Student</label>
+            <select id="l1rel">
+              <option value="Department Head who closely observed the student throughout their undergraduate program">Department Head</option>
+              <option value="thesis supervisor who guided the student's final-year research project in depth">Thesis Supervisor</option>
+              <option value="course instructor who taught the student across multiple subjects">Course Instructor</option>
+              <option value="research mentor who worked alongside the student on academic and research projects">Research Mentor</option>
+              <option value="academic advisor who has guided the student's academic and professional development">Academic Advisor</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- §4 LOR2 -->
+    <div class="card" id="s4">
+      <div class="card-hd" onclick="tog('b4',this)">
+        <div class="card-ico ico-c">👨‍🏫</div>
+        <div><div class="card-title">Recommendation Letter 2 — Teacher</div><div class="card-sub">Second recommender</div></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="card-body" id="b4">
+        <div class="g2">
+          <div class="f"><label>Full Name <span class="req">*</span></label><input type="text" id="l2n" placeholder="Nurzahan Akter Joly"/></div>
+          <div class="f"><label>Position / Title <span class="req">*</span></label><input type="text" id="l2p" placeholder="Associate Professor"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Department</label><input type="text" id="l2d" placeholder="Department of CSE"/></div>
+          <div class="f"><label>Phone</label><input type="tel" id="l2ph" placeholder="+88 01730 406501"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Email</label><input type="email" id="l2e" placeholder="teacher2@university.edu"/></div>
+          <div class="f"><label>Reference Number</label><input type="text" id="l2r" placeholder="NWU/CSE/R.L/2025/57"/></div>
+        </div>
+        <div class="g1 mt">
+          <div class="f"><label>Your Relationship to Student</label>
+            <select id="l2rel">
+              <option value="thesis supervisor who guided the student's final-year research project in depth">Thesis Supervisor</option>
+              <option value="Department Head who closely observed the student throughout their undergraduate program">Department Head</option>
+              <option value="course instructor who taught the student across multiple subjects">Course Instructor</option>
+              <option value="research mentor who worked alongside the student on academic and research projects">Research Mentor</option>
+              <option value="academic advisor who has guided the student's academic and professional development">Academic Advisor</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- §5 MOI -->
+    <div class="card" id="s5">
+      <div class="card-hd" onclick="tog('b5',this)">
+        <div class="card-ico ico-d">📜</div>
+        <div><div class="card-title">Medium of Instruction (MOI)</div><div class="card-sub">Certifies English as the language of instruction</div></div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="card-body" id="b5">
+        <div class="ibox">✅ <strong>Medium of Instruction: English</strong> — this certificate confirms the student's program was fully conducted in English.</div>
+        <div class="g2">
+          <div class="f"><label>Issuer Authority Type <span class="req">*</span></label>
+            <select id="moiType" onchange="syncMoiPos()">
+              <option value="Registrar">Registrar</option>
+              <option value="Dean">Dean of the Department / Faculty</option>
+              <option value="Principal">Principal (High School / HSC students)</option>
+              <option value="Head">Department Head / Chairman</option>
+              <option value="Controller">Controller of Examinations</option>
+            </select>
+          </div>
+          <div class="f"><label>Issuer Full Name <span class="req">*</span></label><input type="text" id="moiName" placeholder="Prof. Dr. Md. Rafiqul Islam"/></div>
+        </div>
+        <div class="g2 mt">
+          <div class="f"><label>Position / Title <span class="req">*</span></label><input type="text" id="moiPos" placeholder="Registrar"/></div>
+          <div class="f"><label>Reference Number</label><input type="text" id="moiRef" placeholder="VU-22/1238"/></div>
+        </div>
+        <div class="g1 mt">
+          <div class="f"><label>Date on Certificate <span class="hint">(leave blank = today)</span></label><input type="text" id="moiDate" placeholder="04 December, 2024"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- §6 LETTERHEAD -->
+    <div class="card" id="s6">
+      <div class="card-hd" onclick="tog('b6',this)">
+        <div class="card-ico ico-e">🎨</div>
+        <div><div class="card-title">Letterhead Style</div><div class="card-sub">Choose from 11 unique professional designs — all 3 documents share one style</div></div>
+        <span class="chevron open">▼</span>
+      </div>
+      <div class="card-body open" id="b6">
+        <p class="hint" style="margin-bottom:10px">Each design varies in logo position (top-left, top-right, top-center, left-panel), border style, contact placement, and color scheme. The selected style is used for all generated documents.</p>
+        <div class="lh-grid" id="lhGrid"></div>
+        <div style="margin-top:12px"><button class="btn btn-out btn-sm" onclick="surpriseLH()">🎲 Surprise Me</button></div>
+      </div>
+    </div>
+
+    <!-- §7 GENERATE -->
+    <div class="card" id="s7">
+      <div class="card-hd" onclick="tog('b7',this)">
+        <div class="card-ico ico-d">⚡</div>
+        <div><div class="card-title">Generate &amp; Download</div><div class="card-sub">AI-powered generation — ready to print and sign</div></div>
+        <span class="chevron open">▼</span>
+      </div>
+      <div class="card-body open" id="b7">
+        <p class="hint" style="margin-bottom:12px">Documents are generated without seal or signature. Print and take for official stamping and signing by the relevant authority.</p>
+        <div class="gen-opts">
+          <label class="gopt on" id="go1"><input type="checkbox" id="ck1" checked/><div><div class="gopt-t">📝 LOR 1</div><div class="gopt-s">Recommendation Letter 1</div></div></label>
+          <label class="gopt on" id="go2"><input type="checkbox" id="ck2" checked/><div><div class="gopt-t">📝 LOR 2</div><div class="gopt-s">Recommendation Letter 2</div></div></label>
+          <label class="gopt on" id="go3"><input type="checkbox" id="ck3" checked/><div><div class="gopt-t">📜 MOI</div><div class="gopt-s">Medium of Instruction</div></div></label>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gold" onclick="generateAll()" id="genBtn">✨ Generate Documents</button>
+          <button class="btn btn-out btn-sm" onclick="clearAll()">🗑️ Clear Form</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="pvSec" style="display:none">
+      <div class="pv-hd">
+        <span class="pv-hdtitle">📄 Document Preview</span>
+        <div class="btn-row">
+          <button class="btn btn-ink btn-sm" onclick="dlAll()" id="dlBtn">⬇ Download All (.docx)</button>
+          <button class="btn btn-gold btn-sm" onclick="dlAllPDF()" id="dlPdfBtn">📥 Download PDF</button>
+          <button class="btn btn-out btn-sm" onclick="window.print()">🖨 Print</button>
+        </div>
+      </div>
+      <div class="pv-tabs" id="pvTabs"></div>
+      <div class="pv-body" id="pvBody"></div>
+    </div>
+
+  </main>
+</div>
+</div><!-- /lorTool -->
+
+<!-- BANK PLACEHOLDER -->
+<div id="bankTool" style="display:none">
+  <div class="wrap"><div class="main"><div class="card"><div class="cs">
+    <div class="cs-ico">🏦</div><h3>Bank Statement Generator</h3>
+    <p>Coming soon — upload your code to activate this module.</p>
+  </div></div></div></div>
+</div>
+
+<script>
+'use strict';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  STATE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let logoB64 = null;
+let selectedLH = 0;
+let generatedDocs = {};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  10 LETTERHEAD DEFINITIONS
+//  logoPos: 'tl'=top-left | 'tr'=top-right | 'tc'=top-center | 'ls'=left-stack
+//  contactPos: 'inline'=under name | 'right'=right column | 'footer'=footer only | 'split'=split inline+footer
+//  borderType: 'double'|'thick'|'gradient'|'dual'|'thin'|'ornament'|'pill'|'spaced'
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const LH = [
+  { name:'Classic Navy',   color:'#0d2137', font:'Georgia, serif',               logoPos:'tl', contactPos:'inline',  borderType:'double',   thumb:'#e8f0f7' },
+  { name:'Maroon & Gold',  color:'#6b1a20', font:'Palatino Linotype, serif',     logoPos:'tr', contactPos:'footer',  borderType:'gradient', thumb:'#f5eaea' },
+  { name:'Green Scholar',  color:'#1b5e35', font:'Cambria, serif',               logoPos:'ls', contactPos:'inline',  borderType:'dual',     thumb:'#e6f4ea' },
+  { name:'Royal Blue',     color:'#1a3580', font:'Book Antiqua, serif',          logoPos:'tc', contactPos:'bottomBar',  borderType:'thick',    thumb:'#e8eefa' },
+  { name:'Teal Modern',    color:'#0c5a6a', font:'Trebuchet MS, sans-serif',     logoPos:'tl', contactPos:'right',   borderType:'spaced',   thumb:'#e0f2f5' },
+  { name:'Formal Black',   color:'#111111', font:'Times New Roman, serif',       logoPos:'tr', contactPos:'footer',  borderType:'thin',     thumb:'#f0f0f0' },
+  { name:'Burgundy',       color:'#5c1f3a', font:'Garamond, serif',              logoPos:'ls', contactPos:'right',   borderType:'ornament', thumb:'#f5e8ee' },
+  { name:'Steel Blue',     color:'#2c4a6e', font:'Verdana, sans-serif',          logoPos:'tc', contactPos:'bottomBar',  borderType:'dual',     thumb:'#e8eef5' },
+  { name:'Forest Dark',    color:'#234a30', font:'Palatino Linotype, serif',     logoPos:'tl', contactPos:'footer',  borderType:'spaced',   thumb:'#e6efe8' },
+  { name:'Slate Modern',   color:'#3d4f63', font:'Segoe UI, Tahoma, sans-serif', logoPos:'tr', contactPos:'inline',  borderType:'pill',     thumb:'#eaecf0' },
+  { name:'Split Compact',  color:'#1a3a5c', font:'Georgia, serif',               logoPos:'cl', contactPos:'footer',  borderType:'dual',     thumb:'#e8f0f7', wordLimit:200, fontOffset:-2 },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  BORDER HTML BUILDER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function borderHTML(s){
+  const c=s.color, g='#c9a84c';
+  switch(s.borderType){
+    case 'double':   return `<div style="border-top:4px double ${c};border-bottom:1px solid ${g};padding-top:7px;margin:10px 0 14px;"></div>`;
+    case 'gradient': return `<div style="height:5px;background:linear-gradient(90deg,${c} 65%,${g});margin:10px 0 14px;border-radius:2px;"></div>`;
+    case 'dual':     return `<div style="margin:10px 0 14px;"><div style="height:4px;background:${c};border-radius:2px;margin-bottom:3px;"></div><div style="height:1px;background:${g};"></div></div>`;
+    case 'thick':    return `<div style="height:6px;background:${c};margin:10px 0 14px;border-radius:3px;"></div>`;
+    case 'spaced':   return `<div style="margin:10px 0 14px;"><div style="height:1px;background:${c};margin-bottom:4px;"></div><div style="height:3px;background:${g};border-radius:1px;"></div></div>`;
+    case 'thin':     return `<div style="border-bottom:1.5px solid ${c};margin:10px 0 14px;"></div>`;
+    case 'ornament': return `<div style="margin:10px 0 14px;display:flex;align-items:center;gap:7px;"><div style="flex:1;height:1px;background:${c};"></div><span style="font-size:9px;color:${g};">✦</span><div style="flex:1;height:1px;background:${c};"></div></div>`;
+    case 'pill':     return `<div style="margin:10px 0 14px;display:flex;gap:6px;"><div style="height:5px;flex:1;background:${c};border-radius:20px;"></div><div style="height:5px;width:28px;background:${g};border-radius:20px;"></div></div>`;
+    default:         return `<div style="border-bottom:2px solid ${c};margin:10px 0 14px;"></div>`;
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  LETTERHEAD HTML BUILDER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildLH(school, idx){
+  const s = LH[idx];
+  const c = s.color;
+  const f = s.font;
+
+  const hasLogo = !!school.logo;
+  const logoImg = hasLogo
+    ? `<img src="${school.logo}" style="max-height:72px;max-width:120px;object-fit:contain;display:block;" alt="logo"/>`
+    : `<div style="width:65px;height:56px;background:${c};border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:7.5px;font-weight:700;text-align:center;padding:4px;line-height:1.3;">${school.name.split(' ').slice(0,3).join('<br/>')}</div>`;
+
+  // For Split Compact style: slightly smaller logo
+  const logoImgSm = hasLogo
+    ? `<img src="${school.logo}" style="max-height:62px;max-width:104px;object-fit:contain;display:block;" alt="logo"/>`
+    : `<div style="width:58px;height:50px;background:${c};border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:6.5px;font-weight:700;text-align:center;padding:4px;line-height:1.3;">${school.name.split(' ').slice(0,3).join('<br/>')}</div>`;
+
+  const uniName = `<div style="font-size:15.5pt;font-weight:700;color:${c};font-family:${f};line-height:1.2;">${school.name}</div>`;
+  const uniNameSm = `<div style="font-size:13.5pt;font-weight:700;color:${c};font-family:${f};line-height:1.2;">${school.name}</div>`;
+  const deptLine = school.dept ? `<div style="font-size:8pt;color:#444;margin-top:3px;font-family:${f};">${school.dept}</div>` : '';
+  const deptLineSm = school.dept ? `<div style="font-size:7pt;color:#444;margin-top:2px;font-family:${f};">${school.dept}</div>` : '';
+
+  // Build individual contact detail lines (small font, stacked)
+  const addrLine   = school.address ? `<div style="font-size:7pt;color:#555;line-height:1.5;">${school.address}</div>` : '';
+  const phoneEmailLine = (school.phone || school.email)
+    ? `<div style="font-size:7pt;color:#555;line-height:1.5;">${[school.phone, school.email].filter(Boolean).join(' &nbsp;|&nbsp; ')}</div>` : '';
+  const webLine    = school.web     ? `<div style="font-size:7pt;color:#555;line-height:1.5;">${school.web}</div>` : '';
+  const contactBlock = (addrLine||phoneEmailLine||webLine)
+    ? `<div style="margin-top:5px;">${addrLine}${phoneEmailLine}${webLine}</div>` : '';
+  const contactBlockSm = (addrLine||phoneEmailLine||webLine)
+    ? `<div style="margin-top:4px;">${addrLine}${phoneEmailLine}${webLine}</div>` : '';
+
+  // Pipe-joined for footer use
+  const footerPipeStr = [
+    school.address||'',
+    (school.phone || school.email) ? [school.phone, school.email].filter(Boolean).join(' | ') : '',
+    school.web||''
+  ].filter(Boolean).join(' &nbsp;|&nbsp; ');
+  const contactInline = footerPipeStr ? `<div style="font-size:7.5pt;color:#555;margin-top:5px;line-height:1.6;">${footerPipeStr}</div>` : '';
+  const footerContact = footerPipeStr
+    ? `<div style="margin-top:16pt;padding-top:7pt;border-top:1px solid #ccc;font-size:7pt;color:#666;text-align:center;font-family:'Times New Roman',serif;">${footerPipeStr}</div>`
+    : '';
+  const footerContactSm = footerPipeStr
+    ? `<div style="margin-top:10pt;padding-top:5pt;border-top:1px solid #ccc;font-size:6.5pt;color:#666;text-align:center;font-family:'Times New Roman',serif;">${footerPipeStr}</div>`
+    : '';
+
+  let headerHTML = '';
+
+  if(s.logoPos === 'cl'){
+    // Split Compact: logo center-vertically on LEFT half, university name on RIGHT — fits A4, font -2
+    headerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:6px 0;">
+      <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0;width:100px;">${logoImgSm}</div>
+      <div style="flex:1;border-left:2px solid ${c};padding-left:14px;">${uniNameSm}${deptLineSm}${contactBlockSm}</div>
+    </div>`;
+  } else if(s.logoPos === 'tc'){
+    // Top-center: logo centered, then name centered below
+    headerHTML = `
+      <div style="text-align:center;margin-bottom:5px;">${logoImg.replace('display:block','display:inline-block')}</div>
+      <div style="text-align:center;">${uniName}${deptLine}</div>
+      ${s.contactPos==='inline' ? `<div style="text-align:center;">${contactInline}</div>` : ''}
+      ${s.contactPos==='inline' && contactBlock ? `<div style="text-align:center;">${contactBlock}</div>` : ''}`;
+  // Note: for bottomBar (Steel Blue, Royal Blue) no contact is rendered in the header
+  } else if(s.logoPos === 'tl'){
+    // Top-left: logo left, name+contact right
+    if(s.contactPos === 'right'){
+      headerHTML = `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:flex-start;gap:11px;">${logoImg}<div>${uniName}${deptLine}</div></div>
+        <div style="text-align:right;flex-shrink:0;">${contactInline}</div>
+      </div>`;
+    } else {
+      headerHTML = `<div style="display:flex;align-items:flex-start;gap:11px;">${logoImg}<div>${uniName}${deptLine}${s.contactPos==='inline'?contactBlock:''}</div></div>`;
+    }
+  } else if(s.logoPos === 'tr'){
+    // Top-right: name left, logo right
+    if(s.contactPos === 'right'){
+      headerHTML = `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div>${uniName}${deptLine}${contactBlock}</div>${logoImg}</div>`;
+    } else {
+      headerHTML = `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div>${uniName}${deptLine}${s.contactPos==='inline'?contactBlock:''}</div>${logoImg}</div>`;
+    }
+  } else {
+    // ls = left-stack: logo on far left with vertical border, text right
+    headerHTML = `<div style="display:flex;align-items:flex-start;gap:0;">
+      <div style="flex-shrink:0;padding-right:14px;margin-right:14px;border-right:3px solid ${c};">${logoImg}</div>
+      <div style="flex:1;">${uniName}${deptLine}${contactBlock}</div>
+    </div>`;
+  }
+
+  // Bottom-bar contact (one single line: addr | phone | email | web)
+  const allContactOneLine = [
+    school.address||'',
+    (school.phone || school.email) ? [school.phone, school.email].filter(Boolean).join(' | ') : '',
+    school.web||''
+  ].filter(Boolean).join('  •  ');
+  const bottomBarHTML = allContactOneLine
+    ? `<div style="position:absolute;bottom:0;left:0;right:0;background:${c};color:#fff;font-size:6.5pt;text-align:center;padding:5px 20px;letter-spacing:.02em;font-family:${f};line-height:1.4;z-index:2;">${allContactOneLine}</div>`
+    : '';
+
+  return {
+    header: `<div style="padding:0 20px;">${headerHTML}</div>`,
+    border: borderHTML(s),
+    footer: s.contactPos==='bottomBar' ? '' : (s.contactPos==='footer' ? (s.logoPos==='cl' ? footerContactSm : footerContact) : ''),
+    bottomBar: s.contactPos==='bottomBar' ? bottomBarHTML : '',
+    color: c,
+    fontOffset: s.fontOffset||0,
+    wordLimit: s.wordLimit||0
+  };
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  WATERMARK HTML
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function wmHTML(logo){
+  if(!logo) return '';
+  // mix-blend-mode:multiply removes white background cleanly
+  return `<div class="wm-layer"><img src="${logo}" style="width:calc(75% - 30px);opacity:0.18;mix-blend-mode:multiply;display:block;" alt=""/></div>`;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  FULL A4 DOCUMENT HTML
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildDocHTML(opts){
+  // opts: {lhIdx, school, refNum, date, title, paras, sigName, sigRole, sigDept, sigEmail, sigPhone, isMOI, useWm, logo}
+  const lh = buildLH(opts.school, opts.lhIdx);
+  // LORs: only show date if explicitly provided; MOI always shows date
+  const today = opts.date || (opts.isMOI ? new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'}) : '');
+  const wm = (opts.useWm && opts.logo) ? wmHTML(opts.logo) : '';
+  const fo = lh.fontOffset; // e.g. -2 for Split Compact
+
+  const paras = opts.paras.filter(p=>p.trim()).map(p=>{
+    const clean = p.replace(/\*\*/g,'').trim();
+    if(opts.isMOI){
+      const isMedLine = clean.toLowerCase().includes('medium of instruction') && clean.toLowerCase().includes('english');
+      return `<p${isMedLine?' style="font-weight:700;"':''}>${clean}</p>`;
+    }
+    return `<p>${clean}</p>`;
+  }).join('');
+
+  // For Split Compact: enforce max-height:297mm so it never exceeds A4
+  const a4Extra = lh.wordLimit ? `max-height:297mm;overflow:hidden;` : '';
+  // Font size offset applied via CSS custom property override
+  const fontOverride = fo ? `font-size:${10+fo}pt;` : '';
+
+  return `<div class="a4-outer"><div class="a4" style="${a4Extra}${fontOverride}">
+  ${wm}
+  ${lh.bottomBar||''}
+  <div class="a4-inner">
+    ${lh.header}
+    ${lh.border}
+    ${(opts.refNum || today) ? `<div style="display:flex;justify-content:space-between;font-family:'Times New Roman',serif;font-size:${9.5+fo}pt;color:#444;margin-bottom:${fo?'12pt':'18pt'};">
+      <span>${opts.refNum?'Ref: '+opts.refNum:'&nbsp;'}</span>
+      <span>${today||'&nbsp;'}</span>
+    </div>` : `<div style="margin-bottom:${fo?'12pt':'18pt'};"></div>`}
+    <div style="text-align:center;font-family:'Times New Roman',serif;font-size:${(fo?10:12)+fo+3}pt;font-weight:700;text-decoration:underline;color:${lh.color};margin-bottom:${fo?'14pt':'20pt'};">${opts.title}</div>
+    <div class="body-wrap" style="${fo?`font-size:${10+fo}pt;`:''}">${paras}</div>
+    <div class="sig-area" style="margin-top:${fo?'36pt':'52pt'};">
+      <div style="height:1.4em;"></div>
+      <div class="sig-line"></div>
+      <div class="sig-name" style="${fo?`font-size:${10+fo}pt;`:''}">${opts.sigName}</div>
+      <div class="sig-role" style="${fo?`font-size:${9.5+fo}pt;`:''}">${opts.sigRole}</div>
+      ${opts.sigDept?`<div class="sig-role" style="${fo?`font-size:${9.5+fo}pt;`:''}">${opts.sigDept}</div>`:''}
+      <div class="sig-role" style="${fo?`font-size:${9.5+fo}pt;`:''}">${opts.school.name}</div>
+      ${opts.sigEmail?`<div class="sig-role" style="${fo?`font-size:${9.5+fo}pt;`:''}" >Email: ${opts.sigEmail}</div>`:''}
+      ${opts.sigPhone?`<div class="sig-role" style="${fo?`font-size:${9.5+fo}pt;`:''}" >Phone: ${opts.sigPhone}</div>`:''}
+    </div>
+    ${lh.footer}
+  </div>
+</div></div>`;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  LETTERHEAD THUMBNAILS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildThumbs(){
+  const grid = document.getElementById('lhGrid');
+  grid.innerHTML = '';
+  LH.forEach((s,i)=>{
+    const div = document.createElement('div');
+    div.className = 'lh-opt' + (i===selectedLH?' sel':'');
+    div.onclick = ()=>selectLH(i);
+    div.innerHTML = `<div class="lh-thumb" style="background:${s.thumb};">${thumbSVG(s,i)}<span class="sel-badge">✓</span></div><div class="lh-lbl">${s.name}</div>`;
+    grid.appendChild(div);
+  });
+}
+function thumbSVG(s, i){
+  const c = s.color;
+  let out = '';
+  // Logo block
+  const logoBlock = `<div style="width:11px;height:11px;background:#ccc;border-radius:1px;flex-shrink:0;"></div>`;
+  const nameBlock = `<div><div style="width:${24+((i*7)%20)}px;height:4px;background:${c};border-radius:1px;margin-bottom:2px;"></div><div style="width:${16+((i*3)%14)}px;height:2.5px;background:#aaa;border-radius:1px;"></div></div>`;
+
+  if(s.logoPos==='cl'){
+    // Split Compact: logo centered on left, vertical divider, name on right
+    out += `<div style="display:flex;align-items:center;gap:3px;margin-bottom:2px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:14px;flex-shrink:0;">${logoBlock}</div>
+      <div style="width:1.5px;height:22px;background:${c};flex-shrink:0;margin:0 2px;"></div>
+      ${nameBlock}
+    </div>`;
+  } else if(s.logoPos==='tc'){
+    out += `<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:2px;">${logoBlock}<div style="width:30px;height:4px;background:${c};border-radius:1px;margin-top:2px;"></div><div style="width:22px;height:2.5px;background:#aaa;border-radius:1px;margin-top:2px;"></div></div>`;
+  } else if(s.logoPos==='tl'){
+    out += `<div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:2px;">${logoBlock}${nameBlock}</div>`;
+  } else if(s.logoPos==='tr'){
+    out += `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:3px;margin-bottom:2px;">${nameBlock}${logoBlock}</div>`;
+  } else {
+    out += `<div style="display:flex;align-items:flex-start;gap:0;margin-bottom:2px;"><div style="flex-shrink:0;padding-right:3px;margin-right:3px;border-right:2px solid ${c};">${logoBlock}</div>${nameBlock}</div>`;
+  }
+
+  // Border
+  const borderSample = {
+    double:`<div style="border-top:2px double ${c};border-bottom:1px solid #c9a84c;padding-top:2px;margin-bottom:3px;"></div>`,
+    gradient:`<div style="height:3px;background:linear-gradient(90deg,${c} 60%,#c9a84c);border-radius:1px;margin-bottom:3px;"></div>`,
+    dual:`<div style="margin-bottom:3px;"><div style="height:2.5px;background:${c};border-radius:1px;margin-bottom:1px;"></div><div style="height:1px;background:#c9a84c;"></div></div>`,
+    thick:`<div style="height:3.5px;background:${c};border-radius:1px;margin-bottom:3px;"></div>`,
+    spaced:`<div style="margin-bottom:3px;"><div style="height:1px;background:${c};margin-bottom:2px;"></div><div style="height:2px;background:#c9a84c;border-radius:1px;"></div></div>`,
+    thin:`<div style="border-bottom:1px solid ${c};margin-bottom:3px;"></div>`,
+    ornament:`<div style="display:flex;align-items:center;gap:3px;margin-bottom:3px;"><div style="flex:1;height:1px;background:${c};"></div><div style="width:3px;height:3px;background:#c9a84c;border-radius:50%;"></div><div style="flex:1;height:1px;background:${c};"></div></div>`,
+    pill:`<div style="display:flex;gap:2px;margin-bottom:3px;"><div style="height:3px;flex:1;background:${c};border-radius:10px;"></div><div style="height:3px;width:8px;background:#c9a84c;border-radius:10px;"></div></div>`,
+  }[s.borderType] || `<div style="border-bottom:1.5px solid ${c};margin-bottom:3px;"></div>`;
+  out += borderSample;
+
+  // Body lines
+  out += `<div style="height:2.5px;background:#ddd;border-radius:1px;margin-bottom:2px;"></div>`;
+  out += `<div style="height:2.5px;background:#ddd;border-radius:1px;width:85%;margin-bottom:2px;"></div>`;
+  out += `<div style="height:2.5px;background:#ddd;border-radius:1px;width:90%;"></div>`;
+  return out;
+}
+function selectLH(i){
+  selectedLH = i;
+  document.querySelectorAll('.lh-opt').forEach((el,j)=>el.classList.toggle('sel',j===i));
+}
+function surpriseLH(){
+  const i = Math.floor(Math.random()*LH.length);
+  selectLH(i);
+  toast('🎲 Letterhead: '+LH[i].name,'info');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  10+ WRITING STYLES — ensures variety between teachers
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const WS = [
+  { opener:'With great enthusiasm and without reservation, I recommend',    focus:'analytical precision and research aptitude',        pStyle:'Enthusiastic Department Head voice; assertive and data-driven; short punchy sentences mixed with longer ones'},
+  { opener:'It is my distinct privilege to endorse',                         focus:'leadership potential and collaborative excellence',  pStyle:'Formal senior academic voice; measured and authoritative; uses "I have observed" and "I can attest"'},
+  { opener:'Having closely supervised this student, I write with confidence', focus:'systematic problem-solving and intellectual rigor',  pStyle:'Supervisor voice; evidence-based; references specific thesis work and lab observations'},
+  { opener:'I take genuine pride in recommending',                            focus:'intellectual curiosity and passion for learning',    pStyle:'Warm mentor voice; anecdotal and personal; references specific classroom moments'},
+  { opener:'Among the many capable students I have taught, few compare to',  focus:'exceptional technical ability and academic maturity', pStyle:'Comparative academic voice; uses contrast and specific academic benchmarks'},
+  { opener:'It gives me considerable pleasure to strongly support',           focus:'communication skills and interdisciplinary thinking', pStyle:'Collegial faculty voice; formal but approachable; references seminars and presentations'},
+  { opener:'I am delighted to heartily recommend',                            focus:'resilience, creativity, and consistent excellence',   pStyle:'Positive thesis advisor voice; narrative-driven; traces growth over the program'},
+  { opener:'Based on years of direct academic interaction, I firmly assert',  focus:'discipline, initiative, and scholarly independence',  pStyle:'Evidence-centric; uses phrases like "demonstrated consistently" and "on multiple occasions"'},
+  { opener:'Without the slightest hesitation, I put forward',                 focus:'technical competence and forward-thinking approach',  pStyle:'Direct and confident; short paragraphs; each sentence carries one strong claim'},
+  { opener:'Having had the opportunity to observe this student extensively,', focus:'breadth of knowledge and depth of commitment',        pStyle:'Reflective academic voice; philosophical opener; transitions using "beyond academics" and "more importantly"'},
+  { opener:'I count it a privilege to speak to the abilities of',             focus:'problem-solving agility and team leadership',        pStyle:'Respectful senior professor voice; uses "I can affirm" and "my observations confirm"'},
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  GENERATE LOR — 100% client-side templates
+//  Program-aware: Diploma/Bachelor/Masters/PhD
+//  20×P1 × 20×P2 × 20×P3 = 8,000 LOR combos
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+// ── Program-level context helpers ──
+function progLabel(t){
+  return {diploma:'a Diploma programme',bachelor:"a Bachelor's degree programme",masters:"a Master's degree programme",phd:'a PhD / Doctoral programme'}[t]||"a Master's degree programme";
+}
+function progAdj(t){
+  return {diploma:'further',bachelor:'undergraduate',masters:'postgraduate',phd:'doctoral'}[t]||'postgraduate';
+}
+// What the student completed before applying
+function priorQual(t, deg, major){
+  if(t==='diploma'||t==='bachelor'){
+    return `secondary school studies${major?' with a strong foundation in '+major:''}`;
+  }
+  return `${deg||'undergraduate degree'}${major?' in '+major:''}`;
+}
+// How to describe the target programme level
+function targetDesc(t){
+  return {
+    diploma:'diploma-level study, which will provide a strong vocational and academic foundation',
+    bachelor:"undergraduate study at degree level, which will broaden and deepen ${pr.p} academic foundation",
+    masters:'advanced postgraduate study, which demands a high level of independent scholarly thought',
+    phd:'doctoral research, the most rigorous form of academic inquiry'
+  }[t]||'advanced postgraduate study';
+}
+
+// ── P1: Opening paragraph — 20 variants, program-aware ──
+const LOR_P1 = [
+  (sn,teacher,school,pr,rel,prog,prior)=>`It is with genuine enthusiasm and the utmost confidence that I recommend ${sn} for ${prog}. As ${teacher.position} at ${school.name}${rel}, I have observed ${pr.p} academic development with considerable interest. Having completed ${prior}, ${pr.s} has demonstrated the intellectual calibre and professional disposition that make ${pr.o} an exceptional candidate for the next stage of ${pr.p} education.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`I write this letter of recommendation for ${sn} with a strong sense of privilege and conviction. In my capacity as ${teacher.position} at ${school.name}${rel}, I have had direct and sustained engagement with ${pr.p} academic work. Having successfully completed ${prior}, ${sn} is, in my assessment, thoroughly prepared for the academic demands of ${prog}.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`Among the many students I have had the pleasure of teaching at ${school.name}, ${sn} stands out as one of the most capable and intellectually driven individuals I have encountered. As ${pr.p} ${teacher.position}${rel}, I am delighted to provide this strong endorsement in support of ${pr.p} application to ${prog}. The academic foundation ${pr.s} built through ${prior} leaves me in no doubt of ${pr.p} readiness.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`Having worked closely with ${sn} throughout ${pr.p} time at ${school.name}, I can say with full authority that ${pr.s} represents precisely the kind of student that ${prog.replace('a ','')} programme seeks. It is my honour, as ${pr.p} ${teacher.position}${rel}, to recommend ${pr.o} unreservedly. ${pr.cap} completed ${prior} with distinction, and I am confident ${pr.s} is fully prepared for the road ahead.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`I have been asked to provide a letter of recommendation for ${sn}, and I do so not as a matter of obligation but with sincere enthusiasm. My experience as ${pr.p} ${teacher.position} at ${school.name}${rel} has given me ample opportunity to assess ${pr.p} abilities. Following ${pr.p} completion of ${prior}, I am thoroughly convinced of ${pr.p} readiness for ${prog}.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`It gives me great pleasure to strongly recommend ${sn} for admission to ${prog}. As ${teacher.position} at ${school.name}${rel}, I have had the opportunity to assess ${pr.p} intellectual development at close range. The academic rigour ${pr.s} demonstrated in completing ${prior} is a clear indicator of the potential ${pr.s} will bring to the next level of study.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`I submit this letter in strong support of ${sn}'s application to ${prog}. In my role as ${teacher.position} at ${school.name}${rel}, I came to know ${pr.o} as a student of remarkable focus and intellectual depth. ${pr.cap} completed ${prior} with consistent dedication, and I believe ${pr.s} will carry those same qualities — and more — into the next stage of ${pr.p} academic journey.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`It is a pleasure to recommend ${sn} for ${prog}, and I do so with complete confidence based on firsthand observation. As ${pr.p} ${teacher.position} at ${school.name}${rel}, I witnessed ${pr.p} consistent dedication to academic excellence throughout ${pr.p} completion of ${prior}. That same dedication, I am certain, will serve ${pr.o} equally well in the programme ahead.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`I am pleased to offer this letter of recommendation in support of ${sn}, whose academic performance and personal character have consistently impressed me at ${school.name}. As ${teacher.position}${rel}, I observed ${pr.o} closely as ${pr.s} completed ${prior}. On that basis, I consider ${pr.o} among the most capable candidates I have had the privilege of recommending for ${prog}.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`Without hesitation, I offer my strongest possible recommendation for ${sn} in support of ${pr.p} application to ${prog}. My experience working with ${pr.o} as ${teacher.position} at ${school.name}${rel} has given me deep insight into ${pr.p} academic capabilities. The manner in which ${pr.s} approached ${prior} speaks directly to the qualities that will define ${pr.p} success at this next level.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`I write on behalf of ${sn} with great confidence and genuine admiration. In my years as ${teacher.position} at ${school.name}${rel}, few students have demonstrated the combination of intellectual curiosity, methodological care, and personal integrity that ${sn} brought consistently to ${pr.p} completion of ${prior}. I am delighted to endorse ${pr.p} application to ${prog} wholeheartedly.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`It is with both pride and conviction that I recommend ${sn} for ${prog}. Having served as ${pr.p} ${teacher.position} at ${school.name}${rel}, I am well positioned to speak to ${pr.p} academic ability with authority. The completion of ${prior} provided a solid foundation; I can affirm with confidence that ${sn} is unequivocally ready for the next stage of ${pr.p} academic career.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`I am honoured to recommend ${sn} for ${prog}. As ${teacher.position} at ${school.name}${rel}, I observed ${pr.p} academic growth closely throughout ${pr.p} completion of ${prior}. The commitment, analytical depth, and scholarly integrity ${pr.s} demonstrated consistently make ${pr.o} a standout candidate — one I support with complete and unreserved confidence.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`This letter represents my wholehearted endorsement of ${sn} for ${prog}. During ${pr.p} time at ${school.name}, where I served as ${pr.p} ${teacher.position}${rel}, ${sn} established ${pr.o}self as a consistently high-performing and intellectually engaged student. ${pr.cap} completed ${prior} with the kind of diligence and intellectual seriousness that I believe will carry ${pr.o} far in the programme to come.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`I take genuine pleasure in recommending ${sn} for ${prog}. My interactions with ${pr.o} in my role as ${teacher.position} at ${school.name}${rel} have consistently reinforced my view that ${pr.s} possesses the qualities — intellectual rigour, perseverance, and genuine academic curiosity — that define an outstanding student at every level. ${pr.cap} completion of ${prior} confirms this assessment conclusively.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`Few students leave as lasting an impression as ${sn} has during ${pr.p} time at ${school.name}. As ${pr.p} ${teacher.position}${rel}, I observed ${pr.p} academic development in depth as ${pr.s} worked through ${prior}. On the strength of everything I witnessed, I am delighted to offer a letter of strong support for ${pr.p} application to ${prog}.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`It is my privilege to recommend ${sn} for ${prog}. Having worked with ${pr.o} extensively as ${teacher.position} at ${school.name}${rel}, I can attest with confidence to ${pr.p} intellectual ability, academic diligence, and genuine suitability for the level of study ahead. ${pr.cap} time spent completing ${prior} has equipped ${pr.o} admirably for the challenge.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`I write in strong support of ${sn}'s application to ${prog}, and do so on the basis of direct, sustained academic interaction. As ${teacher.position} at ${school.name}${rel}, I observed the breadth of ${pr.p} knowledge and the quality of ${pr.p} thinking during ${pr.p} completion of ${prior}. Both were of a consistently high standard that gives me every confidence in ${pr.p} future success.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`My experience as ${teacher.position} at ${school.name}${rel} has brought me into contact with many talented students, and ${sn} ranks among the finest. I recommend ${pr.o} for ${prog} with full confidence, knowing from firsthand experience that the completion of ${prior} has provided ${pr.o} with an excellent academic foundation and that ${pr.s} has the personal qualities to build on it.`,
+
+  (sn,teacher,school,pr,rel,prog,prior)=>`On the basis of extensive academic interaction with ${sn} during ${pr.p} time at ${school.name}, I am pleased to provide this letter of strong support for ${pr.p} application to ${prog}. As ${pr.p} ${teacher.position}${rel}, I observed ${pr.p} consistent dedication and scholarly aptitude throughout ${pr.p} completion of ${prior} — qualities that mark ${pr.o} as an excellent candidate for the programme ahead.`,
+];
+
+// ── P2: Academic detail — 20 variants ──
+// Now ~200-230 words each (up from ~160)
+const LOR_P2 = [
+  (sn,major,pr,tgt)=>`During ${pr.p} studies${major?' in '+major:''}, ${sn} demonstrated a rare capacity for independent inquiry, consistently going beyond the prescribed syllabus to explore emerging questions and deepen ${pr.p} conceptual understanding. ${pr.cap} produced a particularly impressive piece of extended academic work that synthesised complex theoretical frameworks with careful empirical analysis, earning specific commendation from the faculty review panel. This quality of output, combined with ${pr.p} willingness to engage with difficult material rather than avoid it, marked ${pr.o} as a student of genuine intellectual seriousness — precisely the disposition required for ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`${sn}'s performance across seminars, laboratory assignments, and written assessments${major?' in '+major:''} placed ${pr.o} consistently among the top students in ${pr.p} cohort. ${pr.cap} led a collaborative research project that required coordinating diverse perspectives, reconciling conflicting sources, and producing a coherent, well-structured analytical report — a task ${pr.s} executed with considerable distinction. The project outcome was cited by faculty as an exemplary piece of student work. The leadership and academic thoroughness ${pr.s} demonstrated in that context is a clear indication of the abilities ${pr.s} will bring to ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`Throughout the programme, ${sn} exhibited an impressive command of both foundational principles and advanced topics${major?' in '+major:''}. ${pr.cap} engaged critically in classroom and seminar discussions, often raising questions that challenged prevailing assumptions and prompted broader academic dialogue among peers and faculty alike. ${pr.p} written assignments were consistently characterised by clarity of argument, depth of analysis, and a genuine originality of thought that is uncommon at this level. These are precisely the qualities that will serve ${pr.o} well as ${pr.s} advances to ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`${sn} completed a substantial independent research module${major?' in '+major:''} that required considerable self-direction, methodological precision, and the ability to sustain focused inquiry over an extended period. The resulting work was of a calibre seldom encountered at this stage of academic development, reflecting ${pr.p} ability to synthesise existing literature, identify genuine research gaps, design a rigorous study, and present findings with scholarly confidence and clarity. The examiners noted the quality of ${pr.p} methodology in particular, and I consider it a strong predictor of success in ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`What distinguished ${sn}${major?' in the study of '+major:''} was not merely ${pr.p} technical competence, but ${pr.p} capacity to apply acquired knowledge creatively and critically to novel, real-world scenarios. ${pr.cap} completed a major project that drew on interdisciplinary methods and produced insights that were both practically relevant and academically rigorous. Faculty reviewers specifically highlighted the quality of ${pr.p} analytical reasoning and the coherence of ${pr.p} conclusions. This is exactly the intellectual agility that will benefit ${pr.o} greatly in ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`${sn} showed exceptional aptitude${major?' in '+major:''}, particularly in research methodology, critical evaluation of sources, and sustained analytical argumentation. ${pr.cap} authored a well-structured dissertation that demonstrated a mature understanding of the subject area, earning praise from faculty reviewers for both its intellectual rigour and its clarity of expression. Beyond the final product, what impressed me was the discipline and organisation ${pr.s} brought to the research process itself — a disposition that will serve ${pr.o} equally well in ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`In the context of ${major||'the programme'}, ${sn} consistently demonstrated the ability to engage with challenging material and extract nuanced, meaningful insights that went beyond surface-level understanding. ${pr.cap} undertook a substantial literature review that revealed a sophisticated grasp of the theoretical landscape, and subsequently designed and executed a study with commendable methodological rigour. The quality of ${pr.p} thinking throughout that process — questioning, systematic, and creatively engaged — speaks directly to ${pr.p} readiness for ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`One of ${sn}'s most notable academic qualities is ${pr.p} ability to bridge theoretical knowledge and practical application${major?' within '+major:''}. During ${pr.p} final extended project, ${pr.s} produced a detailed analytical framework that drew on multiple scholarly traditions and applied them to a concrete, real-world context — a level of interdisciplinary thinking that I consider uncommon among students at this level. This capacity for synthesis and application is a genuine academic asset, and one that will distinguish ${pr.o} in ${tgt} study.`,
+
+  (sn,teacher,pr,tgt)=>`${sn}'s coursework was consistently marked by diligence, intellectual precision, and a genuine desire to understand material deeply rather than simply meet assessment requirements. ${pr.cap} undertook reading beyond the required curriculum, engaged in substantive academic discussions outside of class, and sought constructive feedback on ${pr.p} work at every stage. This proactive and intellectually serious approach to study is precisely what is required for success in ${tgt} study, and ${sn} exemplified it throughout.`,
+
+  (sn,major,pr,tgt)=>`During the research component of ${pr.p}${major?' '+major:''} studies, ${sn} demonstrated a level of methodological fluency that far exceeded expectations for this stage of academic development. ${pr.cap} designed an original study, navigated its complexities with skill and composure, and produced a final report that peers and faculty alike cited as a model of clear, rigorous academic writing. The confidence and independence ${pr.s} brought to that process are hallmarks of a student who will thrive in ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`${sn} approached every aspect of ${pr.p}${major?' '+major:''} work with intellectual seriousness and a commendable, sustained work ethic. ${pr.p.charAt(0).toUpperCase()+pr.p.slice(1)} extended academic writing reflected both a thorough command of the relevant literature and a mature capacity for independent critical evaluation — faculties that will be tested and rewarded in equal measure in ${tgt} study. I found the consistency of ${pr.p} output across varied assessment formats particularly impressive.`,
+
+  (sn,major,pr,tgt)=>`The quality of ${sn}'s academic output${major?' in '+major:''} placed ${pr.o} consistently in the upper tier of ${pr.p} cohort. Particularly noteworthy was ${pr.p} ability to draw meaningful connections between disparate concepts and build unified, well-supported arguments from them — a skill that speaks to both ${pr.p} analytical intelligence and the breadth of ${pr.p} reading. It is a skill that will be of particular value as ${pr.s} transitions into ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`In seminars and lectures${major?' on '+major:''}, ${sn} stood out for the quality and consistency of ${pr.p} intellectual contributions. ${pr.cap} demonstrated an ability to listen critically, formulate considered responses under time pressure, and articulate complex ideas with precision and appropriate academic register — a combination of skills that is as valuable in ${tgt} study as it is genuinely rare among students at this level.`,
+
+  (sn,major,pr,tgt)=>`${sn}'s final-year research project${major?' in '+major:''} was among the most impressive pieces of student work I have had the privilege of supervising. ${pr.cap} identified a meaningful gap in the existing literature, formulated a well-grounded research question, and carried out the investigation with care, methodological honesty, and clear scholarly intent. The outcome was a piece of work that I would describe, without qualification, as entirely appropriate for ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`Throughout ${pr.p} studies, ${sn} demonstrated an exceptional ability to process and critically synthesise large volumes of complex academic material within defined timeframes. ${pr.cap} approached problem sets, case studies, and extended written assignments with equal thoroughness and intellectual care, and consistently produced work that reflected a nuanced understanding of both theory and its real-world implications — a balance that will serve ${pr.o} well in ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`${sn} brought an admirable and distinctive combination of creative thinking and methodological rigour to ${pr.p} academic work${major?' in '+major:''}. In particular, ${pr.p} contributions to collaborative and project-based assessments were distinguished by ${pr.p} ability to lead productive intellectual discussion while remaining genuinely open to the perspectives of others — a rare and valuable quality that speaks to both ${pr.p} academic maturity and ${pr.p} suitability for the collaborative demands of ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`Academic results aside, what I found most impressive about ${sn} was the manner in which ${pr.s} engaged with difficulty${major?' in the study of '+major:''}. When confronted with challenging theoretical problems, ambiguous data, or conflicting scholarly perspectives, ${pr.s} engaged directly with the complexity rather than retreating to oversimplification or superficial answers. This is, in my experience, the defining characteristic of the graduate scholarly mindset, and it will serve ${pr.o} well in ${tgt} study.`,
+
+  (sn,major,pr,tgt)=>`${sn}'s engagement with ${pr.p} field of study went consistently beyond what was required by the curriculum. ${pr.cap} attended optional seminars, sought feedback proactively and acted on it thoughtfully, and pursued independent lines of inquiry that enriched ${pr.p} assessed work considerably. This level of genuine intellectual self-motivation — going beyond minimum requirements not for credit, but out of authentic scholarly interest — is exactly what ${tgt} study demands and what ${sn} has reliably demonstrated.`,
+
+  (sn,major,pr,tgt)=>`In my assessment, ${sn} is the kind of student who enriches the academic environment around ${pr.o}. ${pr.cap} regularly offered incisive commentary on assigned readings${major?' in '+major:''}, challenged assumptions in a respectful and reasoned manner, and demonstrated a capacity for sustained, structured argumentation that made ${pr.p} presence in seminars and discussion sessions genuinely valuable to peers and faculty alike. This intellectual presence will be an asset in any ${tgt} environment.`,
+
+  (sn,major,pr,tgt)=>`The research and analytical skills ${sn} developed over the course of ${pr.p} studies are, in my professional judgement, of a calibre that will serve ${pr.o} extremely well in ${tgt} study. ${pr.cap} demonstrated a systematic and disciplined approach to data gathering and analysis, a critical and questioning eye for methodological limitations, and a consistent ability to write with both precision and clarity across a range of assessment types and academic contexts.`,
+];
+
+// ── P3: Character & closing — 20 variants, program-aware ──
+const LOR_P3 = [
+  (sn,pr,prog)=>`Beyond ${pr.p} academic achievements, ${sn} is known for ${pr.p} integrity, collegiality, and genuine commitment to ${pr.p} chosen field. ${pr.cap} approaches every challenge — academic or personal — with composure, purpose, and a steady determination that I believe will carry ${pr.o} through the rigours of ${prog} with distinction. I recommend ${pr.o} without reservation and wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${sn} combines intellectual seriousness with a collaborative spirit and an openness to other perspectives that makes ${pr.o} a genuinely valued presence in any academic community. I have every confidence that ${pr.s} will contribute meaningfully to ${prog} and to the broader scholarly environment it represents. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`On a personal level, ${sn} is disciplined, intellectually curious, and deeply motivated by a genuine desire to learn and grow. These attributes — which cannot be taught but must be cultivated — are ones ${sn} has clearly developed well, and they are, in my view, indispensable for the demands of ${prog}. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${sn}'s character is as commendable as ${pr.p} academic record. ${pr.cap} is thoughtful, diligent, and unfailingly respectful of peers and faculty — a reflection of the maturity and professionalism ${pr.s} will bring to ${prog} and to every environment ${pr.s} enters thereafter. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`I have rarely encountered a student who combines intellectual drive with such personal humility, resilience, and genuine perseverance as ${sn}. ${pr.cap} is precisely the kind of scholar who will rise to the demands of ${prog} and make a meaningful, lasting contribution to ${pr.p} field in the years that follow. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`What strikes me most about ${sn}, beyond ${pr.p} academic accomplishments, is ${pr.p} authentic passion for knowledge as an end in itself. ${pr.cap} approaches learning not as a means to a credential alone, but as an intrinsic and worthwhile pursuit — a quality that will sustain ${pr.o} through the inevitable challenges of ${prog} and distinguish ${pr.o} long after. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${sn} has demonstrated, consistently and across varied contexts, a level of personal responsibility and academic integrity that I consider the true bedrock of scholarly success. ${pr.cap} is reliable, principled, and consistently supportive of those around ${pr.o} — qualities that will make ${pr.o} not only a successful student in ${prog}, but a valued member of the academic community ${pr.s} joins. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`I am confident that ${sn} will bring the same energy, rigour, and sustained commitment to ${prog} that ${pr.s} has demonstrated at every stage of ${pr.p} academic journey to date. ${pr.cap} is the kind of student who makes teaching genuinely rewarding, and I have no doubt ${pr.s} will make both ${pr.o}self and ${pr.p} institution proud. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${sn}'s academic journey to this point reflects not only innate ability, but a sustained and very deliberate investment in personal and intellectual growth. ${pr.cap} is resilient in the face of difficulty and gracious in success — two qualities that distinguish the truly exceptional student from the merely capable one, and that will serve ${pr.o} especially well in ${prog}. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`In addition to ${pr.p} academic strengths, ${sn} possesses a thoughtfulness and emotional intelligence that will serve ${pr.o} particularly well in the collaborative, multicultural academic environments that characterise the best programmes at this level. ${pr.cap} is the kind of individual who both learns from and actively contributes to the communities ${pr.s} joins. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${sn}'s willingness to engage critically — with ideas, with feedback, and with ${pr.p} own assumptions — marks ${pr.o} as a scholar of genuine intellectual potential. This honest, reflective approach to learning, combined with ${pr.p} strong academic record, gives me every reason to recommend ${pr.o} enthusiastically and without qualification for ${prog}. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`It is not only ${sn}'s academic results that recommend ${pr.o}, but the manner in which ${pr.s} has pursued ${pr.p} studies — with curiosity, purpose, and a quiet determination that is evident to all who have worked with ${pr.o}. I endorse ${pr.p} application to ${prog} fully and without the slightest reservation. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${sn} is, in my estimation, among the most naturally gifted and diligently prepared students I have had the privilege of teaching. ${pr.cap} possesses the rare and valuable ability to work effectively both independently and in collaboration with others, adapting ${pr.p} approach as the task demands. I recommend ${pr.o} for ${prog} with the greatest possible enthusiasm and confidence. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${prog.charAt(0).toUpperCase()+prog.slice(1)} demands not only intellectual ability but also resilience, self-discipline, and genuine scholarly ambition — qualities that ${sn} has demonstrated in abundance throughout ${pr.p} time at this institution. I have full and unqualified confidence in ${pr.p} capacity to meet and exceed the expectations of the programme. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${sn} leaves this institution with my highest regard and my sincerest best wishes. ${pr.cap} has been a model student in every meaningful sense — academically rigorous, personally conscientious, and consistently engaged with the intellectual life of the department beyond the minimum required. I am certain ${pr.p} time in ${prog} will reflect the same admirable qualities. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`I have observed many students pass through this department, and it is rare that one stands out as clearly as ${sn}. ${pr.cap} combines academic excellence with personal integrity in a manner that will make ${pr.o} not only a successful participant in ${prog}, but a genuinely valued and respected member of whichever academic community ${pr.s} enters. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`What recommends ${sn} most powerfully for ${prog} is not any single achievement, but the consistent quality of effort and the intellectual seriousness with which ${pr.s} has approached every aspect of ${pr.p} studies. These qualities are not easily taught; they must be cultivated through discipline and genuine commitment — and ${sn} has clearly cultivated them to an admirable degree. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`My overall assessment of ${sn} is of a student who is thoroughly prepared — intellectually, academically, and personally — for the demands of ${prog}. I recommend ${pr.o} without qualification and with the sincere hope that ${pr.p} application meets with the success it richly deserves. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`${sn} has earned this recommendation through sustained effort, intellectual integrity, and an authentic commitment to academic excellence. ${pr.cap} is, in every meaningful sense, ready for ${prog}, and I am confident ${pr.s} will represent both ${pr.o}self and ${pr.p} institution with distinction at every stage. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+
+  (sn,pr,prog)=>`I close this letter with the observation that ${sn} is the kind of student that those in this profession enter it hoping to encounter — driven, thoughtful, and genuinely committed to the pursuit of knowledge for its own sake. I recommend ${pr.o} for ${prog} with complete confidence and the warmest possible personal regards. I wish ${pr.o} every success in ${pr.p} future endeavours.`,
+];
+
+function genLOR(d, teacher, wsIdx){
+  const {student, school} = d;
+  const pr  = student.gender==='female'
+    ? {s:'she',o:'her',p:'her',cap:'She',ms:'Ms.'}
+    : {s:'he',o:'him',p:'his',cap:'He',ms:'Mr.'};
+  const tgt  = student.target || 'masters';
+  const prog = progLabel(tgt);
+  const prior = priorQual(tgt, student.degree, student.major);
+  const tgtStudy = progAdj(tgt)+' study';
+  const sn   = student.name;
+  const rel  = teacher.relation ? `, having served as ${pr.p} ${teacher.relation},` : '';
+
+  const p1fn = pick(LOR_P1);
+  const p1   = p1fn(sn, teacher, school, pr, rel, prog, prior);
+
+  const p2fn = pick(LOR_P2);
+  const p2   = p2fn(sn, student.major, pr, tgtStudy);
+
+  const p3fn = pick(LOR_P3);
+  const p3   = p3fn(sn, pr, prog);
+
+  return Promise.resolve([p1, p2, p3]);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  GENERATE MOI — 100% client-side templates
+//  Program-aware: prior qualification context
+//  10×P1 × 10×P3 = 100 MOI combinations
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const MOI_P1 = [
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`This is to certify that ${sn}${id} was a duly enrolled and registered student of ${school}. ${pr.cap} successfully completed all requirements of the ${deg}${major?' in '+major:''}, offered by the Department of ${dept}${grad}${cgpa}. Throughout the duration of the programme, ${sn} maintained a satisfactory academic standing and fulfilled all curricular obligations as stipulated by the institution.${tgt==='diploma'||tgt==='bachelor'?' This programme was completed following '+sn+"'s secondary school education.":''}`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`We hereby certify that ${sn}${id} was a registered${tgt==='diploma'||tgt==='bachelor'?' full-time':' full-time'} student of ${school}, duly enrolled in the ${deg}${major?' in '+major:''} offered by the Department of ${dept}. ${pr.cap} fulfilled all academic requirements of the programme${grad}${cgpa} and was conferred the qualification upon successful completion of all prescribed coursework and assessments.`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`The Office of the Registrar of ${school} hereby confirms that ${sn}${id} pursued and successfully completed the ${deg}${major?' in '+major:''} from the Department of ${dept}${grad}. ${pr.cap} satisfied all the academic requirements set forth by the university${cgpa}, and the qualification was duly conferred upon ${pr.o} by the institution.`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`This certificate is issued to confirm that ${sn}${id} was a bonafide student of ${school}, registered in the ${deg}${major?' programme in '+major:''} under the Department of ${dept}. ${pr.cap} completed the full duration of the programme${grad} and fulfilled all academic obligations${cgpa}, thereby qualifying for the formal award of the qualification.`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`To whom it may concern: this office confirms that ${sn}${id} successfully pursued the ${deg}${major?' in '+major:''} at ${school}, affiliated with the Department of ${dept}. ${pr.cap} completed the programme in its entirety${grad}${cgpa} and was awarded the qualification upon formal assessment and approval by the academic board of the university.`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`We certify that ${sn}${id} was a student enrolled in the ${deg}${major?' in the field of '+major:''} at ${school}, under the Department of ${dept}. ${pr.cap} diligently completed all prescribed courses, examinations, and project requirements${grad}${cgpa}, and was declared eligible for the conferral of the qualification by the institution's academic council.`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`This is to state that ${sn}${id} successfully completed the ${deg}${major?' in '+major:''} from the Department of ${dept}, ${school}${grad}. ${pr.cap} was a regular student of the institution and met all academic and administrative requirements of the programme${cgpa}. The qualification was formally conferred upon ${pr.o} upon the successful conclusion of all prescribed assessments.`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`The undersigned authority of ${school} certifies that ${sn}${id} was registered as a student in the ${deg}${major?' in '+major:''} under the Department of ${dept}. ${pr.cap} completed the full academic requirements of the programme${grad}${cgpa} and was officially awarded the qualification in recognition of ${pr.p} satisfactory academic performance throughout.`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`This certificate confirms that ${sn}${id} was an enrolled student at ${school} and completed the ${deg}${major?' in '+major:''}, administered by the Department of ${dept}${grad}. ${pr.cap} fulfilled all the academic criteria required for the award of the qualification${cgpa}, and it was conferred upon ${pr.o} following the successful conclusion of the programme.`,
+
+  (sn,id,deg,major,dept,school,pr,grad,cgpa,tgt)=>`I write to confirm that ${sn}${id} was a bonafide and regularly enrolled student at ${school}. ${pr.cap} pursued the ${deg}${major?' in '+major:''} in the Department of ${dept} and completed all coursework, examinations, and project requirements of the programme${grad}${cgpa}. Upon satisfying all conditions prescribed by the institution, the qualification was duly awarded to ${pr.o}.`,
+];
+
+const MOI_P3 = [
+  (sn,pr,issuer,school)=>`This certificate is issued upon the formal request of the student and in accordance with the authority vested in the Office of the ${issuer} of ${school}. We extend our sincere best wishes to ${sn} and wish ${pr.o} every success in ${pr.p} future academic and professional endeavours.`,
+  (sn,pr,issuer,school)=>`This document is issued by the Office of the ${issuer} of ${school} upon the request of ${sn}, for the purpose of ${pr.p} application to a further academic programme. We wish ${pr.o} the very best in all ${pr.p} future endeavours.`,
+  (sn,pr,issuer,school)=>`The ${issuer}'s Office of ${school} issues this certificate on behalf of the institution and upon the formal request of the student. We extend our warmest congratulations to ${sn} and wish ${pr.o} continued success in ${pr.p} academic journey ahead.`,
+  (sn,pr,issuer,school)=>`This certificate is issued by the Office of the ${issuer}, ${school}, upon the specific request of ${sn}, for use in ${pr.p} application for further studies. The institution wishes ${pr.o} every success in ${pr.p} future endeavours.`,
+  (sn,pr,issuer,school)=>`In issuing this certificate, the Office of the ${issuer} of ${school} affirms the accuracy of the information stated herein and extends its full confidence and best wishes to ${sn} as ${pr.s} pursues ${pr.p} further academic aspirations.`,
+  (sn,pr,issuer,school)=>`This certificate is issued as an official document of ${school}, prepared by the Office of the ${issuer} upon the request of ${sn}. The institution is pleased to extend its warmest best wishes to ${pr.o} as ${pr.s} pursues ${pr.p} next academic programme.`,
+  (sn,pr,issuer,school)=>`The Office of the ${issuer} of ${school} hereby confirms the authenticity of the information contained in this certificate, issued in good faith upon the request of the student. We wish ${sn} every success in ${pr.p} future academic and professional career.`,
+  (sn,pr,issuer,school)=>`This document is issued with the full authority of the ${issuer}'s Office of ${school}. We trust it will serve ${sn} well in ${pr.p} further studies application, and we wish ${pr.o} the greatest success in all ${pr.p} future endeavours.`,
+  (sn,pr,issuer,school)=>`Issued upon the request of the student concerned, this certificate carries the official endorsement of the ${issuer}'s Office, ${school}. The institution congratulates ${sn} on ${pr.p} academic achievements and wishes ${pr.o} a successful and fulfilling experience in the programme ahead.`,
+  (sn,pr,issuer,school)=>`This Medium of Instruction Certificate is prepared and issued by the Office of the ${issuer} of ${school} in response to ${sn}'s formal request. We extend our best wishes to ${pr.o} as ${pr.s} embarks on the next chapter of ${pr.p} academic journey.`,
+];
+
+function genMOI(d){
+  const {student, school, moi} = d;
+  const pr = student.gender==='female'
+    ? {s:'she',o:'her',p:'her',cap:'She'}
+    : {s:'he',o:'him',p:'his',cap:'He'};
+  const tgt    = student.target || 'masters';
+  const sn     = student.name;
+  const id     = student.id ? ` (Student ID: ${student.id})` : '';
+  const grad   = student.grad ? `, graduating in ${student.grad}` : '';
+  const cgpa   = student.cgpa ? ` with a cumulative GPA of ${student.cgpa}` : '';
+  const dept   = school.dept || student.major;
+  const issuer = moi.type || 'Registrar';
+
+  const p1fn = pick(MOI_P1);
+  const p1   = p1fn(sn, id, student.degree, student.major, dept, school.name, pr, grad, cgpa, tgt);
+
+  const p2 = `The medium of instruction of the program is English at this University. All lectures, tutorials, seminars, examinations, written assignments, laboratory sessions, and other academic activities were conducted, assessed, and documented exclusively in the English language. Students were required to demonstrate proficiency in academic English across all components of assessment throughout the duration of their studies.`;
+
+  const p3fn = pick(MOI_P3);
+  const p3   = p3fn(sn, pr, issuer, school.name);
+
+  return Promise.resolve([p1, p2, p3]);
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  COLLECT FORM DATA
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function getData(){
+  const g = id => (document.getElementById(id)||{}).value?.trim()||'';
+  return {
+    school:{ name:g('sName'), dept:g('sDept'), phone:g('sPhone'), email:g('sEmail'), address:g('sAddr'), web:g('sWeb'), logo:logoB64 },
+    student:{ name:g('stName'), id:g('stId'), degree:g('stDeg'), major:g('stMaj'), grad:g('stGrad'), cgpa:g('stCgpa'), gender:g('stGen'), target:g('stTarget')||'masters' },
+    lor1:{ name:g('l1n'), position:g('l1p'), dept:g('l1d'), phone:g('l1ph'), email:g('l1e'), ref:g('l1r'), relation:g('l1rel') },
+    lor2:{ name:g('l2n'), position:g('l2p'), dept:g('l2d'), phone:g('l2ph'), email:g('l2e'), ref:g('l2r'), relation:g('l2rel') },
+    moi:{ name:g('moiName'), position:g('moiPos'), type:g('moiType'), ref:g('moiRef'), date:g('moiDate') },
+  };
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  MAIN GENERATE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function generateAll(){
+  const d = getData();
+  const doL1 = document.getElementById('ck1').checked;
+  const doL2 = document.getElementById('ck2').checked;
+  const doMO = document.getElementById('ck3').checked;
+  const useWm = document.getElementById('wmToggle').checked;
+
+  // Validate
+  const errs = [];
+  if(!d.school.name)   errs.push('School / university name is required');
+  if(!d.student.name)  errs.push('Student name is required');
+  if(!d.student.degree) errs.push('Completed degree is required');
+  if(!d.student.major)  errs.push('Major / field is required');
+  if(doL1 && !d.lor1.name) errs.push('LOR 1 teacher name is required');
+  if(doL2 && !d.lor2.name) errs.push('LOR 2 teacher name is required');
+  if(doMO && !d.moi.name)  errs.push('MOI issuer name is required');
+  if(errs.length){ toast('⚠ '+errs[0],'err'); return; }
+
+  generatedDocs = {};
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('pvSec').style.display = 'none';
+
+  // Pick two different writing styles (never same for LOR1 & LOR2)
+  const all = Array.from({length:WS.length},(_,i)=>i);
+  const wsIdx1 = all[Math.floor(Math.random()*all.length)];
+  let wsIdx2;
+  do { wsIdx2 = all[Math.floor(Math.random()*all.length)]; } while(wsIdx2===wsIdx1);
+
+  const school = d.school;
+
+  try{
+    if(doL1){
+      setOv(true,'Preparing Recommendation Letter 1…','Building letter from '+d.lor1.name+"'s perspective");
+      const paras = await genLOR(d, d.lor1, wsIdx1);
+      generatedDocs.lor1 = {
+        html: buildDocHTML({lhIdx:selectedLH, school, refNum:d.lor1.ref, title:'Recommendation Letter',
+          paras, sigName:d.lor1.name, sigRole:d.lor1.position, sigDept:d.lor1.dept,
+          sigEmail:d.lor1.email, sigPhone:d.lor1.phone, isMOI:false, useWm, logo:logoB64}),
+        paras, teacher:d.lor1
+      };
+    }
+    if(doL2){
+      setOv(true,'Preparing Recommendation Letter 2…','Building letter from '+d.lor2.name+"'s perspective");
+      const paras = await genLOR(d, d.lor2, wsIdx2);
+      generatedDocs.lor2 = {
+        html: buildDocHTML({lhIdx:selectedLH, school, refNum:d.lor2.ref, title:'Recommendation Letter',
+          paras, sigName:d.lor2.name, sigRole:d.lor2.position, sigDept:d.lor2.dept,
+          sigEmail:d.lor2.email, sigPhone:d.lor2.phone, isMOI:false, useWm, logo:logoB64}),
+        paras, teacher:d.lor2
+      };
+    }
+    if(doMO){
+      setOv(true,'Writing Medium of Instruction Certificate…','');
+      const paras = await genMOI(d);
+      generatedDocs.moi = {
+        html: buildDocHTML({lhIdx:selectedLH, school, refNum:d.moi.ref, date:d.moi.date,
+          title:'To Whom It May Concern', paras,
+          sigName:d.moi.name, sigRole:d.moi.position, sigDept:'', sigEmail:'', sigPhone:'',
+          isMOI:true, useWm, logo:logoB64}),
+        paras, issuer:d.moi
+      };
+    }
+
+    setOv(false);
+    renderPreview();
+    document.getElementById('pvSec').style.display = 'block';
+    setTimeout(()=>document.getElementById('pvSec').scrollIntoView({behavior:'smooth',block:'start'}),100);
+    toast('✅ Documents generated successfully!','ok');
+
+  } catch(e){
+    setOv(false);
+    console.error(e);
+    toast('❌ '+e.message,'err');
+  }
+  document.getElementById('genBtn').disabled = false;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  PREVIEW RENDER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function renderPreview(){
+  const tabs = document.getElementById('pvTabs');
+  const body = document.getElementById('pvBody');
+  tabs.innerHTML = '';
+  const keys = Object.keys(generatedDocs);
+  const labels = {lor1:'📝 LOR 1', lor2:'📝 LOR 2', moi:'📜 MOI'};
+  keys.forEach((k,i)=>{
+    const t = document.createElement('button');
+    t.className = 'ptab'+(i===0?' on':'');
+    t.textContent = labels[k];
+    t.onclick = ()=>{
+      document.querySelectorAll('.ptab').forEach(x=>x.classList.remove('on'));
+      t.classList.add('on');
+      body.innerHTML = generatedDocs[k].html;
+    };
+    tabs.appendChild(t);
+  });
+  if(keys.length) body.innerHTML = generatedDocs[keys[0]].html;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  DOWNLOAD ALL AS .DOCX
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function dlAll(){
+  const d = getData();
+  if(!Object.keys(generatedDocs).length){ toast('⚠ Generate documents first','err'); return; }
+  document.getElementById('dlBtn').disabled = true;
+  toast('⏳ Preparing Word documents…','info');
+
+  try{
+    // The UMD build exposes itself as window.docx
+    const lib = window.docx;
+    if(!lib || !lib.Document){ throw new Error('docx library not loaded. Please refresh the page.'); }
+    const {
+      Document, Packer, Paragraph, TextRun, AlignmentType, UnderlineType,
+      BorderStyle, convertInchesToTwip
+    } = lib;
+    const _cit = (convertInchesToTwip && typeof convertInchesToTwip==='function')
+      ? convertInchesToTwip
+      : (inches => Math.round(inches * 1440));
+
+    const s = LH[selectedLH];
+    const colorHex = s.color.replace('#','');
+    const school = d.school;
+    const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+    const fileLabels = {lor1:'LOR_1_Recommendation', lor2:'LOR_2_Recommendation', moi:'MOI_Certificate'};
+    const studentSlug = (d.student.name||'Student').replace(/[^a-zA-Z0-9]/g,'_');
+
+    for(const [key, doc] of Object.entries(generatedDocs)){
+      const refNum = key==='moi' ? d.moi.ref : (doc.teacher?.ref||'');
+      const title = key==='moi' ? 'To Whom It May Concern' : 'Recommendation Letter';
+      const sigName = key==='moi' ? d.moi.name : (doc.teacher?.name||'');
+      const sigRole = key==='moi' ? d.moi.position : (doc.teacher?.position||'');
+      const sigDept = key==='moi' ? '' : (doc.teacher?.dept||'');
+      const sigEmail = key==='moi' ? '' : (doc.teacher?.email||'');
+      const sigPhone = key==='moi' ? '' : (doc.teacher?.phone||'');
+
+      const ch = [];
+      const fo = s.fontOffset||0; // font size offset for Split Compact (-2)
+      const basePt = sz => (sz + fo*2); // size is in half-points, fo is in points → multiply by 2
+
+      // — School name heading
+      ch.push(new Paragraph({
+        children:[new TextRun({text: school.name, bold:true, size:basePt(32), color:colorHex, font: s.font.split(',')[0].trim() })],
+        spacing:{after:60}
+      }));
+      if(school.dept){
+        ch.push(new Paragraph({
+          children:[new TextRun({text:school.dept, size:basePt(18), color:'444444'})],
+          spacing:{after:30}
+        }));
+      }
+      // Stacked contact lines — each on its own line, small font
+      if(school.address){
+        ch.push(new Paragraph({
+          children:[new TextRun({text: school.address, size:14, color:'555555'})],
+          spacing:{after:20}
+        }));
+      }
+      if(school.phone){
+        ch.push(new Paragraph({
+          children:[new TextRun({text:'Tel: '+school.phone, size:14, color:'555555'})],
+          spacing:{after:20}
+        }));
+      }
+      if(school.email){
+        ch.push(new Paragraph({
+          children:[new TextRun({text: school.email, size:14, color:'555555'})],
+          spacing:{after:20}
+        }));
+      }
+      if(school.web){
+        ch.push(new Paragraph({
+          children:[new TextRun({text: school.web, size:14, color:'555555'})],
+          spacing:{after:30}
+        }));
+      }
+
+      // — Divider line (paragraph with bottom border)
+      ch.push(new Paragraph({
+        border:{bottom:{color:colorHex, style:BorderStyle.SINGLE, size:12, space:4}},
+        spacing:{after:140}
+      }));
+
+      // — Ref & Date
+      if(refNum){
+        ch.push(new Paragraph({
+          children:[new TextRun({text:'Ref: '+refNum, size:basePt(20), color:'444444'})],
+          spacing:{after:60}
+        }));
+      }
+      // Date: only for MOI (not LORs)
+      if(key === 'moi'){
+        ch.push(new Paragraph({
+          children:[new TextRun({text:'Date: '+today, size:basePt(20), color:'444444'})],
+          spacing:{after:280}
+        }));
+      } else {
+        ch.push(new Paragraph({spacing:{after: refNum ? 280 : 200}}));
+      }
+
+      // — Title (centered, underlined) — +3pt font
+      ch.push(new Paragraph({
+        children:[new TextRun({text:title, bold:true, size:basePt(26+6), color:colorHex, underline:{type:UnderlineType.SINGLE}})],
+        alignment:AlignmentType.CENTER,
+        spacing:{after:340}
+      }));
+
+      // — Body paragraphs
+      for(const para of doc.paras){
+        const clean = para.replace(/\*\*/g,'').trim();
+        if(!clean) continue;
+        const isMedLine = key==='moi' && clean.toLowerCase().includes('medium of instruction') && clean.toLowerCase().includes('english');
+        ch.push(new Paragraph({
+          children:[new TextRun({text:clean, size:basePt(22), bold:isMedLine, font:'Times New Roman'})],
+          alignment:AlignmentType.JUSTIFIED,
+          spacing:{after:200}
+        }));
+      }
+
+      // — Signature space (blank + line + name + role)
+      ch.push(new Paragraph({spacing:{before:fo?480:700, after:0}})); // space for handwriting
+      ch.push(new Paragraph({
+        border:{bottom:{color:'333333', style:BorderStyle.SINGLE, size:6, space:4}},
+        children:[new TextRun({text:'', size:basePt(22)})],
+        spacing:{after:90},
+        indent:{end: _cit(4.5)}
+      }));
+
+      if(sigName) ch.push(new Paragraph({children:[new TextRun({text:sigName, bold:true, size:basePt(22)})], spacing:{after:60}}));
+      if(sigRole) ch.push(new Paragraph({children:[new TextRun({text:sigRole, size:basePt(20), color:'333333'})], spacing:{after:50}}));
+      if(sigDept) ch.push(new Paragraph({children:[new TextRun({text:sigDept, size:basePt(20), color:'333333'})], spacing:{after:50}}));
+      ch.push(new Paragraph({children:[new TextRun({text:school.name, size:basePt(20), color:'333333'})], spacing:{after:50}}));
+      if(sigEmail) ch.push(new Paragraph({children:[new TextRun({text:'Email: '+sigEmail, size:basePt(18), color:'555555'})], spacing:{after:40}}));
+      if(sigPhone) ch.push(new Paragraph({children:[new TextRun({text:'Phone: '+sigPhone, size:basePt(18), color:'555555'})], spacing:{after:40}}));
+
+      // — Footer contact (address on own line, phone|email combined, web on own line)
+      const footerParts = [
+        school.address,
+        (school.phone || school.email) ? [school.phone, school.email].filter(Boolean).join(' | ') : '',
+        school.web
+      ].filter(Boolean);
+      if(footerParts.length){
+        const footerText = footerParts.join('  |  ');
+        ch.push(new Paragraph({
+          border:{top:{color:'aaaaaa', style:BorderStyle.SINGLE, size:4, space:4}},
+          children:[new TextRun({text:footerText, size:14, color:'888888'})],
+          alignment:AlignmentType.CENTER,
+          spacing:{before:320, after:0}
+        }));
+      }
+
+      // A4 page: 210mm×297mm in twips (1 inch = 1440 twips, 1mm = 56.7 twips)
+      // 210mm = 11906 twips, 297mm = 16838 twips
+      // Margins: top 18mm=1021, bottom 16mm=907, left/right 22mm=1247
+      const docObj = new Document({
+        sections:[{
+          properties:{
+            page:{
+              size:{width:11906, height:16838},
+              margin:{top:1021, bottom:907, left:1531, right:1531}
+            }
+          },
+          children: ch
+        }]
+      });
+
+      const blob = await Packer.toBlob(docObj);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileLabels[key]}_${studentSlug}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      await new Promise(r=>setTimeout(r,600));
+    }
+    toast('✅ All documents downloaded!','ok');
+  } catch(e){
+    console.error(e);
+    toast('❌ Download failed: '+e.message,'err');
+  }
+  document.getElementById('dlBtn').disabled = false;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  DOWNLOAD ALL AS PDF
+//  Strategy: html2canvas → jsPDF (one per doc)
+//  Fallback: open print dialog if canvas fails
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function dlAllPDF(){
+  if(!Object.keys(generatedDocs).length){ toast('⚠ Generate documents first','err'); return; }
+  const btn = document.getElementById('dlPdfBtn');
+  btn.disabled = true;
+
+  const { jsPDF } = window.jspdf || {};
+  if(!jsPDF){ toast('❌ jsPDF library failed to load. Try refreshing.','err'); btn.disabled=false; return; }
+  if(!window.html2canvas){ toast('❌ html2canvas not loaded. Try refreshing.','err'); btn.disabled=false; return; }
+
+  toast('⏳ Rendering PDFs — please wait…','info');
+
+  const d = getData();
+  const studentSlug = (d.student.name||'Student').replace(/[^a-zA-Z0-9]/g,'_');
+  const fileLabels = {lor1:'LOR_1_Recommendation', lor2:'LOR_2_Recommendation', moi:'MOI_Certificate'};
+  const keys = Object.keys(generatedDocs);
+
+  // Create a fully styled offscreen container
+  const offscreen = document.createElement('div');
+  offscreen.style.cssText = [
+    'position:fixed','left:-2000px','top:0','z-index:-999',
+    'background:#fff','width:794px','pointer-events:none'
+  ].join(';');
+  document.body.appendChild(offscreen);
+
+  let successCount = 0;
+  try {
+    for(const key of keys){
+      const label = fileLabels[key].replace(/_/g,' ');
+      setOv(true, `Rendering ${label}…`, 'Generating PDF — do not close the tab');
+
+      // Inject the doc HTML
+      offscreen.innerHTML = generatedDocs[key].html;
+      const a4el = offscreen.querySelector('.a4');
+      if(!a4el){ continue; }
+
+      // Force pixel-perfect A4 dimensions
+      a4el.style.cssText += ';width:794px!important;min-height:1123px!important;max-height:none!important;box-shadow:none!important;margin:0!important;padding-top:18mm;padding-bottom:16mm;padding-left:27mm;padding-right:27mm;overflow:visible!important;';
+
+      // Wait for fonts/images to settle
+      await new Promise(r => setTimeout(r, 350));
+
+      // Force layout recalculation
+      void a4el.offsetHeight;
+
+      let pdfSaved = false;
+      try {
+        const canvas = await window.html2canvas(a4el, {
+          scale: 2.5,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          width: 794,
+          height: Math.max(1123, a4el.scrollHeight),
+          scrollX: 0,
+          scrollY: 0,
+          logging: false,
+          imageTimeout: 8000,
+          removeContainer: false
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4', compress:true });
+        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+        pdf.save(`${fileLabels[key]}_${studentSlug}.pdf`);
+        pdfSaved = true;
+        successCount++;
+      } catch(canvasErr){
+        console.warn('html2canvas failed for '+key, canvasErr);
+      }
+
+      // Fallback: if canvas failed, open print dialog for this doc
+      if(!pdfSaved){
+        const printWin = window.open('','_blank','width=900,height=700');
+        if(printWin){
+          printWin.document.write(`<!DOCTYPE html><html><head>
+            <meta charset="UTF-8"/>
+            <style>
+              @page{size:A4;margin:0}
+              body{margin:0;padding:0;background:#fff}
+              .a4{width:210mm;min-height:297mm;padding:18mm 27mm 16mm;box-sizing:border-box;position:relative;overflow:hidden}
+              .wm-layer{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none}
+              .a4-inner{position:relative;z-index:1}
+              .body-wrap p{margin-bottom:10pt;text-align:justify;font-family:'Times New Roman',Times,serif;font-size:10pt;line-height:1.68}
+              .sig-area{margin-top:52pt}.sig-line{width:200pt;border-top:1px solid #444;margin-bottom:5pt}
+              .sig-name{font-weight:700;font-size:10pt;font-family:'Times New Roman',Times,serif}
+              .sig-role{font-size:9.5pt;color:#333;line-height:1.5;font-family:'Times New Roman',Times,serif}
+            </style>
+            </head><body>${generatedDocs[key].html}</body></html>`);
+          printWin.document.close();
+          await new Promise(r=>setTimeout(r,800));
+          printWin.print();
+          successCount++;
+        }
+      }
+      await new Promise(r => setTimeout(r, 300));
+    }
+  } finally {
+    document.body.removeChild(offscreen);
+    setOv(false);
+  }
+
+  btn.disabled = false;
+  if(successCount > 0){
+    toast(`✅ ${successCount} PDF${successCount>1?'s':''} downloaded!`,'ok');
+  } else {
+    toast('❌ PDF generation failed. Try the 🖨 Print button instead.','err');
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  UI HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function tog(id, hd){
+  const b = document.getElementById(id);
+  const ch = hd.querySelector('.chevron');
+  const isOpen = b.classList.contains('open');
+  b.style.display = isOpen?'none':'block';
+  b.classList.toggle('open',!isOpen);
+  ch.classList.toggle('open',!isOpen);
+}
+function goSec(id){ document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
+function switchTool(t, btn){
+  document.getElementById('lorTool').style.display = t==='lor'?'block':'none';
+  document.getElementById('bankTool').style.display = t==='bank'?'block':'none';
+  document.querySelectorAll('.ttab').forEach(x=>x.classList.remove('on'));
+  btn.classList.add('on');
+}
+function setOv(show, t, s){
+  document.getElementById('ov').classList.toggle('show',show);
+  if(t) document.getElementById('ovT').textContent = t;
+  if(s!==undefined) document.getElementById('ovS').textContent = s;
+}
+function toast(msg, type){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show '+(type||'info');
+  setTimeout(()=>{ el.className='toast'; }, 3600);
+}
+function handleLogo(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    logoB64 = e.target.result;
+    const prev = document.getElementById('logoPrev');
+    prev.src = logoB64;
+    prev.style.display = 'block';
+    document.getElementById('logoPlaceholder').style.display = 'none';
+    document.getElementById('logoFname').textContent = '✓ '+file.name;
+    document.getElementById('wmRow').style.display = 'flex';
+  };
+  reader.readAsDataURL(file);
+}
+function syncMoiPos(){
+  const map = {Registrar:'Registrar', Dean:'Dean', Principal:'Principal', Head:'Head of Department', Controller:'Controller of Examinations'};
+  const v = document.getElementById('moiType').value;
+  document.getElementById('moiPos').value = map[v]||v;
+}
+function clearAll(){
+  if(!confirm('Clear all form fields?')) return;
+  document.querySelectorAll('input[type=text],input[type=email],input[type=tel]').forEach(el=>el.value='');
+  document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
+  logoB64 = null;
+  document.getElementById('logoPrev').style.display = 'none';
+  document.getElementById('logoPlaceholder').style.display = 'block';
+  document.getElementById('logoFname').textContent = '';
+  document.getElementById('wmRow').style.display = 'none';
+  document.getElementById('wmToggle').checked = false;
+  document.getElementById('pvSec').style.display = 'none';
+  generatedDocs = {};
+  toast('🗑 Form cleared','info');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  INIT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Close all card bodies except the ones marked open
+document.querySelectorAll('.card-body').forEach(b=>{
+  if(!b.classList.contains('open')) b.style.display='none';
+});
+// Checkbox styling
+['ck1','ck2','ck3'].forEach((id,i)=>{
+  document.getElementById(id).addEventListener('change',function(){
+    document.getElementById('go'+(i+1)).classList.toggle('on',this.checked);
+  });
+});
+buildThumbs();
+</script>
+</body>
+</html>
