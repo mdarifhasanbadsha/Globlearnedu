@@ -1,4 +1,4 @@
-import Resend from 'resend';
+import { Resend } from 'resend';
 
 if (!process.env.RESEND_API_KEY) {
   throw new Error('RESEND_API_KEY is required');
@@ -12,6 +12,6 @@ export async function sendEmail(options: { to: string; subject: string; html?: s
     to: options.to,
     subject: options.subject,
     html: options.html,
-    text: options.text,
+    text: options.text ?? options.html ?? '',
   });
 }

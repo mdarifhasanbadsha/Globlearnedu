@@ -2,7 +2,17 @@ import { db } from '~/lib/db';
 import { notifications } from '~/lib/db/schema';
 import { sendEmail } from '~/lib/email';
 
-export async function sendNotification(applicationId: number, recipientType: 'student' | 'partner', recipientId: number, type: string, data: { title: string; message: string; email?: string; }) {
+type NotificationType =
+  | 'status_update'
+  | 'document_request'
+  | 'interview_scheduled'
+  | 'interview_reminder'
+  | 'pre_admission'
+  | 'admitted'
+  | 'payment_request'
+  | 'general';
+
+export async function sendNotification(applicationId: number, recipientType: 'student' | 'partner', recipientId: number, type: NotificationType, data: { title: string; message: string; email?: string; }) {
   await db.insert(notifications).values({
     application_id: applicationId,
     application_university_id: null,

@@ -8,7 +8,6 @@ import {
   boolean,
   timestamp,
   date,
-  textArray,
 } from 'drizzle-orm/pg-core';
 
 export const universityType = pgEnum('university_type', ['985', '211', 'regular', 'vocational', 'language']);
@@ -81,7 +80,7 @@ export const programs = pgTable('programs', {
   duration_years: integer('duration_years').notNull(),
   tuition_fee_rmb_per_year: integer('tuition_fee_rmb_per_year').notNull(),
   is_active: boolean('is_active').notNull().default(true),
-  intake_months: textArray('intake_months'),
+  intake_months: text('intake_months').array(),
   requires_interview: boolean('requires_interview').notNull().default(false),
   created_at: timestamp('created_at').notNull().defaultNow(),
   updated_at: timestamp('updated_at').notNull().defaultNow(),
@@ -102,7 +101,7 @@ export const scholarships = pgTable('scholarships', {
   type: scholarshipType('type').notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   coverage_type: coverageType('coverage_type').notNull(),
-  applicable_levels: textArray('applicable_levels'),
+  applicable_levels: text('applicable_levels').array(),
   covers_tuition: boolean('covers_tuition').notNull().default(false),
   tuition_percentage: integer('tuition_percentage'),
   covers_accommodation: boolean('covers_accommodation').notNull().default(false),
@@ -128,7 +127,7 @@ export const actual_costs = pgTable('actual_costs', {
   cost_type: varchar('cost_type', { length: 32 }).notNull(),
   amount_min_rmb: integer('amount_min_rmb'),
   amount_max_rmb: integer('amount_max_rmb'),
-  is_covered_by_scholarship: textArray('is_covered_by_scholarship'),
+  is_covered_by_scholarship: text('is_covered_by_scholarship').array(),
   notes: text('notes'),
   created_at: timestamp('created_at').notNull().defaultNow(),
 });
@@ -472,7 +471,7 @@ export const blog_posts = pgTable('blog_posts', {
   featured_image_url: varchar('featured_image_url', { length: 512 }),
   author_id: integer('author_id').notNull().references(() => staff.id),
   category: varchar('category', { length: 128 }),
-  tags: textArray('tags'),
+  tags: text('tags').array(),
   seo_title: varchar('seo_title', { length: 255 }),
   seo_description: varchar('seo_description', { length: 512 }),
   status: blogStatus('status').notNull().default('draft'),

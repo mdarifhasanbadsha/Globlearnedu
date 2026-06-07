@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "preview": "opennextjs-cloudflare build && wrangler dev",
-    "deploy": "opennextjs-cloudflare build && wrangler deploy",
+    "deploy": "opennextjs-cloudflare build --openNextConfigPath ./open-next.config.ts && wrangler deploy",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate"
@@ -32,6 +32,7 @@
     "eslint": "^9.0.0",
     "eslint-config-next": "latest",
     "tailwindcss": "^4.0.0",
+    "@tailwindcss/postcss": "^4.3.0",
     "postcss": "^8.4.0",
     "autoprefixer": "^10.0.0",
     "wrangler": "^4.0.0",

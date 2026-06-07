@@ -5,7 +5,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-08-16',
+  apiVersion: '2022-11-15',
 });
 
 export async function createPaymentIntent(amount: number, currency: string, metadata: Record<string, string>) {

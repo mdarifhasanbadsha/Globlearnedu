@@ -1,14 +1,6 @@
-import type { OpenNextConfig } from '@opennextjs/cloudflare';
+import { defineCloudflareConfig } from '@opennextjs/cloudflare';
 
-const config: OpenNextConfig = {
-  cloudflare: {
-    compatibilityDate: '2026-06-01',
-    compatibilityFlags: ['nodejs_compat'],
-    assets: {
-      directory: '.open-next/assets',
-      binding: 'ASSETS',
-    },
-  },
-};
-
-export default config;
+export default defineCloudflareConfig({
+  // Cloudflare-specific OpenNext overrides can go here.
+  // Compatibility settings are already handled by wrangler.jsonc.
+});
