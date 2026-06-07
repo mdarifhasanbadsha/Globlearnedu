@@ -52,12 +52,12 @@ export async function POST(request: Request) {
     if (hexMatch) receivedSig = header;
   }
 
-  const expected = await computeHmacHex(secret, raw);
-  const verified = timingSafeEqualHex(expected, receivedSig);
   // If debug header present, return signatures and raw body for troubleshooting
+  const expected = await computeHmacHex(secret, raw);
   if (request.headers.get('x-debug') === '1') {
     return NextResponse.json({ expected, receivedSig, raw });
   }
+  const verified = timingSafeEqualHex(expected, receivedSig);
   if (!verified) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
