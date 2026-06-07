@@ -242,7 +242,7 @@ export function Header() {
           >
             {/* WhatsApp — icon only on mobile, icon + text on md+ */}
             <a
-              href="https://wa.me/message/globlearnedu"
+              href="https://wa.me/8615655031556?text=Hello%2C%20I%20want%20to%20know%20about%20studying%20in%20China%20with%20Globlearn%20Education."
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Chat on WhatsApp"
@@ -500,7 +500,7 @@ export function Header() {
               }}
             >
               <a
-                href="https://wa.me/message/globlearnedu"
+                href="https://wa.me/8615655031556?text=Hello%2C%20I%20want%20to%20know%20about%20studying%20in%20China%20with%20Globlearn%20Education."
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

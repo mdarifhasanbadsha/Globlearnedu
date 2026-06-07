@@ -29,7 +29,7 @@ const PROGRAMS = [
 ];
 
 const SOCIALS = [
-  { label: "WA", title: "WhatsApp", href: "https://wa.me/message/globlearnedu" },
+  { label: "WA", title: "WhatsApp", href: "https://wa.me/8615655031556?text=Hello%2C%20I%20want%20to%20know%20about%20studying%20in%20China%20with%20Globlearn%20Education." },
   { label: "WC", title: "WeChat", href: "#" },
   { label: "FB", title: "Facebook", href: "#" },
   { label: "IG", title: "Instagram", href: "#" },
@@ -154,7 +154,7 @@ export function Footer() {
             <div className={`${open.contact ? "block" : "hidden"} lg:block pb-6 lg:pb-0`}>
               {/* WhatsApp button */}
               <a
-                href="https://wa.me/message/globlearnedu"
+                href="https://wa.me/8615655031556?text=Hello%2C%20I%20want%20to%20contact%20Globlearn%20Education%20about%20studying%20in%20China."
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

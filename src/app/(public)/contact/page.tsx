@@ -18,7 +18,7 @@ export default function ContactPage() {
           <h2 className="font-semibold text-slate-900 mb-2">WhatsApp</h2>
           <p className="text-sm text-slate-600 mb-3">Fastest response — usually within minutes.</p>
           <a
-            href="https://wa.me/message/globlearnedu"
+            href="https://wa.me/8615655031556?text=Hello%2C%20I%20want%20to%20contact%20Globlearn%20Education%20about%20studying%20in%20China."
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block text-sm font-semibold text-white px-4 py-2 rounded-lg bg-[#1B3A6B] hover:opacity-90 transition-opacity"

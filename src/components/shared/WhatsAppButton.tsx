@@ -1,5 +1,11 @@
 import { MessageCircle } from "lucide-react";
 
+export const WA_NUMBER = "8615655031556";
+
+export function buildWALink(message: string) {
+  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 interface WhatsAppButtonProps {
   message?: string;
   label?: string;
@@ -8,13 +14,12 @@ interface WhatsAppButtonProps {
 }
 
 export default function WhatsAppButton({
-  message = "Hi, I'm interested in studying in China with Globlearn Education.",
+  message = "Hello, I want to know about studying in China with Globlearn Education.",
   label = "WhatsApp us — 24/7",
   fullWidth,
   size = "md",
 }: WhatsAppButtonProps) {
-  const encoded = encodeURIComponent(message);
-  const href = `https://wa.me/message/globlearnedu?text=${encoded}`;
+  const href = buildWALink(message);
   const sizes = {
     sm: "px-4 py-2 text-sm",
     md: "px-6 py-3 text-sm",

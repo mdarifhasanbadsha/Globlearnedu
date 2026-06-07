@@ -108,7 +108,7 @@ export default async function CountryPage({
                 <WhatsAppButton
                   size="lg"
                   label="Talk to an advisor"
-                  message={`Hi, I'm a student from ${data.name} interested in studying in China with Globlearn Education.`}
+                  message={`Hello, I am a student from ${data.name} and I want to know about studying in China. Please give me more information.`}
                 />
               </div>
             </div>

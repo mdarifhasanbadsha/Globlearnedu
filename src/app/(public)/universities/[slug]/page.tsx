@@ -107,7 +107,7 @@ export default async function UniversityPage({
                 <WhatsAppButton
                   size="lg"
                   label="Ask us on WhatsApp"
-                  message={`Hi, I'm interested in studying at ${uni.name} with Globlearn Education.`}
+                  message={`Hello, I want to know about ${uni.name}. Please give me more information about admission and scholarships.`}
                 />
               </div>
             </div>

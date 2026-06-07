@@ -235,7 +235,7 @@ export default async function BlogPostPage({
               </Link>
               <WhatsAppButton
                 label="WhatsApp our advisors"
-                message={`Hi, I read "${post.title}" on the Globlearn Education blog and want to learn more.`}
+                message={`Hello, I read your article "${post.title}" and I want to know more about studying in China with Globlearn Education.`}
               />
             </div>
           </div>
