@@ -5,13 +5,13 @@ import WhatsAppButton from "~/components/shared/WhatsAppButton";
 
 export const metadata: Metadata = {
   title: "About Us — Globlearn Education",
-  description: "Globlearn Education helps students from Africa, Middle East & South Asia access top Chinese universities. 500+ students placed, 99% visa guidance success, transparent fees.",
+  description: "Globlearn Education helps students from Africa, Middle East & South Asia access top Chinese universities. 5,000+ students placed, 99% visa guidance success, transparent fees.",
 };
 
 const STATS = [
-  { icon: <Users size={28} />, value: "500+", label: "Students Placed" },
+  { icon: <Users size={28} />, value: "5,000+", label: "Students Placed" },
   { icon: <GraduationCap size={28} />, value: "99%", label: "Visa Guidance Success*" },
-  { icon: <Globe size={28} />, value: "65+", label: "Countries Served" },
+  { icon: <Globe size={28} />, value: "80+", label: "Countries Served" },
   { icon: <Award size={28} />, value: "4 Types", label: "Scholarships We Handle" },
 ];
 
