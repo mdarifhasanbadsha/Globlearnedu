@@ -1,36 +1,36 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { getAuth, clerkClient } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-async function getRole(req: NextRequest) {
-  const auth = getAuth(req);
-  if (!auth.userId) return null;
-  const user = await clerkClient.users.getUser(auth.userId);
-  return user.publicMetadata?.role as string | null;
-}
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/about(.*)",
+  "/contact(.*)",
+  "/faq(.*)",
+  "/blog(.*)",
+  "/universities(.*)",
+  "/programs(.*)",
+  "/scholarships(.*)",
+  "/compare(.*)",
+  "/track(.*)",
+  "/partner(.*)",
+  "/refer-and-earn(.*)",
+  "/study-in-china-from-(.*)",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/api/webhooks(.*)",
+]);
 
-export async function middleware(req: NextRequest) {
-  const role = await getRole(req);
-  const { pathname } = req.nextUrl;
-
-  if (pathname.startsWith('/dashboard') && role !== 'student') {
-    return NextResponse.redirect(new URL('/sign-in', req.url));
+export default clerkMiddleware(async (auth, req) => {
+  if (isPublicRoute(req)) return NextResponse.next();
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
   }
-
-  if (pathname.startsWith('/partner') && role !== 'partner') {
-    return NextResponse.redirect(new URL('/sign-in', req.url));
-  }
-
-  if (pathname.startsWith('/staff') && role !== 'staff' && role !== 'admin') {
-    return NextResponse.redirect(new URL('/sign-in', req.url));
-  }
-
-  if (pathname.startsWith('/admin') && role !== 'admin') {
-    return NextResponse.redirect(new URL('/sign-in', req.url));
-  }
-
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/partner/:path*', '/staff/:path*', '/admin/:path*', '/api/:path*'],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)",
+  ],
 };
