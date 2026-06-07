@@ -3,7 +3,6 @@ import Link from "next/link";
 export function FinalCTA() {
   return (
     <section className="py-20 relative overflow-hidden" style={{ backgroundColor: "#0A1628" }}>
-      {/* Background decoration */}
       <div
         className="absolute inset-0 hero-grid opacity-40 pointer-events-none"
       />
@@ -24,18 +23,18 @@ export function FinalCTA() {
             style={{ backgroundColor: "#FFD700" }}
           />
           <span className="text-white/70 text-xs font-semibold tracking-wide">
-            Applications Open for 2025 Intake
+            Applications Open for 2026–2027 Intake
           </span>
         </div>
 
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-4">
+        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-4">
           Ready to Start Your{" "}
           <span className="gradient-text">China Journey?</span>
         </h2>
 
-        <p className="text-white/60 text-base max-w-xl mx-auto mb-8 leading-relaxed">
-          Join 500+ students from 30+ countries who chose Globlearn Education to guide them
-          to top Chinese universities. Transparent fees. Expert support. All scholarship types.
+        <p className="text-white/60 text-sm sm:text-base max-w-xl mx-auto mb-8 leading-relaxed">
+          Join 5,000+ students from 80+ countries who chose Globlearn Education to guide them
+          to top Chinese universities. Transparent fees. Expert support. All four scholarship types.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
@@ -57,7 +56,7 @@ export function FinalCTA() {
           </Link>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-6 text-white/40 text-xs">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-white/40 text-xs">
           {[
             "No hidden fees",
             "CSC · University · Provincial · Self-sponsored",

@@ -2,25 +2,25 @@ import Link from "next/link";
 
 const POSTS = [
   {
-    slug: "csc-scholarship-2025-complete-guide",
+    slug: "csc-scholarship-2026-complete-guide",
     category: "Scholarships",
     categoryColor: "#C8102E",
-    title: "CSC Scholarship 2025: Complete Application Guide for International Students",
+    title: "CSC Scholarship 2026–2027: Complete Application Guide for International Students",
     excerpt:
       "Everything you need to know about China Scholarship Council (CSC) applications — eligibility, required documents, deadlines and expert tips to maximise your chances.",
     readingTime: 8,
-    date: "Jan 15, 2025",
+    date: "Jan 15, 2026",
     author: "GloblearnEdu Team",
   },
   {
     slug: "top-universities-china-international-students",
     category: "Universities",
     categoryColor: "#1B3A6B",
-    title: "Top 10 Universities in China for International Students 2025",
+    title: "Top 10 Universities in China for International Students 2026",
     excerpt:
       "A comprehensive ranking of the best Chinese universities for international students, covering academics, campus life, scholarship availability and English-taught programs.",
     readingTime: 6,
-    date: "Jan 22, 2025",
+    date: "Jan 22, 2026",
     author: "GloblearnEdu Team",
   },
   {
@@ -31,14 +31,14 @@ const POSTS = [
     excerpt:
       "A practical guide to applying for your Chinese student visa — required documents, embassy procedures, common mistakes to avoid and what Globlearn Education's 99% guidance record means for you.",
     readingTime: 7,
-    date: "Feb 3, 2025",
+    date: "Feb 3, 2026",
     author: "GloblearnEdu Team",
   },
 ];
 
 export function BlogPreview() {
   return (
-    <section className="py-16" style={{ backgroundColor: "#F8FAFF" }}>
+    <section className="py-12 lg:py-16" style={{ backgroundColor: "#F8FAFF" }}>
       <div className="mx-auto max-w-7xl px-4 lg:px-6">
         <div className="flex items-end justify-between mb-10">
           <div>
@@ -49,7 +49,7 @@ export function BlogPreview() {
               From Our Blog
             </p>
             <h2
-              className="text-2xl sm:text-3xl font-black"
+              className="text-2xl lg:text-4xl font-black"
               style={{ color: "#1B3A6B" }}
             >
               Guides &amp; Resources
@@ -74,7 +74,6 @@ export function BlogPreview() {
               href={`/blog/${post.slug}`}
               className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 flex flex-col overflow-hidden group"
             >
-              {/* Placeholder image area */}
               <div
                 className="h-40 flex items-center justify-center text-white/20 text-6xl font-black"
                 style={{ backgroundColor: post.categoryColor }}

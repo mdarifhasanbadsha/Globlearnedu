@@ -8,7 +8,7 @@ const SCHOLARSHIPS = [
     description:
       "China Scholarship Council (CSC) is the most prestigious government scholarship covering full tuition, accommodation and a monthly living stipend.",
     covers: ["Full Tuition", "Accommodation", "Monthly Stipend", "Medical Insurance"],
-    deadline: "March 2025",
+    deadline: "March 2027",
     competition: "Highly Competitive",
   },
   {
@@ -28,7 +28,7 @@ const SCHOLARSHIPS = [
     description:
       "Provincial government scholarships are region-specific awards with less competition than CSC. Strong coverage for eligible applicants.",
     covers: ["Partial/Full Tuition", "Living Allowance (varies)", "Provincial Support"],
-    deadline: "April–May 2025",
+    deadline: "April–May 2027",
     competition: "Low–Moderate",
   },
   {
@@ -45,7 +45,7 @@ const SCHOLARSHIPS = [
 
 export function ScholarshipSection() {
   return (
-    <section className="py-16" style={{ backgroundColor: "#F8FAFF" }}>
+    <section className="py-12 lg:py-16" style={{ backgroundColor: "#F8FAFF" }}>
       <div className="mx-auto max-w-7xl px-4 lg:px-6">
         <div className="text-center mb-10">
           <p
@@ -55,7 +55,7 @@ export function ScholarshipSection() {
             Scholarship Options
           </p>
           <h2
-            className="text-2xl sm:text-3xl font-black"
+            className="text-2xl lg:text-4xl font-black"
             style={{ color: "#1B3A6B" }}
           >
             Every Student Has a Pathway
@@ -126,7 +126,7 @@ export function ScholarshipSection() {
         <p className="text-center text-xs text-slate-400">
           Not sure which scholarship suits you?{" "}
           <Link href="/contact" className="font-semibold hover:underline" style={{ color: "#1B3A6B" }}>
-            Talk to our team — it's free
+            Talk to our team — it&apos;s free
           </Link>
         </p>
       </div>

@@ -33,7 +33,7 @@ const TESTIMONIALS = [
 
 export function TestimonialsSection() {
   return (
-    <section className="py-16 bg-white">
+    <section className="py-12 lg:py-16 bg-white">
       <div className="mx-auto max-w-7xl px-4 lg:px-6">
         <div className="text-center mb-10">
           <p
@@ -43,7 +43,7 @@ export function TestimonialsSection() {
             Student Stories
           </p>
           <h2
-            className="text-2xl sm:text-3xl font-black"
+            className="text-2xl lg:text-4xl font-black"
             style={{ color: "#1B3A6B" }}
           >
             Real Students. Real Results.
@@ -53,13 +53,13 @@ export function TestimonialsSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Mobile: horizontal scroll; Desktop: grid */}
+        <div className="flex md:grid md:grid-cols-3 gap-4 md:gap-6 overflow-x-auto scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
           {TESTIMONIALS.map((t) => (
             <div
               key={t.name}
-              className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col"
+              className="flex-shrink-0 w-[85vw] md:w-auto bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-5 md:p-6 flex flex-col"
             >
-              {/* Quote */}
               <div
                 className="text-3xl font-black leading-none mb-3"
                 style={{ color: "#C8102E" }}
@@ -70,7 +70,6 @@ export function TestimonialsSection() {
                 {t.quote}
               </p>
 
-              {/* Attribution */}
               <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm flex-shrink-0"

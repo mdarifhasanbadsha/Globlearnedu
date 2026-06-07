@@ -6,9 +6,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <Header />
-      <main className="pt-[68px] pb-[60px] lg:pb-0 min-h-screen">
-        {children}
-      </main>
+      <main className="pt-[68px] pb-16 md:pb-0 min-h-screen">{children}</main>
       <Footer />
       <MobileBottomBar />
     </>

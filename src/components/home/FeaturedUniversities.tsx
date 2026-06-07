@@ -78,7 +78,7 @@ export function FeaturedUniversities() {
           </p>
           <h2
             style={{
-              fontSize: "clamp(1.5rem, 3vw, 2rem)",
+              fontSize: "clamp(1.5rem, 3vw, 2.5rem)",
               fontWeight: "900",
               color: "#1B3A6B",
               marginBottom: "8px",
@@ -92,16 +92,8 @@ export function FeaturedUniversities() {
           </p>
         </div>
 
-        {/* Grid — explicit CSS grid, not relying on Tailwind classes */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "20px",
-            marginBottom: "32px",
-          }}
-          className="lg:grid-cols-3"
-        >
+        {/* Responsive grid — Tailwind classes only (no inline gridTemplateColumns) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
           {UNIVERSITIES.map((uni) => (
             <div
               key={uni.slug}
@@ -138,21 +130,10 @@ export function FeaturedUniversities() {
                   >
                     {uni.name}
                   </h3>
-                  <p
-                    style={{
-                      color: "rgba(255,255,255,0.55)",
-                      fontSize: "12px",
-                    }}
-                  >
+                  <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>
                     {uni.city}
                   </p>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "6px",
-                      marginTop: "10px",
-                    }}
-                  >
+                  <div style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
                     <span
                       style={{
                         fontSize: "10px",
@@ -227,14 +208,7 @@ export function FeaturedUniversities() {
                   >
                     Programs
                   </p>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "4px",
-                      marginBottom: "12px",
-                    }}
-                  >
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "12px" }}>
                     {uni.programs.map((p) => (
                       <span
                         key={p}
@@ -263,9 +237,7 @@ export function FeaturedUniversities() {
                   >
                     Scholarships
                   </p>
-                  <div
-                    style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}
-                  >
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                     {uni.scholarship.map((s) => {
                       const b = BADGE[s] ?? { bg: "#f1f5f9", color: "#475569" };
                       return (
@@ -333,11 +305,7 @@ export function FeaturedUniversities() {
               stroke="currentColor"
               strokeWidth={2}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </Link>
         </div>

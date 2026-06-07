@@ -10,15 +10,8 @@ const STATS = [
 export function HeroSection() {
   return (
     <section
-      className="hero-grid"
-      style={{
-        backgroundColor: "#0A1628",
-        minHeight: "92vh",
-        display: "flex",
-        alignItems: "center",
-        position: "relative",
-        overflow: "hidden",
-      }}
+      className="hero-grid min-h-screen flex items-center relative overflow-hidden"
+      style={{ backgroundColor: "#0A1628" }}
     >
       {/* Top glow */}
       <div
@@ -35,17 +28,8 @@ export function HeroSection() {
         }}
       />
 
-      <div
-        style={{
-          position: "relative",
-          maxWidth: "1100px",
-          margin: "0 auto",
-          padding: "80px 24px",
-          textAlign: "center",
-          width: "100%",
-        }}
-      >
-        {/* Eyebrow */}
+      <div className="relative w-full max-w-5xl mx-auto px-4 lg:px-6 py-16 lg:py-24 text-center">
+        {/* Badge */}
         <div
           style={{
             display: "inline-flex",
@@ -54,7 +38,7 @@ export function HeroSection() {
             border: "1px solid rgba(255,255,255,0.15)",
             borderRadius: "999px",
             padding: "6px 16px",
-            marginBottom: "28px",
+            marginBottom: "24px",
           }}
         >
           <span
@@ -76,59 +60,39 @@ export function HeroSection() {
               letterSpacing: "0.03em",
             }}
           >
-            Admission 2025 — Now Open
+            Admission 2026–2027 — Now Open
           </span>
         </div>
 
         {/* Headline */}
         <h1
-          style={{
-            color: "white",
-            fontSize: "clamp(2.2rem, 6vw, 4.2rem)",
-            fontWeight: "900",
-            lineHeight: 1.05,
-            letterSpacing: "-0.02em",
-            marginBottom: "24px",
-            maxWidth: "900px",
-            marginLeft: "auto",
-            marginRight: "auto",
-          }}
+          className="text-3xl sm:text-4xl lg:text-6xl font-black text-white leading-tight mb-6"
+          style={{ letterSpacing: "-0.02em" }}
         >
-          Study in China with{" "}
-          <span className="gradient-text">Full Scholarship</span>
-          {" "}Support
+          Your Future Begins in China{" "}
+          <span className="gradient-text">— Start Today.</span>
         </h1>
 
         {/* Subheadline */}
         <p
-          style={{
-            color: "rgba(255,255,255,0.62)",
-            fontSize: "clamp(1rem, 2.5vw, 1.15rem)",
-            lineHeight: 1.7,
-            maxWidth: "640px",
-            margin: "0 auto 40px",
-          }}
+          className="text-sm sm:text-lg text-white/60 leading-relaxed max-w-2xl mx-auto mb-10"
         >
-          Globlearn Education empowers students from Africa, Middle East &amp; South Asia
-          to access world-class Chinese universities. Transparent fees. Expert visa guidance.
-          All four scholarship types — equal support for every pathway.
+          Globlearn Education has helped{" "}
+          <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>5,000+ students</span>{" "}
+          from{" "}
+          <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>80+ countries</span>{" "}
+          gain admission to China&apos;s top universities — with expert scholarship guidance
+          and end-to-end support.
         </p>
 
         {/* CTAs */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "12px",
-            justifyContent: "center",
-            marginBottom: "56px",
-          }}
-        >
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center mb-12">
           <Link
             href="/universities"
             style={{
               display: "inline-flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "8px",
               padding: "14px 32px",
               borderRadius: "10px",
@@ -160,6 +124,7 @@ export function HeroSection() {
             style={{
               display: "inline-flex",
               alignItems: "center",
+              justifyContent: "center",
               padding: "14px 32px",
               borderRadius: "10px",
               border: "1.5px solid rgba(255,255,255,0.25)",
@@ -173,23 +138,18 @@ export function HeroSection() {
           </Link>
         </div>
 
-        {/* Stats row */}
+        {/* Stats row — 2×2 on mobile, 4×1 on desktop */}
         <div
+          className="grid grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto rounded-2xl overflow-hidden"
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            maxWidth: "720px",
-            margin: "0 auto",
             border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "16px",
-            overflow: "hidden",
           }}
         >
           {STATS.map((stat, i) => (
             <div
               key={stat.label}
               style={{
-                padding: "20px 16px",
+                padding: "20px 12px",
                 textAlign: "center",
                 backgroundColor: "rgba(255,255,255,0.03)",
                 borderRight:
@@ -200,7 +160,7 @@ export function HeroSection() {
             >
               <div
                 style={{
-                  fontSize: "28px",
+                  fontSize: "clamp(1.4rem, 4vw, 1.75rem)",
                   fontWeight: "900",
                   color: "white",
                   lineHeight: 1,
@@ -211,7 +171,7 @@ export function HeroSection() {
               </div>
               <div
                 style={{
-                  fontSize: "11px",
+                  fontSize: "10px",
                   fontWeight: "500",
                   color: "rgba(255,255,255,0.45)",
                   textTransform: "uppercase",
@@ -227,7 +187,7 @@ export function HeroSection() {
         {/* Disclaimer */}
         <p
           style={{
-            marginTop: "20px",
+            marginTop: "16px",
             color: "rgba(255,255,255,0.25)",
             fontSize: "11px",
           }}

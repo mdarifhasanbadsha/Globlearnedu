@@ -1,7 +1,7 @@
 const NOTICES = [
-  "🎓 2025 Admission Now Open — Apply before March 31 for CSC Scholarship",
-  "🏛️ University Scholarship applications open — Rolling basis, limited seats",
-  "🌍 Students from 30+ countries guided successfully to Chinese universities",
+  "🎓 2026–2027 CSC Scholarship applications now open — deadline March 15, 2027",
+  "🏛️ University Scholarship applications open — Rolling basis, limited seats available",
+  "🌍 Students from 80+ countries guided successfully to Chinese universities",
   "📋 99% visa guidance success rate — Expert team ready to assist you",
   "💰 Transparent fees — Affordable cost, no hidden charges, ever",
 ];
@@ -21,7 +21,7 @@ export function NoticeBanner() {
             className="inline-flex items-center gap-8 text-white/90 text-xs font-medium px-6"
           >
             {notice}
-            <span style={{ color: "#FFD700" }}>◆</span>
+            <span style={{ color: "#FFD700" }}>✦</span>
           </span>
         ))}
       </div>
