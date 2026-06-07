@@ -1,29 +1,20 @@
-import { db } from '~/lib/db';
-import { notifications } from '~/lib/db/schema';
-import { sendEmail } from '~/lib/email';
+import { db } from "@/lib/db";
+import { notifications } from "@/lib/db/schema";
+import { sendEmail } from "@/lib/email";
 
-type NotificationType =
-  | 'status_update'
-  | 'document_request'
-  | 'interview_scheduled'
-  | 'interview_reminder'
-  | 'pre_admission'
-  | 'admitted'
-  | 'payment_request'
-  | 'general';
-
-export async function sendNotification(applicationId: number, recipientType: 'student' | 'partner', recipientId: number, type: NotificationType, data: { title: string; message: string; email?: string; }) {
+export async function sendNotification(
+  userId: string,
+  applicationId: string | null,
+  data: { title: string; message: string; email?: string }
+) {
   await db.insert(notifications).values({
-    application_id: applicationId,
-    application_university_id: null,
-    recipient_type: recipientType,
-    recipient_id: recipientId,
-    notification_type: type,
+    userId,
+    applicationId: applicationId ?? undefined,
     title: data.title,
     message: data.message,
-    is_read: false,
-    sent_at: new Date(),
-    created_at: new Date(),
+    channel: "in_portal",
+    isRead: false,
+    sentAt: new Date(),
   });
 
   if (data.email) {
