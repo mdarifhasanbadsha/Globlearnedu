@@ -54,6 +54,10 @@ export async function POST(request: Request) {
 
   const expected = await computeHmacHex(secret, raw);
   const verified = timingSafeEqualHex(expected, receivedSig);
+  // If debug header present, return signatures and raw body for troubleshooting
+  if (request.headers.get('x-debug') === '1') {
+    return NextResponse.json({ expected, receivedSig, raw });
+  }
   if (!verified) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
