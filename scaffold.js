@@ -120,7 +120,7 @@ declare module "*.module.sass";
 `],
   ['next.config.mjs', `const nextConfig = {
   experimental: {
-    serverActions: true,
+    serverActions: {},
   },
   reactStrictMode: true,
 };
