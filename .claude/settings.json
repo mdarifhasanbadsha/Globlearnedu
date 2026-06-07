@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(dir \"src\\\\app\\\\\\(public\\)\\\\layout.tsx\" \"src\\\\app\\\\layout.tsx\" \"src\\\\components\\\\layout\\\\Header.tsx\" \"src\\\\components\\\\layout\\\\MobileBottomBar.tsx\")"
     ]
   }
 }
