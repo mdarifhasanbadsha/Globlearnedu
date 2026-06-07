@@ -1,16 +1,43 @@
 {
-  "name": "globlearn-education",
-  "version": "1.0.0",
-  "description": "Globlearn Education - Study in China Agency",
-  "main": "server.js",
+  "name": "globlearnedu",
+  "private": true,
+  "version": "0.1.0",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "opennextjs-cloudflare build && wrangler dev",
+    "deploy": "opennextjs-cloudflare build && wrangler deploy",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "next": "^15.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@opennextjs/cloudflare": "^1.0.0",
+    "@clerk/nextjs": "^5.0.0",
+    "@neondatabase/serverless": "^1.0.0",
+    "drizzle-orm": "^0.45.2",
+    "resend": "^1.0.0",
+    "stripe": "^12.0.0",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "framer-motion": "^11.0.0",
+    "date-fns": "^2.0.0",
+    "zod": "^3.0.0",
+    "@tanstack/react-query": "^5.0.0"
   },
-  "engines": {
-    "node": ">=16.0.0"
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "latest",
+    "tailwindcss": "^4.0.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.0.0",
+    "wrangler": "^4.0.0",
+    "drizzle-kit": "^0.31.10",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0"
   }
 }
