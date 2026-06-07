@@ -28,13 +28,17 @@ export async function generateMetadata({
   const data = countriesData[country];
   if (!data) return { title: "Country Not Found" };
   return {
-    title: `Study in China from ${data.name} 2026`,
-    description: `${data.studentsInChina} students from ${data.name} already study in China. Discover programs, scholarships, and visa guidance for ${data.name}n students with Globlearn Education.`,
+    title: `Study in China from ${data.name} 2026 — Scholarships, MBBS & Universities`,
+    description: `${data.studentsInChina} students from ${data.name} study in China. Complete 2026 guide: CSC scholarship, MBBS programs, top universities, visa from ${data.embassyCity} Embassy, and step-by-step application with Globlearn Education.`,
     keywords: [
       `study in China from ${data.name}`,
-      `China scholarship ${data.name}`,
+      `China scholarship ${data.name} 2026`,
       `CSC scholarship ${data.name} 2026`,
-      `Chinese university ${data.name} students`,
+      `MBBS in China for ${data.name} students`,
+      `Chinese university admission ${data.name}`,
+      `${data.name} students China visa`,
+      `study abroad China ${data.name} 2026`,
+      `Chinese government scholarship ${data.name}`,
     ],
   };
 }
@@ -87,8 +91,8 @@ export default async function CountryPage({
               </div>
 
               <h1 className="text-4xl md:text-5xl font-black text-white mb-5 leading-tight">
-                Study in China<br />
-                from {data.name}
+                Study in China from {data.name}<br />
+                <span className="text-[#29ABE2] text-3xl md:text-4xl">2026 Complete Guide</span>
               </h1>
               <p className="text-white/70 text-lg mb-8 max-w-xl leading-relaxed">
                 {data.tagline}
@@ -137,17 +141,47 @@ export default async function CountryPage({
                 Why China
               </p>
               <h2 className="text-2xl font-black text-[#1B3A6B] mb-5">
-                Why students from {data.name} choose China
+                Why {data.name} Students Choose Chinese Universities in 2026
               </h2>
               <p className="text-gray-600 leading-relaxed mb-8">{data.description}</p>
 
-              <div className="space-y-3">
+              <div className="space-y-3 mb-8">
                 {data.highlights.map((h) => (
                   <div key={h} className="flex items-start gap-3">
                     <CheckCircle2 size={18} className="text-[#C8102E] mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-gray-600 leading-relaxed">{h}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Quick Facts — optimised for featured snippets */}
+              <div className="rounded-2xl border border-gray-200 overflow-hidden">
+                <div className="px-5 py-3" style={{ backgroundColor: "#1B3A6B" }}>
+                  <p className="text-xs font-bold text-white uppercase tracking-widest">
+                    Quick Facts — Study in China from {data.name} 2026
+                  </p>
+                </div>
+                <table className="w-full text-sm">
+                  <tbody>
+                    {[
+                      { label: "Students from " + data.name + " in China", value: data.studentsInChina },
+                      { label: "Top programs", value: data.topPrograms.map(p => p.name).slice(0, 3).join(", ") },
+                      { label: "Scholarship types", value: "CSC, University, Provincial, Self-sponsored" },
+                      { label: "Tuition range", value: "¥14,000–¥35,000 / year" },
+                      { label: "Living costs", value: "¥1,200–¥2,500 / month" },
+                      { label: "Visa type", value: "X1 Student Visa" },
+                      { label: "Embassy for visa", value: data.embassyCity + " (Chinese Embassy)" },
+                      { label: "Visa guidance success", value: "99% (evidence-based, not a guarantee)" },
+                      { label: "Language of instruction", value: "English (most programs) or Mandarin" },
+                      { label: "Popular cities", value: data.popularCities.join(", ") },
+                    ].map((row, i) => (
+                      <tr key={row.label} className={i % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                        <td className="px-5 py-2.5 font-semibold text-[#1B3A6B] w-1/2">{row.label}</td>
+                        <td className="px-5 py-2.5 text-gray-600">{row.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -168,8 +202,11 @@ export default async function CountryPage({
               </div>
 
               <div className="bg-[#FFF8EC] rounded-2xl p-6 border border-[#FFD700]/30">
-                <p className="text-xs font-bold tracking-widest uppercase text-[#92610A] mb-4">
-                  Visa Notes
+                <p className="text-xs font-bold tracking-widest uppercase text-[#92610A] mb-1">
+                  X1 Visa — {data.name}
+                </p>
+                <p className="text-sm font-bold text-[#92610A] mb-4">
+                  Chinese Embassy, {data.embassyCity}
                 </p>
                 <ul className="space-y-2">
                   {data.visaNotes.map((note) => (
@@ -180,7 +217,7 @@ export default async function CountryPage({
                   ))}
                 </ul>
                 <p className="text-[10px] text-[#92610A]/70 mt-3 leading-relaxed">
-                  Visa decisions are made by the Chinese Embassy. Globlearn Education provides preparation guidance only.
+                  Visa decisions are made by the Chinese Embassy in {data.embassyCity}. Globlearn Education provides preparation guidance only.
                 </p>
               </div>
             </div>
@@ -195,7 +232,7 @@ export default async function CountryPage({
             Programs
           </p>
           <h2 className="text-2xl font-black text-[#1B3A6B] mb-3">
-            Most Popular Programs for {data.name}n Students
+            Most Popular Programs for Students from {data.name} in 2026
           </h2>
           <p className="text-gray-500 text-sm mb-8">
             Click any program to see universities, tuition, requirements, and scholarships.
@@ -242,7 +279,7 @@ export default async function CountryPage({
             Funding
           </p>
           <h2 className="text-2xl font-black text-[#1B3A6B] mb-8">
-            Scholarships for {data.name}n Students
+            CSC Scholarship 2026 for Students from {data.name}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
@@ -301,7 +338,7 @@ export default async function CountryPage({
             Your Journey
           </p>
           <h2 className="text-2xl font-black text-white mb-10">
-            From {data.name} to China — 5 Steps
+            How to Apply to a Chinese University from {data.name} — 5 Steps
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-6">
             {JOURNEY_STEPS.map((s) => (
@@ -328,7 +365,7 @@ export default async function CountryPage({
               FAQ
             </p>
             <h2 className="text-2xl font-black text-[#1B3A6B] mb-8 text-center">
-              Questions from {data.name}n Students
+              Frequently Asked Questions — Study in China from {data.name}
             </h2>
             <div className="space-y-3">
               {data.faqs.map((faq, i) => (
