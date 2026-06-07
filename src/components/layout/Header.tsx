@@ -240,16 +240,17 @@ export function Header() {
               justifyContent: "flex-end",
             }}
           >
-            {/* WhatsApp — desktop (md+) with text */}
+            {/* WhatsApp — icon only on mobile, icon + text on md+ */}
             <a
               href="https://wa.me/message/globlearnedu"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:flex"
+              aria-label="Chat on WhatsApp"
               style={{
+                display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                padding: "8px 14px",
+                padding: "8px 12px",
                 borderRadius: "8px",
                 backgroundColor: "#25D366",
                 color: "white",
@@ -261,29 +262,7 @@ export function Header() {
               }}
             >
               {WA_ICON}
-              WhatsApp
-            </a>
-
-            {/* WhatsApp — mobile icon only (below md) */}
-            <a
-              href="https://wa.me/message/globlearnedu"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex md:hidden"
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                width: "40px",
-                height: "40px",
-                borderRadius: "8px",
-                backgroundColor: "#25D366",
-                color: "white",
-                textDecoration: "none",
-                flexShrink: 0,
-              }}
-              aria-label="WhatsApp"
-            >
-              {WA_ICON}
+              <span className="hidden md:inline">WhatsApp</span>
             </a>
 
             {/* Login / UserButton — desktop only */}

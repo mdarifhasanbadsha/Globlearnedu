@@ -735,6 +735,86 @@ export const blogPosts: BlogPost[] = [
   },
 
   {
+    slug: "china-scholarship-timeline-2026",
+    title: "China Scholarship Timeline 2026: Month-by-Month Application Calendar",
+    excerpt:
+      "Miss the CSC deadline and you wait a full year. This month-by-month calendar shows exactly when to act — from choosing your university in September to receiving your Admission Notice in July.",
+    author: "GloblearnEdu Team",
+    authorRole: "Globlearn Education — Scholarship Advisors",
+    date: "2026-03-28",
+    readTime: "6 min read",
+    category: "Scholarships",
+    tags: ["CSC Scholarship", "Timeline", "Application Calendar", "Deadlines"],
+    featured: false,
+    content: [
+      {
+        type: "paragraph",
+        text: "The single biggest reason students miss the CSC scholarship is not poor grades or weak documents — it is timing. The application window opens and closes within a narrow few months, and universities process applications on a rolling basis. This calendar gives you every critical date for the 2026–2027 intake cycle.",
+      },
+      {
+        type: "callout",
+        text: "This calendar covers the September 2027 intake. If you are targeting September 2026, you are very late — contact Globlearn Education immediately to assess your options for late-cycle applications.",
+        variant: "warning",
+      },
+      {
+        type: "h2",
+        text: "Full Application Calendar: September 2026 → September 2027",
+      },
+      {
+        type: "table",
+        headers: ["Month", "What to Do", "Deadline Risk"],
+        rows: [
+          ["Sep – Oct 2026", "Research programs, shortlist 3–5 universities, contact potential PhD supervisors", "Low — preparation phase"],
+          ["Nov 2026", "Request academic transcripts, arrange notarisation and certified translations", "Low — but takes 4–8 weeks"],
+          ["Dec 2026", "Draft study plan / research proposal; request recommendation letters from professors", "Medium — references take time"],
+          ["Jan 2027", "CSC Online Application System opens (studyinchina.csc.edu.cn) — register and begin", "HIGH — act now"],
+          ["Feb 2027", "Complete medical examination at certified hospital; get police clearance if required", "HIGH — 2–4 weeks processing"],
+          ["Mar 2027", "Submit CSC online application; post documents to university international office", "CRITICAL — most uni deadlines"],
+          ["Apr 2027", "University internal review; follow up with international admissions office", "Critical — respond to requests fast"],
+          ["May 2027", "Last chance for late university scholarship applications; provincial scholarship window", "High — last opportunity"],
+          ["Jun – Jul 2027", "CSC results announced; Admission Notice and JW form issued to successful applicants", "Waiting phase"],
+          ["Aug 2027", "Apply for X1 student visa at Chinese Embassy in your country", "Act within 1–2 weeks of receiving Notice"],
+          ["Sep 2027", "Arrive in China; register at university; apply for Residence Permit within 30 days", "CRITICAL — 30-day legal requirement"],
+        ],
+      },
+      {
+        type: "h2",
+        text: "Key Deadlines You Cannot Miss",
+      },
+      {
+        type: "ul",
+        items: [
+          "January 2027: CSC application system opens — start your profile immediately",
+          "March 15–31, 2027: Most 985 universities close their CSC nomination window",
+          "March 31, 2027: Hard CSC submission deadline for most institutions",
+          "May 31, 2027: Last date for most provincial scholarship applications",
+          "Within 30 days of arrival: Residence Permit application — this is a legal requirement, not optional",
+        ],
+      },
+      {
+        type: "h2",
+        text: "What Globlearn Education Does at Each Stage",
+      },
+      {
+        type: "ul",
+        items: [
+          "Sep–Nov: University and program matching based on your profile, budget, and career goal",
+          "Dec–Jan: Study plan and research proposal writing support; document checklist and review",
+          "Feb–Mar: Full CSC application submission support; university, provincial, and university scholarship simultaneous applications",
+          "Apr–May: Follow-up with universities; respond to admission queries; prepare for visa",
+          "Jun–Jul: Visa document preparation; pre-departure guidance",
+          "Aug–Sep: Arrival support, Residence Permit guidance, settlement assistance",
+        ],
+      },
+      {
+        type: "callout",
+        text: "Start in September — not January. Students who contact us in September consistently have stronger applications, more time to polish their documents, and higher scholarship success rates than students who contact us in February.",
+        variant: "tip",
+      },
+    ],
+  },
+
+  {
     slug: "bachelors-degree-china-worth-it-2026",
     title: "Bachelor's Degree in China: Is It Worth It for International Students in 2026?",
     excerpt:

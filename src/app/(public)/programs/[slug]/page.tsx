@@ -30,7 +30,7 @@ export async function generateMetadata({
   const program = programsData[slug];
   if (!program) return { title: "Program Not Found" };
   return {
-    title: `${program.name} in China | Globlearn Education`,
+    title: `${program.name} in China`,
     description: program.tagline,
   };
 }

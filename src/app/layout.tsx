@@ -18,11 +18,11 @@ export const metadata: Metadata = {
     "Globlearn Education helps students from Africa, Middle East & South Asia study at top Chinese universities with CSC, University & Provincial scholarships. 99% visa guidance success.",
   keywords: [
     "study in China",
-    "CSC scholarship 2025",
+    "CSC scholarship 2026",
     "China university admission",
     "Globlearn Education",
     "MBBS China",
-    "scholarship China 2025",
+    "scholarship China 2026",
   ],
   metadataBase: new URL("https://globlearnedu.com"),
   openGraph: {

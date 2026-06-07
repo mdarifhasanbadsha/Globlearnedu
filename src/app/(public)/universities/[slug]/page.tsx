@@ -30,7 +30,7 @@ export async function generateMetadata({
   const uni = universitiesData[slug];
   if (!uni) return { title: "University Not Found" };
   return {
-    title: `${uni.name} | Study in China | Globlearn Education`,
+    title: `${uni.name} | Study in China`,
     description: uni.tagline,
   };
 }

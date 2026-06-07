@@ -20,7 +20,7 @@ export async function generateMetadata({
   const post = getPostBySlug(slug);
   if (!post) return { title: "Article Not Found" };
   return {
-    title: `${post.title} | Globlearn Education Blog`,
+    title: `${post.title} | Blog`,
     description: post.excerpt,
   };
 }

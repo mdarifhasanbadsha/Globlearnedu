@@ -18,14 +18,14 @@ const CITIES = [
 ];
 
 const PROGRAMS = [
-  { label: "MBBS / Medicine", href: "/programs" },
-  { label: "Bachelor's Degree", href: "/programs" },
-  { label: "Master's Degree", href: "/programs" },
-  { label: "PhD Programs", href: "/programs" },
-  { label: "Chinese Language", href: "/programs" },
-  { label: "Diploma / Vocational", href: "/programs" },
-  { label: "MBA & Business", href: "/programs" },
-  { label: "Artificial Intelligence", href: "/programs" },
+  { label: "MBBS / Medicine", href: "/programs/mbbs-medicine" },
+  { label: "Bachelor's Degree", href: "/programs/bachelors-degree" },
+  { label: "Master's Degree", href: "/programs/masters-degree" },
+  { label: "PhD Programs", href: "/programs/phd-program" },
+  { label: "Chinese Language", href: "/programs/chinese-language" },
+  { label: "Diploma / Vocational", href: "/programs/diploma-vocational" },
+  { label: "MBA & Business", href: "/programs/mba-business" },
+  { label: "Artificial Intelligence", href: "/programs/artificial-intelligence" },
 ];
 
 const SOCIALS = [
