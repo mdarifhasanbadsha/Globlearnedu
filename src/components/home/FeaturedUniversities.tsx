@@ -14,12 +14,12 @@ const UNIVERSITIES = [
     name: "Wuhan University",
     city: "Wuhan, Hubei",
     qsRank: 220,
-    programs: ["MBBS", "Computer Science", "Law", "Environmental Science"],
+    programs: ["MBBS", "Computer Science", "Law", "Environment"],
     scholarship: ["CSC", "University", "Provincial"],
   },
   {
     slug: "huazhong-university-science-technology",
-    name: "Huazhong Univ. of Sci. & Tech.",
+    name: "HUST",
     city: "Wuhan, Hubei",
     qsRank: 275,
     programs: ["Engineering", "Medicine", "Business", "CS"],
@@ -30,7 +30,7 @@ const UNIVERSITIES = [
     name: "Fudan University",
     city: "Shanghai",
     qsRank: 55,
-    programs: ["Medicine", "Economics", "International Studies", "Science"],
+    programs: ["Medicine", "Economics", "Intl Studies", "Science"],
     scholarship: ["CSC", "University"],
   },
   {
@@ -38,7 +38,7 @@ const UNIVERSITIES = [
     name: "Zhejiang University",
     city: "Hangzhou",
     qsRank: 44,
-    programs: ["Engineering", "Agriculture", "Medicine", "Management"],
+    programs: ["Engineering", "Agriculture", "Medicine", "Mgmt"],
     scholarship: ["CSC", "University"],
   },
   {
@@ -51,108 +51,256 @@ const UNIVERSITIES = [
   },
 ];
 
-const SCHOLARSHIP_COLORS: Record<string, string> = {
-  CSC: "bg-red-50 text-[#C8102E]",
-  University: "bg-blue-50 text-[#1B3A6B]",
-  Provincial: "bg-sky-50 text-[#1a7fa8]",
-  "Self-sponsored": "bg-yellow-50 text-[#8a6f00]",
+const BADGE: Record<string, { bg: string; color: string }> = {
+  CSC: { bg: "rgba(200,16,46,0.1)", color: "#C8102E" },
+  University: { bg: "rgba(27,58,107,0.1)", color: "#1B3A6B" },
+  Provincial: { bg: "rgba(41,171,226,0.12)", color: "#1a7fa8" },
+  "Self-sponsored": { bg: "rgba(255,215,0,0.15)", color: "#8a6f00" },
 };
 
 export function FeaturedUniversities() {
   return (
-    <section className="py-16 bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 lg:px-6">
-        <div className="text-center mb-10">
+    <section style={{ backgroundColor: "#f8fafc", padding: "64px 0" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px" }}>
+        {/* Heading */}
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
           <p
-            className="text-xs font-bold uppercase tracking-widest mb-2"
-            style={{ color: "#C8102E" }}
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              color: "#C8102E",
+              marginBottom: "8px",
+            }}
           >
             Top Partner Universities
           </p>
           <h2
-            className="text-2xl sm:text-3xl font-black"
-            style={{ color: "#1B3A6B" }}
+            style={{
+              fontSize: "clamp(1.5rem, 3vw, 2rem)",
+              fontWeight: "900",
+              color: "#1B3A6B",
+              marginBottom: "8px",
+            }}
           >
             Choose from China&apos;s Best
           </h2>
-          <p className="text-slate-500 text-sm mt-2 max-w-xl mx-auto">
-            We partner with 985 &amp; 211 elite universities across China, offering all scholarship
-            types at every level.
+          <p style={{ fontSize: "14px", color: "#64748b", maxWidth: "520px", margin: "0 auto" }}>
+            We partner with 985 &amp; 211 elite universities across China, offering all
+            scholarship types at every level.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+        {/* Grid — explicit CSS grid, not relying on Tailwind classes */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "20px",
+            marginBottom: "32px",
+          }}
+          className="lg:grid-cols-3"
+        >
           {UNIVERSITIES.map((uni) => (
             <div
               key={uni.slug}
-              className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden"
+              style={{
+                backgroundColor: "white",
+                borderRadius: "16px",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
             >
+              {/* Card header */}
               <div
-                className="px-5 py-4 text-white"
-                style={{ backgroundColor: "#1B3A6B" }}
+                style={{
+                  backgroundColor: "#1B3A6B",
+                  padding: "16px 20px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: "8px",
+                }}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-bold text-sm leading-tight">{uni.name}</h3>
-                    <p className="text-white/60 text-xs mt-0.5">{uni.city}</p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="text-[10px] font-bold text-white/50 uppercase">QS Rank</div>
-                    <div className="font-black text-lg text-white leading-tight">
-                      #{uni.qsRank}
-                    </div>
+                <div>
+                  <h3
+                    style={{
+                      color: "white",
+                      fontWeight: "700",
+                      fontSize: "14px",
+                      lineHeight: 1.3,
+                      marginBottom: "2px",
+                    }}
+                  >
+                    {uni.name}
+                  </h3>
+                  <p
+                    style={{
+                      color: "rgba(255,255,255,0.55)",
+                      fontSize: "12px",
+                    }}
+                  >
+                    {uni.city}
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "6px",
+                      marginTop: "10px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: "800",
+                        color: "white",
+                        backgroundColor: "#C8102E",
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      985
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: "800",
+                        color: "white",
+                        backgroundColor: "#29ABE2",
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      211
+                    </span>
                   </div>
                 </div>
-                <div className="flex gap-1.5 mt-3">
-                  <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-md"
-                    style={{ backgroundColor: "#C8102E" }}
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: "700",
+                      color: "rgba(255,255,255,0.4)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
                   >
-                    985
-                  </span>
-                  <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-md"
-                    style={{ backgroundColor: "#29ABE2" }}
+                    QS Rank
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "22px",
+                      fontWeight: "900",
+                      color: "white",
+                      lineHeight: 1.1,
+                    }}
                   >
-                    211
-                  </span>
+                    #{uni.qsRank}
+                  </div>
                 </div>
               </div>
 
-              <div className="px-5 py-4 flex-1 flex flex-col justify-between">
+              {/* Card body */}
+              <div
+                style={{
+                  padding: "16px 20px",
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Popular Programs
+                  <p
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: "#94a3b8",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Programs
                   </p>
-                  <div className="flex flex-wrap gap-1.5 mb-4">
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "4px",
+                      marginBottom: "12px",
+                    }}
+                  >
                     {uni.programs.map((p) => (
                       <span
                         key={p}
-                        className="text-[11px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md"
+                        style={{
+                          fontSize: "11px",
+                          color: "#475569",
+                          backgroundColor: "#f1f5f9",
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                        }}
                       >
                         {p}
                       </span>
                     ))}
                   </div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                    Scholarships Available
+
+                  <p
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: "#94a3b8",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    Scholarships
                   </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {uni.scholarship.map((s) => (
-                      <span
-                        key={s}
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                          SCHOLARSHIP_COLORS[s] ?? "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {s}
-                      </span>
-                    ))}
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}
+                  >
+                    {uni.scholarship.map((s) => {
+                      const b = BADGE[s] ?? { bg: "#f1f5f9", color: "#475569" };
+                      return (
+                        <span
+                          key={s}
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            backgroundColor: b.bg,
+                            color: b.color,
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          {s}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
+
                 <Link
                   href={`/universities/${uni.slug}`}
-                  className="mt-4 block w-full text-center text-[13px] font-semibold text-white py-2.5 rounded-xl bg-[#C8102E] hover:bg-[#A50D25] transition-colors"
+                  style={{
+                    display: "block",
+                    marginTop: "16px",
+                    padding: "10px",
+                    textAlign: "center",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: "white",
+                    backgroundColor: "#C8102E",
+                    borderRadius: "10px",
+                    textDecoration: "none",
+                  }}
                 >
                   View &amp; Apply
                 </Link>
@@ -161,14 +309,25 @@ export function FeaturedUniversities() {
           ))}
         </div>
 
-        <div className="text-center">
+        <div style={{ textAlign: "center" }}>
           <Link
             href="/universities"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold border-2 border-[#1B3A6B] text-[#1B3A6B] hover:bg-[#1B3A6B] hover:text-white transition-all"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "12px 28px",
+              borderRadius: "10px",
+              border: "2px solid #1B3A6B",
+              color: "#1B3A6B",
+              fontSize: "14px",
+              fontWeight: "700",
+              textDecoration: "none",
+            }}
           >
             View All Universities
             <svg
-              className="w-4 h-4"
+              style={{ width: "16px", height: "16px" }}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
