@@ -108,7 +108,7 @@ export default async function CountryPage({
                 <WhatsAppButton
                   size="lg"
                   label="Talk to an advisor"
-                  message={`Hello, I am a student from ${data.name} and I want to know about studying in China. Please give me more information.`}
+                  message={`Hi! 👋 I'm from ${data.name} and I want to study in China. What scholarships am I eligible for?`}
                 />
               </div>
             </div>

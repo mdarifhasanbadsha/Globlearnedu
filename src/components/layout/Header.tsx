@@ -240,9 +240,15 @@ export function Header() {
               justifyContent: "flex-end",
             }}
           >
+            {/* Response time badge — desktop only */}
+            <div className="hidden md:flex items-center gap-1.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-full px-3 py-1.5 text-xs font-medium text-[#166534]">
+              <span className="w-2 h-2 bg-[#25D366] rounded-full animate-pulse flex-shrink-0" />
+              Replies in 5 min
+            </div>
+
             {/* WhatsApp — icon only on mobile, icon + text on md+ */}
             <a
-              href="https://wa.me/8615655031556?text=Hello%2C%20I%20want%20to%20know%20about%20studying%20in%20China%20with%20Globlearn%20Education."
+              href="https://wa.me/8615655031556?text=Hi%21%20%F0%9F%91%8B%20I%20found%20Globlearn%20Education%20and%20I%27m%20interested%20in%20studying%20in%20China.%20Can%20you%20help%20me%3F"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Chat on WhatsApp"
@@ -500,7 +506,7 @@ export function Header() {
               }}
             >
               <a
-                href="https://wa.me/8615655031556?text=Hello%2C%20I%20want%20to%20know%20about%20studying%20in%20China%20with%20Globlearn%20Education."
+                href="https://wa.me/8615655031556?text=Hi%21%20%F0%9F%91%8B%20I%20found%20Globlearn%20Education%20and%20I%27m%20interested%20in%20studying%20in%20China.%20Can%20you%20help%20me%3F"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

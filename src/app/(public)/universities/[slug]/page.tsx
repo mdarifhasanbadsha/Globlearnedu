@@ -15,7 +15,9 @@ import {
 } from "lucide-react";
 import ApplyCTA from "~/components/shared/ApplyCTA";
 import WhatsAppButton from "~/components/shared/WhatsAppButton";
+import WhatsAppNudge from "~/components/shared/WhatsAppNudge";
 import { universitiesData, universitiesList, tierColors, tierBg } from "~/lib/data/universities";
+import { MessageCircle } from "lucide-react";
 
 export async function generateStaticParams() {
   return Object.keys(universitiesData).map((slug) => ({ slug }));
@@ -107,7 +109,7 @@ export default async function UniversityPage({
                 <WhatsAppButton
                   size="lg"
                   label="Ask us on WhatsApp"
-                  message={`Hello, I want to know about ${uni.name}. Please give me more information about admission and scholarships.`}
+                  message={`Hi! 👋 I'm interested in studying at ${uni.name}. Can Globlearn Education help me apply?`}
                 />
               </div>
             </div>
@@ -263,6 +265,10 @@ export default async function UniversityPage({
               >
                 View all scholarships <ChevronRight size={15} />
               </Link>
+              <WhatsAppNudge
+                message={`Hi! 👋 I want to know which scholarships I qualify for to study at ${uni.name} in China.`}
+                label="Check your scholarship eligibility in 5 minutes →"
+              />
             </div>
 
             {/* Requirements */}
@@ -359,6 +365,19 @@ export default async function UniversityPage({
         title={`Apply to ${uni.name.split(" ").slice(0, 3).join(" ")} — 2026–2027`}
         subtitle="Globlearn Education manages your full application — admission, scholarship, visa guidance, and arrival. One service, end-to-end."
       />
+
+      {/* Mobile sticky WhatsApp bar */}
+      <div className="fixed bottom-16 left-0 right-0 z-40 md:hidden">
+        <a
+          href={`https://wa.me/8615655031556?text=${encodeURIComponent(`Hi! 👋 I'm interested in studying at ${uni.name}. Can Globlearn Education help me apply?`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold text-sm py-3 shadow-lg"
+        >
+          <MessageCircle size={18} />
+          💬 Questions about {uni.name.split(" ")[0]}? WhatsApp us — reply in 5 min
+        </a>
+      </div>
     </>
   );
 }
