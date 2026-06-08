@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
@@ -7,7 +6,6 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: DrizzleAdapter(db),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/sign-in",
@@ -53,26 +51,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = credentials.email as string;
         const password = credentials.password as string;
 
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email.toLowerCase()))
-          .limit(1);
+        try {
+          const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email.toLowerCase()))
+            .limit(1);
 
-        if (!user || !user.passwordHash) return null;
-        if (!user.isActive) return null;
+          if (!user || !user.passwordHash) return null;
+          if (!user.isActive) return null;
 
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) return null;
+          const isValid = await bcrypt.compare(password, user.passwordHash);
+          if (!isValid) return null;
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim(),
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-        };
+          return {
+            id: user.id,
+            email: user.email,
+            name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim(),
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error("Auth error:", error);
+          return null;
+        }
       },
     }),
   ],
