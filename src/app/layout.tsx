@@ -11,30 +11,16 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Study in China 2026–2027 | Globlearn Education",
+    default: "Study in China 2026–2027 — Scholarships & Universities | Globlearn Education",
     template: "%s | Globlearn Education",
   },
   description:
-    "Globlearn Education — your trusted partner for studying in China. Expert guidance for CSC scholarships, university applications, and student visas. Trusted by 5,000+ students from 80+ countries since 2014.",
-  keywords: [
-    "study in China",
-    "CSC scholarship 2026",
-    "China university admission",
-    "Globlearn Education",
-    "MBBS China",
-    "scholarship China 2026",
-  ],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com"),
-  openGraph: {
-    type: "website",
-    siteName: "Globlearn Education",
-    title: "Globlearn Education — Study in China",
-    description:
-      "Top-ranked Chinese universities with affordable tuition and full scholarship opportunities.",
-    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+    "Globlearn Education — trusted by 5,000+ students from 80+ countries. Expert guidance for studying in China: CSC scholarships, university admissions, MBBS, Engineering, Business. Affordable cost. Expert visa guidance.",
+  metadataBase: new URL("https://globlearnedu.com"),
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  verification: {
+    google: "",
   },
-  twitter: { card: "summary_large_image", site: "@globlearnedu" },
-  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

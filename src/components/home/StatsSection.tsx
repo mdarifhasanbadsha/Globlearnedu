@@ -17,7 +17,7 @@ const STATS = [
   {
     value: "80+",
     label: "Countries",
-    sub: "Africa, Middle East, South Asia & beyond",
+    sub: "80+ countries worldwide",
   },
 ];
 
