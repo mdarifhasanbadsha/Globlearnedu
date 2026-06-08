@@ -5,7 +5,7 @@ const TOTAL_STAGES = 14;
 const CURRENT_STAGE = 5;
 
 const APP = {
-  appId: "APP-2026-0142",
+  appId: "MB20260602001",
   submittedDate: "2 June 2026",
   stageName: "Application submitted to universities",
   stageDesc:
@@ -144,7 +144,7 @@ export default function ApplicationPage() {
       <div className="space-y-4">
         <Section
           title="Program & Universities"
-          waMessage="Hi! I'd like to request a change to my program or university selection. My application ID is APP-2026-0142."
+          waMessage="Hi! I'd like to request a change to my program or university selection. My application ID is MB20260602001."
           items={[
             { label: "Funding type", value: "CSC Government Scholarship" },
             { label: "Degree level", value: "MBBS / Medicine" },
@@ -156,7 +156,7 @@ export default function ApplicationPage() {
 
         <Section
           title="Personal Information"
-          waMessage="Hi! I'd like to update my personal information. My application ID is APP-2026-0142."
+          waMessage="Hi! I'd like to update my personal information. My application ID is MB20260602001."
           items={[
             { label: "Surname", value: "RAHMAN" },
             { label: "Given names", value: "AHMED FARHAN" },
@@ -171,7 +171,7 @@ export default function ApplicationPage() {
 
         <Section
           title="Contact Details"
-          waMessage="Hi! I'd like to update my contact details. My application ID is APP-2026-0142."
+          waMessage="Hi! I'd like to update my contact details. My application ID is MB20260602001."
           items={[
             { label: "WhatsApp", value: "+880 1712 345678" },
             { label: "Email", value: "ahmed.rahman@gmail.com" },
@@ -184,7 +184,7 @@ export default function ApplicationPage() {
 
         <Section
           title="Family & Sponsor"
-          waMessage="Hi! I'd like to update my family or sponsor details. My application ID is APP-2026-0142."
+          waMessage="Hi! I'd like to update my family or sponsor details. My application ID is MB20260602001."
           items={[
             { label: "Father's name", value: "Mohammed Rahman" },
             { label: "Father's occupation", value: "Government Officer" },
@@ -197,7 +197,7 @@ export default function ApplicationPage() {
 
         <Section
           title="Academic Background"
-          waMessage="Hi! I'd like to update my academic details. My application ID is APP-2026-0142."
+          waMessage="Hi! I'd like to update my academic details. My application ID is MB20260602001."
           items={[
             { label: "Qualification", value: "Higher Secondary Certificate (HSC)" },
             { label: "Institution", value: "Dhaka College" },
@@ -210,7 +210,7 @@ export default function ApplicationPage() {
 
         <Section
           title="Language Proficiency"
-          waMessage="Hi! I'd like to update my language proficiency details. My application ID is APP-2026-0142."
+          waMessage="Hi! I'd like to update my language proficiency details. My application ID is MB20260602001."
           items={[
             { label: "English test", value: "IELTS" },
             { label: "Score", value: "6.5" },
@@ -221,7 +221,7 @@ export default function ApplicationPage() {
 
         <Section
           title="China Status"
-          waMessage="Hi! I need to update my China status information. My application ID is APP-2026-0142."
+          waMessage="Hi! I need to update my China status information. My application ID is MB20260602001."
           items={[
             { label: "Currently in China", value: "No" },
             { label: "Visa process", value: "Will apply from home country after offer letter" },
@@ -276,7 +276,7 @@ export default function ApplicationPage() {
         </p>
         <a
           href={`https://wa.me/8615655031556?text=${encodeURIComponent(
-            "Hi! I'd like to make a change to my application APP-2026-0142."
+            "Hi! I'd like to make a change to my application MB20260602001."
           )}`}
           target="_blank"
           rel="noopener noreferrer"

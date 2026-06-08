@@ -15,6 +15,27 @@ import Step7ChinaStatus from "./steps/Step7ChinaStatus";
 import Step8Documents from "./steps/Step8Documents";
 import Step9Review from "./steps/Step9Review";
 
+const DEGREE_PREFIX: Record<string, string> = {
+  "MBBS / Medicine": "MB",
+  "Dentistry / Stomatology": "DN",
+  "Bachelor's Degree": "B",
+  "Master's Degree": "M",
+  "PhD / Doctorate": "D",
+  "Language Program": "L",
+  "Foundation / Pre-University": "P",
+  "Short Course / Exchange": "SC",
+};
+
+function buildAppId(degreeLevel: string): string {
+  const prefix = DEGREE_PREFIX[degreeLevel] ?? "AP";
+  const now = new Date();
+  const y = now.getFullYear();
+  const mo = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const serial = String(Math.floor(Math.random() * 900) + 1).padStart(3, "0");
+  return `${prefix}${y}${mo}${d}${serial}`;
+}
+
 const STEP_LABELS = [
   "Program", "Personal", "Contact", "Family", "Academic",
   "Language", "China Status", "Documents", "Review & Pay",
@@ -26,6 +47,7 @@ export default function ApplicationForm() {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<FormData>(INITIAL_FORM);
   const [submitted, setSubmitted] = useState(false);
+  const [appId, setAppId] = useState("");
 
   function update(updates: Partial<FormData>) {
     setData((prev) => ({ ...prev, ...updates }));
@@ -55,7 +77,7 @@ export default function ApplicationForm() {
         {step === 9 && (
           <Step9Review
             {...stepProps}
-            onSubmit={() => setSubmitted(true)}
+            onSubmit={() => { setAppId(buildAppId(data.degreeLevel)); setSubmitted(true); }}
           />
         )}
 
@@ -102,7 +124,7 @@ export default function ApplicationForm() {
               Your Application ID is:
             </p>
             <p className="text-lg font-mono font-black mb-4" style={{ color: "#C8102E" }}>
-              APP-2026-XXXX
+              {appId}
             </p>
             <p className="text-sm mb-8" style={{ color: "#64748B" }}>
               Globlearn Education will review your application within 24 hours.
@@ -116,7 +138,7 @@ export default function ApplicationForm() {
                 Track my application →
               </a>
               <a
-                href="https://wa.me/8615655031556?text=Hi!%20I%20just%20submitted%20my%20application%20APP-2026-XXXX.%20What%20are%20the%20next%20steps?"
+                href={`https://wa.me/8615655031556?text=${encodeURIComponent(`Hi! I just submitted my application ${appId}. What are the next steps?`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center px-6 py-3 rounded-xl text-sm font-bold text-white"

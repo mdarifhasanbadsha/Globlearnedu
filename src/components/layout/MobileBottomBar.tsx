@@ -218,7 +218,7 @@ export function MobileBottomBar() {
               value={trackId}
               onChange={(e) => setTrackId(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-              placeholder="APP-2026-XXXXX or Passport No."
+              placeholder="e.g. MB20260608001 or Passport No."
               style={{
                 width: "100%",
                 padding: "14px 16px",

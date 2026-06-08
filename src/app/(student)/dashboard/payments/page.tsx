@@ -7,7 +7,7 @@ const PAYMENT_ROWS = [
     status: "paid",
     date: "2 June 2026",
     method: "Bank transfer",
-    ref: "DEP-2026-0142",
+    ref: "DEP-MB20260602001",
   },
   {
     description: "Service charge — 1st instalment",
@@ -15,7 +15,7 @@ const PAYMENT_ROWS = [
     status: "due",
     date: "Due 30 June 2026",
     method: "—",
-    ref: "SVC-2026-0142-A",
+    ref: "SVC-MB20260602001-A",
   },
   {
     description: "Service charge — 2nd instalment",
@@ -23,7 +23,7 @@ const PAYMENT_ROWS = [
     status: "pending",
     date: "On admission confirmation",
     method: "—",
-    ref: "SVC-2026-0142-B",
+    ref: "SVC-MB20260602001-B",
   },
 ];
 
@@ -35,7 +35,7 @@ const STATUS_STYLES = {
 
 export default function PaymentsPage() {
   const waHref = `https://wa.me/8615655031556?text=${encodeURIComponent(
-    "Hi! I need help with payment for my application APP-2026-0142."
+    "Hi! I need help with payment for my application MB20260602001."
   )}`;
 
   return (
@@ -45,7 +45,7 @@ export default function PaymentsPage() {
           Payments
         </h1>
         <p className="text-sm" style={{ color: "#64748B" }}>
-          Application APP-2026-0142 — transparent fee breakdown
+          Application MB20260602001 — transparent fee breakdown
         </p>
       </div>
 

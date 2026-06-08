@@ -66,7 +66,7 @@ const NEXT_STEPS = [
 
 const QUICK_ACTIONS = [
   { label: "Track application", href: "/track", icon: MapPin, bg: "#EEF4FF", color: "#1B3A6B" },
-  { label: "WhatsApp advisor", href: "https://wa.me/8615655031556?text=Hi!%20I%20need%20help%20with%20my%20application%20APP-2026-XXXX.", icon: MessageCircle, bg: "#F0FDF4", color: "#166534", external: true },
+  { label: "WhatsApp advisor", href: "https://wa.me/8615655031556?text=Hi!%20I%20need%20help%20with%20my%20application%20MB20260602001.", icon: MessageCircle, bg: "#F0FDF4", color: "#166534", external: true },
   { label: "View notices", href: "/dashboard/notices", icon: Bell, bg: "#E0F2FE", color: "#29ABE2" },
   { label: "Download docs", href: "/dashboard/documents", icon: Download, bg: "#F8FAFC", color: "#64748B" },
 ];
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
                 <div className="flex items-center gap-2 mt-3">
                   <span className="text-white/50 text-xs">App ID:</span>
                   <span className="text-xs font-mono font-bold text-white bg-white/10 px-2 py-0.5 rounded">
-                    APP-2026-XXXX
+                    MB20260602001
                   </span>
                   <span
                     className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
@@ -328,7 +328,7 @@ export default async function DashboardPage() {
               </div>
             </div>
             <a
-              href="https://wa.me/8615655031556?text=Hi!%20I%20want%20to%20check%20on%20my%20application%20APP-2026-XXXX."
+              href="https://wa.me/8615655031556?text=Hi!%20I%20want%20to%20check%20on%20my%20application%20MB20260602001."
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold text-white"
@@ -443,7 +443,7 @@ export default async function DashboardPage() {
               Application ID
             </p>
             <p className="text-base font-mono font-black" style={{ color: "#1B3A6B" }}>
-              APP-2026-XXXX
+              MB20260602001
             </p>
             <p className="text-[10px] mt-1" style={{ color: "#CBD5E1" }}>
               Quote this when contacting support

@@ -129,7 +129,7 @@ const INITIAL_NOTICES: Notice[] = [
     category: "Application",
     title: "Welcome to Globlearn Education!",
     message:
-      "Thank you for choosing Globlearn Education for your China study journey. Your application (APP-2026-0142) has been created. We will guide you every step of the way.",
+      "Thank you for choosing Globlearn Education for your China study journey. Your application (MB20260602001) has been created. We will guide you every step of the way.",
     time: "14 days ago",
     read: true,
     icon: Bell,
