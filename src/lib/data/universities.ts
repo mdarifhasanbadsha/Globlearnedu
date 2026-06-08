@@ -1,4 +1,4 @@
-export interface UniversityProgram {
+﻿export interface UniversityProgram {
   name: string;
   slug: string;
 }
@@ -55,8 +55,8 @@ export const universitiesData: Record<string, UniversityData> = {
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "PhD Program", slug: "phd-program" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     tuitionRMB: "¥26,000 – ¥45,000 / year",
     livingCostRMB: "¥2,500 – ¥4,000 / month",
@@ -119,8 +119,8 @@ export const universitiesData: Record<string, UniversityData> = {
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "PhD Program", slug: "phd-program" },
       { name: "Chinese Language", slug: "chinese-language" },
-      { name: "MBA & Business", slug: "mba-business" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
     ],
     tuitionRMB: "¥25,000 – ¥45,000 / year",
     livingCostRMB: "¥2,500 – ¥4,000 / month",
@@ -180,7 +180,7 @@ export const universitiesData: Record<string, UniversityData> = {
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "PhD Program", slug: "phd-program" },
       { name: "Chinese Language", slug: "chinese-language" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     tuitionRMB: "¥28,000 – ¥45,000 / year",
     livingCostRMB: "¥2,500 – ¥4,500 / month",
@@ -238,8 +238,8 @@ export const universitiesData: Record<string, UniversityData> = {
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "PhD Program", slug: "phd-program" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     tuitionRMB: "¥24,000 – ¥42,000 / year",
     livingCostRMB: "¥2,500 – ¥4,000 / month",
@@ -297,7 +297,7 @@ export const universitiesData: Record<string, UniversityData> = {
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "PhD Program", slug: "phd-program" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
       { name: "Chinese Language", slug: "chinese-language" },
     ],
     tuitionRMB: "¥20,000 – ¥38,000 / year",
@@ -900,7 +900,7 @@ export const universitiesData: Record<string, UniversityData> = {
     programs: [
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     tuitionRMB: "¥20,000 – ¥45,000 / year",
     livingCostRMB: "¥2,500 – ¥4,000 / month",

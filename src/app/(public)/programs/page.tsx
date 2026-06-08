@@ -27,6 +27,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Award: <Award size={28} />,
   Briefcase: <Briefcase size={28} />,
   Brain: <Brain size={28} />,
+  Clock: <Clock size={28} />,
 };
 
 export default function ProgramsPage() {
@@ -49,7 +50,7 @@ export default function ProgramsPage() {
             Find Your Perfect Program
           </h1>
           <p className="text-white/70 text-lg mb-10 max-w-2xl mx-auto">
-            From MBBS to PhD, Bachelor&apos;s to MBA — 8 program pathways at 280+ universities across China.
+            From MBBS to PhD, Foundation to Short Course — 8 program pathways at 280+ universities across China.
             All intakes for 2026–2027 are now open.
           </p>
           {/* Stats row */}

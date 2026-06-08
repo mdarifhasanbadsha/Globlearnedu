@@ -16,7 +16,7 @@ const FUNDING_OPTIONS = [
 
 const DEGREE_LEVELS = [
   "MBBS / Medicine", "Bachelor's", "Master's", "PhD",
-  "Chinese Language", "Diploma", "MBA", "AI",
+  "Chinese Language", "Diploma", "Foundation / Pre-University", "Short Course / Exchange",
 ];
 
 export default function Step1Program({ data, onChange }: Props) {

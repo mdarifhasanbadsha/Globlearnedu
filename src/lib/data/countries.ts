@@ -1,4 +1,4 @@
-export interface CountryProgram {
+﻿export interface CountryProgram {
   name: string;
   slug: string;
 }
@@ -36,7 +36,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
       { name: "PhD Program", slug: "phd-program" },
     ],
     popularCities: ["Wuhan", "Beijing", "Guangzhou", "Chengdu"],
@@ -78,9 +78,9 @@ export const countriesData: Record<string, CountryData> = {
     topPrograms: [
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
     ],
     popularCities: ["Beijing", "Shanghai", "Wuhan", "Guangzhou"],
     highlights: [
@@ -236,7 +236,7 @@ export const countriesData: Record<string, CountryData> = {
     topPrograms: [
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Master's Degree", slug: "masters-degree" },
     ],
     popularCities: ["Beijing", "Wuhan", "Guangzhou", "Chengdu"],
@@ -388,7 +388,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "Chinese Language", slug: "chinese-language" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Guangzhou", "Wuhan", "Shanghai"],
     highlights: [
@@ -469,7 +469,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
       { name: "PhD Program", slug: "phd-program" },
     ],
     popularCities: ["Beijing", "Wuhan", "Chengdu", "Xi'an", "Dalian"],
@@ -547,8 +547,8 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Saudi Arabia's Vision 2030 agenda has dramatically increased the country's international education partnerships, with China emerging as a key destination. Saudi students in China predominantly study engineering, computer science, artificial intelligence, and business — all priority fields under Vision 2030. The Saudi Cultural Mission actively supports students studying in China, and Chinese universities have dedicated Saudi student programs. Saudi Arabia's 30+ million population and oil-funded education budgets make it a significant and growing market.",
     topPrograms: [
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "PhD Program", slug: "phd-program" },
@@ -590,8 +590,8 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "The UAE sends a growing number of students to China each year, drawn primarily by business, technology, and MBA programs at China's top universities. The UAE's position as a global trade and logistics hub — with Jebel Ali Port being China's largest port partner outside Asia — creates unique career synergies for graduates with Chinese university credentials and language skills. Emirati, Egyptian, Indian, Pakistani, and other Arab students based in the UAE all access Chinese universities through UAE-based channels.",
     topPrograms: [
-      { name: "MBA & Business", slug: "mba-business" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
     ],
@@ -635,9 +635,9 @@ export const countriesData: Record<string, CountryData> = {
       "South Africa sends over 4,000 students to Chinese universities, drawn by world-ranked 985 programs, affordable tuition compared to South African private institutions, and the growing China-South Africa trade relationship under BRICS. MBBS, MBA, mining engineering, and artificial intelligence are the most popular fields. The CSC scholarship is available through the Embassy channel in Pretoria, and several South African provincial governments have bilateral education agreements with Chinese provinces.",
     topPrograms: [
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
       { name: "PhD Program", slug: "phd-program" },
     ],
     popularCities: ["Beijing", "Shanghai", "Wuhan", "Guangzhou"],
@@ -676,7 +676,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Chinese Language", slug: "chinese-language" },
     ],
     popularCities: ["Beijing", "Shanghai", "Wuhan", "Guangzhou"],
@@ -714,7 +714,7 @@ export const countriesData: Record<string, CountryData> = {
     topPrograms: [
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
       { name: "Chinese Language", slug: "chinese-language" },
     ],
     popularCities: ["Beijing", "Wuhan", "Shanghai", "Xi'an"],
@@ -827,7 +827,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Wuhan", "Chengdu", "Guangzhou"],
     highlights: [
@@ -898,7 +898,7 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Rwanda's rapid economic development and Vision 2050 strategy have made international education a national priority, with China emerging as a key destination. Over 800 Rwandan students study in China, with a strong focus on ICT, engineering, medicine, and business — all priority sectors under Rwanda's development agenda. The Rwanda-China relationship is close, with Chinese investment in Rwanda's tech parks and infrastructure. The CSC scholarship is available through the Embassy in Kigali.",
     topPrograms: [
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
@@ -935,7 +935,7 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Senegal has over 1,500 students studying in China, with business administration, engineering, Chinese language, and medicine being the most popular fields. The Senegal-China relationship has deepened significantly with the Belt and Road Initiative and Chinese investment in Senegal's infrastructure. French and Wolof-speaking students benefit from dedicated language support programs, and the Chinese Embassy in Dakar actively supports scholarship applications through bilateral channels.",
     topPrograms: [
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Chinese Language", slug: "chinese-language" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
@@ -972,7 +972,7 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Ivory Coast (Côte d'Ivoire) has over 1,000 students at Chinese universities, with strong representation in business, engineering, and medicine. As West Africa's largest economy and a major commodity exporter, Ivory Coast-China trade relations create career opportunities for Chinese-trained business and economics graduates. The Chinese Embassy in Abidjan supports CSC scholarship applications, and French-speaking students can access dedicated language programs.",
     topPrograms: [
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Chinese Language", slug: "chinese-language" },
@@ -1048,7 +1048,7 @@ export const countriesData: Record<string, CountryData> = {
     topPrograms: [
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
     ],
     popularCities: ["Beijing", "Shanghai", "Guangzhou", "Wuhan"],
@@ -1271,7 +1271,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Wuhan", "Guangzhou", "Shanghai"],
     highlights: [
@@ -1308,7 +1308,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Wuhan", "Shanghai", "Guangzhou"],
     highlights: [
@@ -1382,7 +1382,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Wuhan", "Guangzhou", "Chengdu"],
     highlights: [
@@ -1459,7 +1459,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "Chinese Language", slug: "chinese-language" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Shanghai", "Wuhan", "Xi'an"],
     highlights: [
@@ -1536,7 +1536,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Shanghai", "Guangzhou", "Wuhan"],
     highlights: [
@@ -1607,10 +1607,10 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Oman has over 800 students at Chinese universities, with engineering, business, and technology programs aligned with Oman's Vision 2040 economic diversification agenda. The Oman-China relationship is strong through trade and the Port of Duqm's role in Belt and Road logistics. Omani students benefit from Muscat's direct connections to Chinese cities and the Chinese Embassy in Muscat's dedicated CSC scholarship channel. Halal food and Muslim prayer facilities are standard on Chinese campuses.",
     topPrograms: [
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
     ],
     popularCities: ["Beijing", "Shanghai", "Wuhan", "Guangzhou"],
     highlights: [
@@ -1644,10 +1644,10 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Kuwait has over 600 students at Chinese universities, with business, medicine, and engineering being the primary programs. Kuwait's oil-funded education system means many Kuwaiti students are self-sponsored, while others access the CSC scholarship through the Embassy in Kuwait City. The Kuwait-China relationship has strengthened with China being one of Kuwait's largest oil customers and trade partners. Halal food and Islamic prayer facilities are widely available on Chinese campuses.",
     topPrograms: [
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
     ],
     popularCities: ["Beijing", "Shanghai", "Guangzhou", "Hangzhou"],
     highlights: [
@@ -1681,10 +1681,10 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Bahrain has over 400 students at Chinese universities, with a strong concentration in business, finance, and engineering programs. As a major Gulf financial hub, Bahrain's graduates with Chinese MBA credentials and Mandarin skills have unique career advantages in the growing China-Gulf business corridor. The CSC scholarship is available through the Embassy in Manama, and halal food and Islamic facilities are readily accessible on Chinese campuses.",
     topPrograms: [
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
     ],
     popularCities: ["Beijing", "Shanghai", "Guangzhou", "Shenzhen"],
     highlights: [
@@ -1718,8 +1718,8 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Qatar has over 500 students at Chinese universities, with AI, business, and engineering being dominant fields aligned with Qatar's National Vision 2030 and its ambitions to become a knowledge economy. China is one of Qatar's largest LNG customers and trade partners, and the Qatar-China relationship has strengthened significantly. The CSC scholarship is accessible through the Embassy in Doha, and halal food and Islamic prayer facilities are standard on Chinese campuses.",
     topPrograms: [
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
     ],
@@ -1759,7 +1759,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "PhD Program", slug: "phd-program" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
     ],
     popularCities: ["Beijing", "Shanghai", "Wuhan", "Xi'an"],
     highlights: [
@@ -1796,9 +1796,9 @@ export const countriesData: Record<string, CountryData> = {
     topPrograms: [
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Chinese Language", slug: "chinese-language" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
     ],
     popularCities: ["Beijing", "Shanghai", "Wuhan", "Guangzhou"],
     highlights: [
@@ -1875,7 +1875,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Wuhan", "Guangzhou", "Chengdu"],
     highlights: [
@@ -1984,7 +1984,7 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Thailand has over 4,000 students at Chinese universities, driven by the deep Thai-Chinese cultural relationship and the large Thai-Chinese community. Business, Chinese language, tourism management, and engineering are the most popular programs. The Thailand-China High Speed Railway and extensive bilateral trade create strong career pathways for graduates with Chinese language skills and business qualifications. The CSC scholarship is available through the Embassy in Bangkok, and direct Thai Airways flights to multiple Chinese cities make travel convenient.",
     topPrograms: [
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Chinese Language", slug: "chinese-language" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
@@ -2064,7 +2064,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
       { name: "Chinese Language", slug: "chinese-language" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Shanghai", "Wuhan", "Guangzhou"],
     highlights: [
@@ -2099,11 +2099,11 @@ export const countriesData: Record<string, CountryData> = {
     description:
       "Malaysia has over 8,000 students at Chinese universities — driven by Malaysia's large Chinese-Malaysian community, cultural ties, and the practical value of Mandarin in Malaysia's business environment. Business, engineering, medicine, and Chinese language are the most popular programs. Malaysia-China bilateral trade exceeds US$100 billion annually, and Chinese investment in Malaysia's East Coast Rail Link and industrial zones creates strong career pathways. The CSC scholarship is available through the Embassy in Kuala Lumpur, and direct Malaysia Airlines and AirAsia flights connect Malaysia to multiple Chinese cities.",
     topPrograms: [
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Chinese Language", slug: "chinese-language" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
-      { name: "Artificial Intelligence", slug: "artificial-intelligence" },
+      { name: "Foundation / Pre-University", slug: "foundation-pre-university" },
     ],
     popularCities: ["Beijing", "Shanghai", "Guangzhou", "Xiamen"],
     highlights: [
@@ -2141,7 +2141,7 @@ export const countriesData: Record<string, CountryData> = {
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Master's Degree", slug: "masters-degree" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
     ],
     popularCities: ["Beijing", "Shanghai", "Guangzhou", "Chengdu"],
     highlights: [
@@ -2177,7 +2177,7 @@ export const countriesData: Record<string, CountryData> = {
     topPrograms: [
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Chinese Language", slug: "chinese-language" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
     ],
     popularCities: ["Beijing", "Guangzhou", "Wuhan", "Shanghai"],
@@ -2477,7 +2477,7 @@ export const countriesData: Record<string, CountryData> = {
     topPrograms: [
       { name: "Bachelor's Degree", slug: "bachelors-degree" },
       { name: "Chinese Language", slug: "chinese-language" },
-      { name: "MBA & Business", slug: "mba-business" },
+      { name: "Short Course / Exchange", slug: "short-course-exchange" },
       { name: "MBBS / Medicine", slug: "mbbs-medicine" },
     ],
     popularCities: ["Yunnan (Kunming)", "Beijing", "Guangzhou", "Wuhan"],

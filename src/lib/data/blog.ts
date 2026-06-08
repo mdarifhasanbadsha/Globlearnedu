@@ -253,7 +253,7 @@ export const blogPosts: BlogPost[] = [
           ["Master's Degree", "¥16,000 – ¥40,000", "$2,200 – $5,550"],
           ["PhD Program", "¥20,000 – ¥45,000", "$2,750 – $6,250"],
           ["Chinese Language", "¥8,000 – ¥16,000", "$1,100 – $2,200"],
-          ["MBA & Business", "¥30,000 – ¥80,000", "$4,150 – $11,000"],
+          ["Short Course / Exchange", "¥3,000 – ¥20,000 / program", "$420 – $2,750"],
         ],
       },
       {

@@ -24,8 +24,8 @@ const PROGRAMS = [
   { label: "PhD Programs", href: "/programs/phd-program" },
   { label: "Chinese Language", href: "/programs/chinese-language" },
   { label: "Diploma / Vocational", href: "/programs/diploma-vocational" },
-  { label: "MBA & Business", href: "/programs/mba-business" },
-  { label: "Artificial Intelligence", href: "/programs/artificial-intelligence" },
+  { label: "Foundation / Pre-University", href: "/programs/foundation-pre-university" },
+  { label: "Short Course / Exchange", href: "/programs/short-course-exchange" },
 ];
 
 const SOCIALS = [

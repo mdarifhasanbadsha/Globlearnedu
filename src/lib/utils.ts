@@ -24,3 +24,15 @@ export function generateApplicationNumber(): string {
   const random = Math.floor(Math.random() * 90000) + 10000;
   return `APP-${year}-${random}`;
 }
+
+export const PROGRAM_CODES: Record<string, string> = {
+  "mbbs-medicine": "MD",
+  "bachelors-degree": "B",
+  "masters-degree": "M",
+  "phd-program": "P",
+  "chinese-language": "L",
+  "diploma-vocational": "D",
+  "foundation-pre-university": "F",
+  "short-course-exchange": "S",
+  "default": "G",
+};
