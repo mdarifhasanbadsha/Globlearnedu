@@ -314,6 +314,18 @@ export const activityLog = pgTable("activity_log", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ── SETTINGS ─────────────────────────────────────────────
+export const settings = pgTable("settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  label: varchar("label", { length: 255 }),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).default("general"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedBy: uuid("updated_by").references(() => users.id),
+});
+
 // ── NEXTAUTH REQUIRED TABLES ──────────────────────────────
 export const accounts = pgTable(
   "accounts",
