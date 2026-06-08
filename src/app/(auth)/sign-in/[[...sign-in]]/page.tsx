@@ -1,12 +1,14 @@
-import { SignUp } from "@clerk/nextjs";
+import { SignIn } from "@clerk/nextjs";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Sign Up — Globlearn Education" };
+export const metadata: Metadata = { title: "Sign In — Globlearn Education" };
 
-export default function SignUpPage() {
+export default function SignInPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={{ backgroundColor: "#0A1628" }}>
-      {/* Brand header */}
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+      style={{ backgroundColor: "#0A1628" }}
+    >
       <div className="mb-8 text-center">
         <div
           className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-3"
@@ -16,14 +18,14 @@ export default function SignUpPage() {
         </div>
         <h1 className="text-white font-bold text-xl">Globlearn Education</h1>
         <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>
-          Create your student account
+          Student &amp; Partner Portal
         </p>
       </div>
 
-      {/* Clerk SignUp — hash routing avoids needing [[...sign-up]] catch-all segments */}
-      <SignUp
-        routing="hash"
-        signInUrl="/sign-in"
+      <SignIn
+        routing="path"
+        path="/sign-in"
+        signUpUrl="/sign-up"
         fallbackRedirectUrl="/dashboard"
         appearance={{
           variables: {
@@ -35,10 +37,8 @@ export default function SignUpPage() {
           },
           elements: {
             card: "shadow-2xl border-0",
-            formButtonPrimary:
-              "bg-[#C8102E] hover:bg-[#A50D25] text-white font-semibold",
-            footerActionLink:
-              "text-[#C8102E] hover:text-[#A50D25] font-medium",
+            formButtonPrimary: "bg-[#C8102E] hover:bg-[#A50D25] text-white font-semibold",
+            footerActionLink: "text-[#C8102E] hover:text-[#A50D25] font-medium",
             headerTitle: "text-[#1B3A6B] font-bold",
             headerSubtitle: "text-gray-500",
           },
@@ -46,10 +46,8 @@ export default function SignUpPage() {
       />
 
       <p className="text-xs mt-6 text-center max-w-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
-        Already have an account?{" "}
-        <a href="/sign-in" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "underline" }}>
-          Sign in here
-        </a>
+        By signing in you agree to our Terms of Service and Privacy Policy.
+        Secured by Clerk — Globlearn Education never stores your password.
       </p>
     </div>
   );
