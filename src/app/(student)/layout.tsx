@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import DashboardSidebar from "~/components/dashboard/DashboardSidebar";
 import DashboardTopBar from "~/components/dashboard/DashboardTopBar";
+import MobileDashboardNav from "~/components/dashboard/MobileDashboardNav";
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -28,6 +29,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
         <DashboardTopBar userName={userName} userInitials={userInitials} />
         <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">{children}</main>
       </div>
+      <MobileDashboardNav />
     </div>
   );
 }

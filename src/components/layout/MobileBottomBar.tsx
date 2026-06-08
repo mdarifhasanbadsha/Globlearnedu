@@ -7,6 +7,14 @@ export function MobileBottomBar() {
   const pathname = usePathname();
   const router = useRouter();
   const [trackOpen, setTrackOpen] = useState(false);
+
+  // Hide on authenticated portal routes — those have their own nav
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/partner") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/staff")
+  ) return null;
   const [trackId, setTrackId] = useState("");
 
   function handleTrack() {
