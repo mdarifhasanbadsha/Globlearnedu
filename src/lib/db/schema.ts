@@ -1,6 +1,6 @@
 import {
   pgTable, uuid, text, varchar, integer, boolean,
-  timestamp, jsonb, numeric, pgEnum, index,
+  timestamp, jsonb, numeric, pgEnum, index, primaryKey,
 } from "drizzle-orm/pg-core";
 
 // ── ENUMS ────────────────────────────────────────────────
@@ -23,10 +23,13 @@ export const notificationChannelEnum = pgEnum("notification_channel", ["email", 
 // ── USERS ────────────────────────────────────────────────
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
-  clerkId: varchar("clerk_id", { length: 255 }).notNull().unique(),
   email: varchar("email", { length: 255 }).notNull().unique(),
+  emailVerified: timestamp("email_verified"),
+  passwordHash: varchar("password_hash", { length: 255 }),
   firstName: varchar("first_name", { length: 100 }),
   lastName: varchar("last_name", { length: 100 }),
+  name: varchar("name", { length: 255 }),
+  image: varchar("image", { length: 500 }),
   phone: varchar("phone", { length: 30 }),
   country: varchar("country", { length: 100 }),
   role: userRoleEnum("role").notNull().default("student"),
@@ -310,3 +313,38 @@ export const activityLog = pgTable("activity_log", {
   ipAddress: varchar("ip_address", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// ── NEXTAUTH REQUIRED TABLES ──────────────────────────────
+export const accounts = pgTable(
+  "accounts",
+  {
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 255 }).notNull(),
+    provider: varchar("provider", { length: 255 }).notNull(),
+    providerAccountId: varchar("provider_account_id", { length: 255 }).notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: varchar("token_type", { length: 255 }),
+    scope: varchar("scope", { length: 255 }),
+    id_token: text("id_token"),
+    session_state: varchar("session_state", { length: 255 }),
+  },
+  (account) => [primaryKey({ columns: [account.provider, account.providerAccountId] })]
+);
+
+export const sessions = pgTable("sessions", {
+  sessionToken: varchar("session_token", { length: 255 }).notNull().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires").notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: varchar("identifier", { length: 255 }).notNull(),
+    token: varchar("token", { length: 255 }).notNull(),
+    expires: timestamp("expires").notNull(),
+  },
+  (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
+);

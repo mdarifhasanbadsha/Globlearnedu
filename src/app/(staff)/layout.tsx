@@ -1,19 +1,17 @@
 import { redirect } from "next/navigation";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth/config";
 import StaffSidebar from "~/components/staff/StaffSidebar";
 import StaffTopBar from "~/components/staff/StaffTopBar";
 
 export default async function StaffLayout({ children }: { children: React.ReactNode }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  const session = await auth();
+  if (!session?.user) redirect("/sign-in");
 
-  const user = await currentUser();
-  const firstName = user?.firstName ?? "";
-  const lastName = user?.lastName ?? "";
-  const userName =
-    firstName || lastName
-      ? `${firstName} ${lastName}`.trim()
-      : (user?.emailAddresses?.[0]?.emailAddress ?? "Staff");
+  const firstName = (session.user as any).firstName ?? "";
+  const lastName = (session.user as any).lastName ?? "";
+  const email = session.user.email ?? "Staff";
+
+  const userName = firstName || lastName ? `${firstName} ${lastName}`.trim() : email;
   const userInitials =
     firstName && lastName
       ? `${firstName[0]}${lastName[0]}`

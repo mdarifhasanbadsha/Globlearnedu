@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth/config";
 import Link from "next/link";
 import {
   CheckCircle2, Clock, FileText, Bell, Download,
@@ -184,8 +184,8 @@ function CompactStepper() {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const user = await currentUser();
-  const firstName = user?.firstName ?? "there";
+  const session = await auth();
+  const firstName = (session?.user as any)?.firstName ?? "there";
 
   return (
     <div className="max-w-6xl mx-auto">

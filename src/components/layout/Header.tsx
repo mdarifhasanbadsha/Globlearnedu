@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -33,6 +33,7 @@ export function Header() {
   const [admissionExpanded, setAdmissionExpanded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   useEffect(() => {
     const onScroll = () => {
@@ -271,11 +272,11 @@ export function Header() {
               <span className="hidden md:inline">WhatsApp</span>
             </a>
 
-            {/* Login / UserButton — desktop only */}
-            <SignedOut>
+            {/* Login / Dashboard — desktop only */}
+            {!session ? (
               <Link
                 href="/sign-in"
-                className="hidden sm:block"
+                className="hidden sm:flex"
                 style={{
                   padding: "8px 16px",
                   borderRadius: "8px",
@@ -286,18 +287,31 @@ export function Header() {
                   textDecoration: "none",
                   whiteSpace: "nowrap",
                   minHeight: "44px",
-                  display: "flex",
                   alignItems: "center",
                 }}
               >
                 Login
               </Link>
-            </SignedOut>
-            <SignedIn>
-              <div className="hidden sm:block">
-                <UserButton />
-              </div>
-            </SignedIn>
+            ) : (
+              <Link
+                href="/dashboard"
+                className="hidden sm:flex"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  border: "1.5px solid #1B3A6B",
+                  color: "#1B3A6B",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  minHeight: "44px",
+                  alignItems: "center",
+                }}
+              >
+                Dashboard
+              </Link>
+            )}
 
             {/* Apply Now — desktop only */}
             <Link
@@ -529,7 +543,7 @@ export function Header() {
                 </svg>
                 Chat on WhatsApp
               </a>
-              <SignedOut>
+              {!session ? (
                 <Link
                   href="/sign-in"
                   style={{
@@ -547,12 +561,25 @@ export function Header() {
                 >
                   Login
                 </Link>
-              </SignedOut>
-              <SignedIn>
-                <div style={{ padding: "8px 0" }}>
-                  <UserButton />
-                </div>
-              </SignedIn>
+              ) : (
+                <Link
+                  href="/dashboard"
+                  style={{
+                    display: "block",
+                    padding: "13px 16px",
+                    textAlign: "center",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    color: "#1B3A6B",
+                    border: "1.5px solid #1B3A6B",
+                    borderRadius: "10px",
+                    textDecoration: "none",
+                    minHeight: "48px",
+                  }}
+                >
+                  My Dashboard
+                </Link>
+              )}
               <Link
                 href="/universities"
                 style={{

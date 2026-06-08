@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
+import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 const inter = Inter({
@@ -11,11 +11,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Globlearn Education — Study in China",
+    default: "Study in China 2026–2027 | Globlearn Education",
     template: "%s | Globlearn Education",
   },
   description:
-    "Globlearn Education helps students from Africa, Middle East & South Asia study at top Chinese universities with CSC, University & Provincial scholarships. 99% visa guidance success.",
+    "Globlearn Education — your trusted partner for studying in China. Expert guidance for CSC scholarships, university applications, and student visas. Trusted by 5,000+ students from 80+ countries since 2014.",
   keywords: [
     "study in China",
     "CSC scholarship 2026",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     "MBBS China",
     "scholarship China 2026",
   ],
-  metadataBase: new URL("https://globlearnedu.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com"),
   openGraph: {
     type: "website",
     siteName: "Globlearn Education",
@@ -39,13 +39,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={inter.variable}>
-        <body className="font-sans antialiased">
+    <html lang="en" className={inter.variable}>
+      <body className={`${inter.className} antialiased`}>
+        <SessionProvider>
           <div id="scroll-progress" />
           {children}
-        </body>
-      </html>
-    </ClerkProvider>
+        </SessionProvider>
+      </body>
+    </html>
   );
 }
