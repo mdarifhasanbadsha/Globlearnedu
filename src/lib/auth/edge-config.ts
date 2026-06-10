@@ -4,6 +4,17 @@ import NextAuth from "next-auth";
 // Credentials validation happens in the full config (config.ts) via the API route.
 export const { auth } = NextAuth({
   session: { strategy: "jwt" },
+  cookies: {
+    sessionToken: {
+      name: "gl_session_v2",
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   pages: { signIn: "/sign-in" },
   callbacks: {
     async jwt({ token, user }) {
