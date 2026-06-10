@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, LogOut, Shield } from "lucide-react";
-import { signOut } from "next-auth/react";
 
 type Props = { userName: string; userInitials: string };
 
 export default function AdminTopBar({ userName, userInitials }: Props) {
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +67,7 @@ export default function AdminTopBar({ userName, userInitials }: Props) {
                 <p className="text-xs font-semibold text-gray-700 truncate mt-0.5">{userName}</p>
               </div>
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => router.push("/sign-out")}
                 className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left hover:bg-red-50 text-red-600"
               >
                 <LogOut size={14} />Sign out

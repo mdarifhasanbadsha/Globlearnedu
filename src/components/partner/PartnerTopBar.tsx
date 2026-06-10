@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, LogOut, User } from "lucide-react";
-import { signOut } from "next-auth/react";
 
 type Props = { userName: string; userInitials: string };
 
 export default function PartnerTopBar({ userName, userInitials }: Props) {
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +62,7 @@ export default function PartnerTopBar({ userName, userInitials }: Props) {
               </Link>
               <div className="border-t my-1" style={{ borderColor: "#F1F5F9" }} />
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => router.push("/sign-out")}
                 className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left hover:bg-red-50 text-red-600"
               >
                 <LogOut size={14} />Sign out

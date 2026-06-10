@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, LogOut, User } from "lucide-react";
-import { signOut } from "next-auth/react";
 
 const ROLE_BADGE: Record<string, { label: string; bg: string; color: string }> = {
   student: { label: "Student", bg: "#EFF6FF", color: "#1D4ED8" },
@@ -15,6 +15,7 @@ const ROLE_BADGE: Record<string, { label: string; bg: string; color: string }> =
 type Props = { userName: string; userInitials: string; role?: string };
 
 export default function DashboardTopBar({ userName, userInitials, role = "student" }: Props) {
+  const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +77,7 @@ export default function DashboardTopBar({ userName, userInitials, role = "studen
               </Link>
               <div className="border-t my-1" style={{ borderColor: "#F1F5F9" }} />
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => router.push("/sign-out")}
                 className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left hover:bg-red-50 text-red-600"
               >
                 <LogOut size={14} />Sign out

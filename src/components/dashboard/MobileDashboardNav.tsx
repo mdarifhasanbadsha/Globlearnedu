@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 
 const WHATSAPP_URL =
   "https://wa.me/8615655031556?text=" +
@@ -11,6 +10,7 @@ const WHATSAPP_URL =
 
 export default function MobileDashboardNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isActive = (href: string) =>
@@ -246,7 +246,7 @@ export default function MobileDashboardNav() {
 
             {/* Sign out */}
             <button
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={() => router.push("/sign-out")}
               style={{
                 display: "block",
                 width: "100%",
