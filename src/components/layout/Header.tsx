@@ -33,7 +33,12 @@ export function Header() {
   const [admissionExpanded, setAdmissionExpanded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const role = (session?.user as any)?.role as string | undefined;
+  const dashboardUrl =
+    role === "admin" || role === "staff" ? "/admin"
+    : role === "partner" ? "/partner"
+    : "/dashboard";
 
   useEffect(() => {
     const onScroll = () => {
@@ -273,44 +278,46 @@ export function Header() {
             </a>
 
             {/* Login / Dashboard — desktop only */}
-            {!session ? (
-              <Link
-                href="/sign-in"
-                className="hidden sm:flex"
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  border: "1.5px solid #1B3A6B",
-                  color: "#1B3A6B",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  textDecoration: "none",
-                  whiteSpace: "nowrap",
-                  minHeight: "44px",
-                  alignItems: "center",
-                }}
-              >
-                Login
-              </Link>
-            ) : (
-              <Link
-                href="/dashboard"
-                className="hidden sm:flex"
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  border: "1.5px solid #1B3A6B",
-                  color: "#1B3A6B",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  textDecoration: "none",
-                  whiteSpace: "nowrap",
-                  minHeight: "44px",
-                  alignItems: "center",
-                }}
-              >
-                Dashboard
-              </Link>
+            {status !== "loading" && (
+              !session ? (
+                <Link
+                  href="/sign-in"
+                  className="hidden sm:flex"
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    border: "1.5px solid #1B3A6B",
+                    color: "#1B3A6B",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                    minHeight: "44px",
+                    alignItems: "center",
+                  }}
+                >
+                  Login
+                </Link>
+              ) : (
+                <Link
+                  href={dashboardUrl}
+                  className="hidden sm:flex"
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    border: "1.5px solid #1B3A6B",
+                    color: "#1B3A6B",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                    minHeight: "44px",
+                    alignItems: "center",
+                  }}
+                >
+                  Dashboard
+                </Link>
+              )
             )}
 
             {/* Apply Now — desktop only */}
@@ -543,42 +550,44 @@ export function Header() {
                 </svg>
                 Chat on WhatsApp
               </a>
-              {!session ? (
-                <Link
-                  href="/sign-in"
-                  style={{
-                    display: "block",
-                    padding: "13px 16px",
-                    textAlign: "center",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    color: "#1B3A6B",
-                    border: "1.5px solid #1B3A6B",
-                    borderRadius: "10px",
-                    textDecoration: "none",
-                    minHeight: "48px",
-                  }}
-                >
-                  Login
-                </Link>
-              ) : (
-                <Link
-                  href="/dashboard"
-                  style={{
-                    display: "block",
-                    padding: "13px 16px",
-                    textAlign: "center",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    color: "#1B3A6B",
-                    border: "1.5px solid #1B3A6B",
-                    borderRadius: "10px",
-                    textDecoration: "none",
-                    minHeight: "48px",
-                  }}
-                >
-                  My Dashboard
-                </Link>
+              {status !== "loading" && (
+                !session ? (
+                  <Link
+                    href="/sign-in"
+                    style={{
+                      display: "block",
+                      padding: "13px 16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#1B3A6B",
+                      border: "1.5px solid #1B3A6B",
+                      borderRadius: "10px",
+                      textDecoration: "none",
+                      minHeight: "48px",
+                    }}
+                  >
+                    Login
+                  </Link>
+                ) : (
+                  <Link
+                    href={dashboardUrl}
+                    style={{
+                      display: "block",
+                      padding: "13px 16px",
+                      textAlign: "center",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#1B3A6B",
+                      border: "1.5px solid #1B3A6B",
+                      borderRadius: "10px",
+                      textDecoration: "none",
+                      minHeight: "48px",
+                    }}
+                  >
+                    My Dashboard
+                  </Link>
+                )
               )}
               <Link
                 href={session?.user ? "/dashboard/apply" : "/sign-up"}

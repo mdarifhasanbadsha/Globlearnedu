@@ -8,6 +8,10 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const session = await auth();
   if (!session?.user) redirect("/sign-in");
 
+  const role = (session.user as any)?.role as string | undefined;
+  if (role === "admin" || role === "staff") redirect("/admin");
+  if (role === "partner") redirect("/partner");
+
   const firstName = (session.user as any).firstName ?? "";
   const lastName = (session.user as any).lastName ?? "";
   const email = session.user.email ?? "Student";

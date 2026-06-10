@@ -246,7 +246,7 @@ export default function MobileDashboardNav() {
 
             {/* Sign out */}
             <button
-              onClick={() => router.push("/sign-out")}
+              onClick={() => { window.location.href = "/sign-out"; }}
               style={{
                 display: "block",
                 width: "100%",

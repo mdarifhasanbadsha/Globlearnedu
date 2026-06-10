@@ -63,7 +63,7 @@ export default function StaffTopBar({ userName, userInitials }: Props) {
                 <p className="text-xs font-semibold text-gray-700 truncate mt-0.5">{userName}</p>
               </div>
               <button
-                onClick={() => router.push("/sign-out")}
+                onClick={() => { window.location.href = "/sign-out"; }}
                 className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left hover:bg-red-50 text-red-600"
               >
                 <LogOut size={14} />Sign out

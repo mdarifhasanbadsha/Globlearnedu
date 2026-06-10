@@ -1,12 +1,11 @@
 "use client";
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 function SignInForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
@@ -33,8 +32,17 @@ function SignInForm() {
       return;
     }
 
-    router.push(callbackUrl);
-    router.refresh();
+    const res = await fetch("/api/auth/session");
+    const sessionData = await res.json();
+    const role = sessionData?.user?.role;
+
+    if (role === "admin" || role === "staff") {
+      window.location.href = "/admin";
+    } else if (role === "partner") {
+      window.location.href = "/partner";
+    } else {
+      window.location.href = callbackUrl || "/dashboard";
+    }
   }
 
   return (
