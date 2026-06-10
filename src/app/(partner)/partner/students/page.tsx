@@ -1,85 +1,122 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { Search, UserPlus, Filter } from "lucide-react";
+import { Search, UserPlus, Filter, RefreshCw } from "lucide-react";
 
-type Student = {
+const STATUS_STYLES: Record<string, { color: string; bg: string; label: string }> = {
+  submitted:              { color: "#475569", bg: "#F1F5F9",  label: "Submitted" },
+  under_review:           { color: "#D97706", bg: "#FFFBEB",  label: "Under Review" },
+  documents_approved:     { color: "#1B3A6B", bg: "#EEF4FF",  label: "Docs Approved" },
+  applied_per_university: { color: "#94A3B8", bg: "#F8FAFC",  label: "Applied" },
+  processing:             { color: "#29ABE2", bg: "#E0F2FE",  label: "Processing" },
+  interview:              { color: "#9D174D", bg: "#FCE7F3",  label: "Interview" },
+  pre_admission:          { color: "#92400E", bg: "#FEF3C7",  label: "Pre-Admission" },
+  student_confirms:       { color: "#065F46", bg: "#D1FAE5",  label: "Student Confirms" },
+  university_deposit:     { color: "#991B1B", bg: "#FEE2E2",  label: "Univ. Deposit" },
+  final_admission:        { color: "#166534", bg: "#DCFCE7",  label: "Final Admission" },
+  student_accepts:        { color: "#065F46", bg: "#D1FAE5",  label: "Student Accepts" },
+  service_charge_payment: { color: "#9A3412", bg: "#FFEDD5",  label: "Service Charge" },
+  jw202_issued:           { color: "#1E40AF", bg: "#DBEAFE",  label: "JW202 Issued" },
+  complete:               { color: "#14532D", bg: "#F0FDF4",  label: "Complete" },
+  withdrawn:              { color: "#94A3B8", bg: "#F8FAFC",  label: "Withdrawn" },
+  cancelled:              { color: "#991B1B", bg: "#FEE2E2",  label: "Cancelled" },
+};
+
+interface StudentRow {
   id: string;
-  name: string;
-  country: string;
-  countryCode: string;
-  program: string;
-  degree: string;
-  university: string;
+  applicationNumber: string;
   status: string;
-  addedDate: string;
-  appId: string;
-};
+  programLevel: string | null;
+  selectedUniversities: Array<{ universityName: string }> | unknown;
+  passportSurname: string | null;
+  passportGivenName: string | null;
+  nationality: string | null;
+  createdAt: string;
+  studentEmail: string | null;
+  studentFirstName: string | null;
+  studentLastName: string | null;
+  studentCountry: string | null;
+}
 
-const STUDENTS: Student[] = [
-  { id: "s1",  name: "Rahima Hossain",         country: "Bangladesh",    countryCode: "🇧🇩", program: "MBBS / Medicine",       degree: "MBBS",      university: "Wuhan University",              status: "Under Review",       addedDate: "2 June 2026",  appId: "MB20260602001" },
-  { id: "s2",  name: "Kwame Asante",            country: "Ghana",         countryCode: "🇬🇭", program: "Mechanical Engineering", degree: "Bachelor's", university: "Peking University",             status: "Admitted",           addedDate: "28 May 2026",  appId: "B20260528003" },
-  { id: "s3",  name: "Amara Mensah",            country: "Nigeria",       countryCode: "🇳🇬", program: "Computer Science",       degree: "Bachelor's", university: "Jilin University",              status: "Processing",         addedDate: "25 May 2026",  appId: "B20260525001" },
-  { id: "s4",  name: "Sunita Patel",            country: "India",         countryCode: "🇮🇳", program: "MBA",                    degree: "Master's",   university: "Fudan University",              status: "Documents Approved", addedDate: "20 May 2026",  appId: "M20260520002" },
-  { id: "s5",  name: "Ahmed Khan",              country: "Pakistan",      countryCode: "🇵🇰", program: "MBBS / Medicine",        degree: "MBBS",       university: "Sichuan University",            status: "Applied",            addedDate: "15 May 2026",  appId: "MB20260515004" },
-  { id: "s6",  name: "Maria Santos",            country: "Philippines",   countryCode: "🇵🇭", program: "Chinese Language",       degree: "Bachelor's", university: "Wuhan University",              status: "Complete",           addedDate: "10 May 2026",  appId: "L20260510001" },
-  { id: "s7",  name: "Emmanuel Osei",           country: "Ghana",         countryCode: "🇬🇭", program: "Public Health",          degree: "Master's",   university: "Peking Union Medical College",  status: "Documents Required", addedDate: "5 May 2026",   appId: "M20260505001" },
-  { id: "s8",  name: "Fatimah Al-Rashidi",      country: "Saudi Arabia",  countryCode: "🇸🇦", program: "MBBS / Medicine",        degree: "MBBS",       university: "Wuhan University",              status: "Applied",            addedDate: "1 May 2026",   appId: "MB20260501002" },
-  { id: "s9",  name: "Jean-Pierre Nkurunziza",  country: "Rwanda",        countryCode: "🇷🇼", program: "Civil Engineering",      degree: "Bachelor's", university: "Tongji University",             status: "Admitted",           addedDate: "25 Apr 2026",  appId: "B20260425001" },
-  { id: "s10", name: "Priya Sharma",            country: "India",         countryCode: "🇮🇳", program: "Dentistry",              degree: "Dentistry",  university: "Capital Medical University",    status: "Complete",           addedDate: "20 Apr 2026",  appId: "DN20260420001" },
-  { id: "s11", name: "Kofi Boateng",            country: "Ghana",         countryCode: "🇬🇭", program: "Economics",              degree: "Bachelor's", university: "Renmin University",             status: "Admitted",           addedDate: "15 Apr 2026",  appId: "B20260415003" },
-  { id: "s12", name: "Yasmin Hasan",            country: "Bangladesh",    countryCode: "🇧🇩", program: "Pharmacy",               degree: "Bachelor's", university: "Jilin University",              status: "Complete",           addedDate: "10 Apr 2026",  appId: "B20260410002" },
-];
+function displayName(row: StudentRow) {
+  if (row.passportGivenName && row.passportSurname) return `${row.passportGivenName} ${row.passportSurname}`;
+  if (row.studentFirstName && row.studentLastName) return `${row.studentFirstName} ${row.studentLastName}`;
+  return row.studentEmail ?? "—";
+}
 
-const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
-  "Under Review": { color: "#D97706", bg: "#FFFBEB" },
-  "Admitted": { color: "#16A34A", bg: "#F0FDF4" },
-  "Processing": { color: "#29ABE2", bg: "#E0F2FE" },
-  "Documents Approved": { color: "#1B3A6B", bg: "#EEF4FF" },
-  "Applied": { color: "#94A3B8", bg: "#F8FAFC" },
-  "Complete": { color: "#16A34A", bg: "#DCFCE7" },
-  "Documents Required": { color: "#C8102E", bg: "#FEF2F2" },
-};
-
-const ALL_STATUSES = ["All", ...Object.keys(STATUS_STYLES)];
+function primaryUniversity(row: StudentRow) {
+  const univs = row.selectedUniversities as Array<{ universityName: string }>;
+  return Array.isArray(univs) && univs.length > 0 ? univs[0].universityName : "—";
+}
 
 export default function StudentsPage() {
+  const [rows, setRows] = useState<StudentRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
+  async function fetchStudents() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/partner/students");
+      if (res.ok) {
+        const data = await res.json();
+        setRows(data.students ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { fetchStudents(); }, []);
+
   const filtered = useMemo(() => {
-    return STUDENTS.filter((s) => {
+    return rows.filter((r) => {
+      const q = search.toLowerCase();
+      const name = displayName(r).toLowerCase();
       const matchSearch =
-        !search ||
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.country.toLowerCase().includes(search.toLowerCase()) ||
-        s.program.toLowerCase().includes(search.toLowerCase()) ||
-        s.appId.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "All" || s.status === statusFilter;
+        !q ||
+        name.includes(q) ||
+        (r.nationality ?? "").toLowerCase().includes(q) ||
+        (r.studentCountry ?? "").toLowerCase().includes(q) ||
+        r.applicationNumber.toLowerCase().includes(q) ||
+        (r.programLevel ?? "").toLowerCase().includes(q) ||
+        primaryUniversity(r).toLowerCase().includes(q);
+      const matchStatus = statusFilter === "All" || r.status === statusFilter;
       return matchSearch && matchStatus;
     });
-  }, [search, statusFilter]);
+  }, [rows, search, statusFilter]);
+
+  const uniqueStatuses = Array.from(new Set(rows.map((r) => r.status)));
 
   return (
     <div>
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black mb-1" style={{ color: "#1B3A6B" }}>
-            My Students
-          </h1>
+          <h1 className="text-2xl font-black mb-1" style={{ color: "#1B3A6B" }}>My Students</h1>
           <p className="text-sm" style={{ color: "#64748B" }}>
-            {STUDENTS.length} total students — {filtered.length} shown
+            {loading ? "Loading…" : `${rows.length} total — ${filtered.length} shown`}
           </p>
         </div>
-        <Link
-          href="/partner/add-student"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
-          style={{ backgroundColor: "#C8102E" }}
-        >
-          <UserPlus size={15} />
-          Add student
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchStudents}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border"
+            style={{ borderColor: "#E2E8F0", color: "#64748B" }}
+          >
+            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            Refresh
+          </button>
+          <Link
+            href="/partner/add-student"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
+            style={{ backgroundColor: "#C8102E" }}
+          >
+            <UserPlus size={15} />
+            Add student
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -88,10 +125,10 @@ export default function StudentsPage() {
           <Search size={15} style={{ color: "#94A3B8" }} />
           <input
             type="text"
-            placeholder="Search by name, country, program or App ID…"
+            placeholder="Search name, country, program, app ID…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400"
+            className="flex-1 text-sm outline-none bg-transparent"
             style={{ color: "#1B3A6B" }}
           />
         </div>
@@ -103,10 +140,9 @@ export default function StudentsPage() {
             className="text-sm border rounded-xl px-3 py-2 outline-none"
             style={{ borderColor: "#E2E8F0", color: "#475569" }}
           >
-            {ALL_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s === "All" ? "All statuses" : s}
-              </option>
+            <option value="All">All statuses</option>
+            {uniqueStatuses.map((s) => (
+              <option key={s} value={s}>{STATUS_STYLES[s]?.label ?? s}</option>
             ))}
           </select>
         </div>
@@ -114,11 +150,22 @@ export default function StudentsPage() {
 
       {/* Table */}
       <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: "#E2E8F0" }}>
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center">
+            <RefreshCw size={20} className="animate-spin mx-auto mb-2" style={{ color: "#94A3B8" }} />
+            <p className="text-sm" style={{ color: "#94A3B8" }}>Loading students…</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-sm font-semibold" style={{ color: "#94A3B8" }}>
-              No students match your filters.
+              {rows.length === 0 ? "No students yet. Add your first student to get started." : "No students match your filters."}
             </p>
+            {rows.length === 0 && (
+              <Link href="/partner/add-student" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: "#C8102E" }}>
+                <UserPlus size={14} />
+                Add first student
+              </Link>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -126,52 +173,40 @@ export default function StudentsPage() {
               <thead>
                 <tr style={{ borderBottom: "1px solid #F1F5F9" }}>
                   {["Student", "Country", "Program", "University", "Status", "Added", "App ID"].map((h) => (
-                    <th
-                      key={h}
-                      className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap"
-                      style={{ color: "#94A3B8" }}
-                    >
+                    <th key={h} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: "#94A3B8" }}>
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((s) => {
-                  const style = STATUS_STYLES[s.status] ?? { color: "#64748B", bg: "#F8FAFC" };
+                {filtered.map((row) => {
+                  const style = STATUS_STYLES[row.status] ?? { color: "#64748B", bg: "#F8FAFC", label: row.status };
                   return (
-                    <tr
-                      key={s.id}
-                      className="transition-colors hover:bg-gray-50"
-                      style={{ borderBottom: "1px solid #F8FAFC" }}
-                    >
+                    <tr key={row.id} className="transition-colors hover:bg-gray-50" style={{ borderBottom: "1px solid #F8FAFC" }}>
                       <td className="px-5 py-3.5">
-                        <p className="text-sm font-semibold whitespace-nowrap" style={{ color: "#1B3A6B" }}>
-                          {s.name}
-                        </p>
+                        <p className="text-sm font-semibold whitespace-nowrap" style={{ color: "#1B3A6B" }}>{displayName(row)}</p>
+                        {row.studentEmail && <p className="text-[11px]" style={{ color: "#94A3B8" }}>{row.studentEmail}</p>}
                       </td>
                       <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: "#64748B" }}>
-                        {s.countryCode} {s.country}
+                        {row.nationality ?? row.studentCountry ?? "—"}
                       </td>
-                      <td className="px-5 py-3.5 text-sm" style={{ color: "#64748B" }}>
-                        {s.degree}
+                      <td className="px-5 py-3.5 text-sm capitalize" style={{ color: "#64748B" }}>
+                        {row.programLevel?.replace(/_/g, " ") ?? "—"}
                       </td>
                       <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: "#64748B" }}>
-                        {s.university}
+                        {primaryUniversity(row)}
                       </td>
                       <td className="px-5 py-3.5">
-                        <span
-                          className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
-                          style={{ backgroundColor: style.bg, color: style.color }}
-                        >
-                          {s.status}
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: style.bg, color: style.color }}>
+                          {style.label}
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-xs whitespace-nowrap" style={{ color: "#94A3B8" }}>
-                        {s.addedDate}
+                        {new Date(row.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}
                       </td>
                       <td className="px-5 py-3.5 text-xs font-mono whitespace-nowrap" style={{ color: "#94A3B8" }}>
-                        {s.appId}
+                        {row.applicationNumber}
                       </td>
                     </tr>
                   );
