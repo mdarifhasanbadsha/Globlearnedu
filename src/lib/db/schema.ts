@@ -13,7 +13,7 @@ export const applicationStatusEnum = pgEnum("application_status", [
   "service_charge_payment", "jw202_issued", "complete", "withdrawn", "cancelled",
 ]);
 export const scholarshipTypeEnum = pgEnum("scholarship_type", ["csc", "university", "provincial", "self_sponsored"]);
-export const programLevelEnum = pgEnum("program_level", ["bachelor", "master", "phd", "language", "diploma", "mba", "ai"]);
+export const programLevelEnum = pgEnum("program_level", ["bachelor", "master", "phd", "language", "diploma", "foundation", "short_course", "mbbs"]);
 export const blogStatusEnum = pgEnum("blog_status", ["draft", "published", "scheduled", "in_review"]);
 export const pageTypeEnum = pgEnum("page_type", ["general_yearly", "university_admission", "intl_student_admission", "program_yearly"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "failed", "refunded"]);
