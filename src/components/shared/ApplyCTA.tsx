@@ -23,7 +23,7 @@ export default function ApplyCTA({
         <p className="text-white/70 text-lg mb-8 max-w-2xl mx-auto">{subtitle}</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href={program ? `/universities?program=${program}` : "/universities"}
+            href={program ? `/dashboard/apply?program=${program}` : "/dashboard/apply"}
             className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-[#C8102E] hover:bg-[#A50D25] rounded-lg transition-colors"
           >
             Start my application — Affordable Cost

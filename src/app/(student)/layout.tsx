@@ -26,7 +26,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
     <div className="min-h-screen flex" style={{ backgroundColor: "#F8FAFC" }}>
       <DashboardSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <DashboardTopBar userName={userName} userInitials={userInitials} />
+        <DashboardTopBar userName={userName} userInitials={userInitials} role={(session.user as any).role ?? "student"} />
         <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">{children}</main>
       </div>
       <MobileDashboardNav />

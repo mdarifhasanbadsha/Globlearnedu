@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import ApplicationForm from "~/components/application/ApplicationForm";
 
@@ -20,7 +21,9 @@ export default function ApplyPage() {
           Complete all 9 steps. You can save and return at any time — we'll hold your progress.
         </p>
       </div>
-      <ApplicationForm />
+      <Suspense fallback={<div className="animate-pulse h-96 rounded-2xl bg-gray-100" />}>
+        <ApplicationForm />
+      </Suspense>
     </div>
   );
 }

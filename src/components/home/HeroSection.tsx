@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+type HeroProps = { applyHref?: string };
+
 const STATS = [
   { value: "280+", label: "Universities" },
   { value: "5,000+", label: "Students Placed" },
@@ -7,7 +9,7 @@ const STATS = [
   { value: "80+", label: "Countries" },
 ];
 
-export function HeroSection() {
+export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
   return (
     <section
       className="hero-grid min-h-screen flex items-center relative overflow-hidden"
@@ -88,7 +90,7 @@ export function HeroSection() {
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center mb-12">
           <Link
-            href="/universities"
+            href={applyHref}
             style={{
               display: "inline-flex",
               alignItems: "center",

@@ -12,7 +12,7 @@ const NAV_LINKS = [
 ];
 
 const ADMISSION_LINKS = [
-  { label: "Apply Now", href: "/universities" },
+  { label: "Apply Now", href: "/sign-up" },
   { label: "All Universities", href: "/universities" },
   { label: "Programs", href: "/programs" },
   { label: "Scholarships", href: "/scholarships" },
@@ -315,7 +315,7 @@ export function Header() {
 
             {/* Apply Now — desktop only */}
             <Link
-              href="/universities"
+              href={session?.user ? "/dashboard/apply" : "/sign-up"}
               className="hidden sm:flex"
               style={{
                 alignItems: "center",
@@ -581,7 +581,7 @@ export function Header() {
                 </Link>
               )}
               <Link
-                href="/universities"
+                href={session?.user ? "/dashboard/apply" : "/sign-up"}
                 style={{
                   display: "block",
                   padding: "13px 16px",

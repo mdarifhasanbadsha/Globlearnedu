@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Check, Search, X } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Check, Search, X, Info } from "lucide-react";
 import type { FormData } from "../types";
 import { universitiesData } from "~/lib/data/universities";
 
@@ -20,7 +21,23 @@ const DEGREE_LEVELS = [
 ];
 
 export default function Step1Program({ data, onChange }: Props) {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
+  const [preSelectedMsg, setPreSelectedMsg] = useState("");
+
+  useEffect(() => {
+    const slug = searchParams.get("university");
+    if (slug && data.selectedUniversities.length === 0) {
+      const found = universitiesData[slug];
+      if (found) {
+        onChange({ selectedUniversities: [slug] });
+        setPreSelectedMsg(
+          `${found.name} has been pre-selected based on your choice. You can add up to 4 more universities below.`
+        );
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const allUniversities = useMemo(() => Object.values(universitiesData), []);
 
@@ -49,6 +66,12 @@ export default function Step1Program({ data, onChange }: Props) {
 
   return (
     <div>
+      {preSelectedMsg && (
+        <div className="flex items-start gap-3 p-4 rounded-xl mb-6" style={{ backgroundColor: "#EFF6FF", border: "1px solid #BFDBFE" }}>
+          <Info size={16} style={{ color: "#3B82F6", flexShrink: 0, marginTop: "2px" }} />
+          <p className="text-sm font-medium" style={{ color: "#1D4ED8" }}>{preSelectedMsg}</p>
+        </div>
+      )}
       <h2 className="text-xl font-black mb-1" style={{ color: "#1B3A6B" }}>
         Choose your program and universities
       </h2>

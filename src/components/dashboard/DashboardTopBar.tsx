@@ -5,9 +5,16 @@ import Link from "next/link";
 import { Bell, ChevronDown, LogOut, User } from "lucide-react";
 import { signOut } from "next-auth/react";
 
-type Props = { userName: string; userInitials: string };
+const ROLE_BADGE: Record<string, { label: string; bg: string; color: string }> = {
+  student: { label: "Student", bg: "#EFF6FF", color: "#1D4ED8" },
+  partner: { label: "Partner", bg: "#FFFBEB", color: "#92400E" },
+  staff:   { label: "Staff",   bg: "#EEF4FF", color: "#1B3A6B" },
+  admin:   { label: "Admin",   bg: "#FEF2F2", color: "#C8102E" },
+};
 
-export default function DashboardTopBar({ userName, userInitials }: Props) {
+type Props = { userName: string; userInitials: string; role?: string };
+
+export default function DashboardTopBar({ userName, userInitials, role = "student" }: Props) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +57,14 @@ export default function DashboardTopBar({ userName, userInitials }: Props) {
               {userInitials.toUpperCase()}
             </div>
             <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">{userName}</span>
+            {ROLE_BADGE[role] && (
+              <span
+                className="hidden sm:inline text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: ROLE_BADGE[role].bg, color: ROLE_BADGE[role].color }}
+              >
+                {ROLE_BADGE[role].label}
+              </span>
+            )}
             <ChevronDown size={14} style={{ color: "#94A3B8", transform: dropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
           </button>
 

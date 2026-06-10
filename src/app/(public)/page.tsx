@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { auth } from "@/lib/auth/config";
 import { NoticeBanner } from "@/components/home/NoticeBanner";
 import { HeroSection } from "@/components/home/HeroSection";
 import { UniversityMarquee } from "@/components/home/UniversityMarquee";
@@ -62,11 +63,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth();
+  const applyHref = session?.user ? "/dashboard/apply" : "/sign-up";
   return (
     <>
       <NoticeBanner />
-      <HeroSection />
+      <HeroSection applyHref={applyHref} />
       <UniversityMarquee />
       <FeaturedUniversities />
       <WhyChooseUs />

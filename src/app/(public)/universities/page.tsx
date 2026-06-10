@@ -152,7 +152,7 @@ export default function UniversitiesPage() {
             {filtered.map((uni) => (
               <Link
                 key={uni.slug}
-                href={`/universities/${uni.slug}`}
+                href={`/universities/${uni.slug}/apply`}
                 className="group bg-white rounded-2xl border border-gray-200 hover:border-[#1B3A6B] hover:shadow-xl transition-all duration-300 overflow-hidden"
               >
                 {/* Top accent bar */}
@@ -224,7 +224,7 @@ export default function UniversitiesPage() {
                         </span>
                       )}
                       <span className="flex items-center gap-1 text-sm font-bold text-[#1B3A6B] group-hover:text-[#C8102E] transition-colors">
-                        View <ChevronRight size={15} />
+                        View &amp; Apply <ChevronRight size={15} />
                       </span>
                     </div>
                   </div>

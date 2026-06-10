@@ -2,10 +2,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export function MobileBottomBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
   const [trackOpen, setTrackOpen] = useState(false);
 
   // Hide on authenticated portal routes — those have their own nav
@@ -80,7 +82,7 @@ export function MobileBottomBar() {
 
           {/* Apply — red elevated pill */}
           <Link
-            href="/universities"
+            href={session?.user ? "/dashboard/apply" : "/sign-up"}
             style={{
               flex: 1,
               display: "flex",
