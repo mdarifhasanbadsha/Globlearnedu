@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
 import { applications, notifications as notifTable, payments } from "@/lib/db/schema";
@@ -126,6 +127,10 @@ function CompactStepper({ currentStage }: { currentStage: number }) {
 
 export default async function DashboardPage() {
   const session = await auth();
+  const role = (session?.user as any)?.role as string | undefined;
+  if (role === "admin" || role === "staff") redirect("/admin");
+  if (role === "partner") redirect("/partner");
+
   const userId = (session?.user as any)?.id as string | undefined;
   const firstName = (session?.user as any)?.firstName ?? (session?.user?.name ?? "there").split(" ")[0];
 
