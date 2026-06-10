@@ -9,6 +9,10 @@ import { users } from "@/lib/db/schema";
 const SEED_EMAIL = "admin@globlearnedu.com";
 const SEED_PASSWORD = "GlobAdmin2026!";
 
+export async function GET() {
+  return POST();
+}
+
 export async function POST() {
   const existing = await db
     .select({ id: users.id, role: users.role })
