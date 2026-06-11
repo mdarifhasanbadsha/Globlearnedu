@@ -12,6 +12,7 @@ import {
   UserCheck,
   Settings,
   Mail,
+  CalendarRange,
   ExternalLink,
 } from "lucide-react";
 
@@ -36,6 +37,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     items: [
       { label: "Universities", href: "/admin/universities", icon: Building2 },
       { label: "Blog Posts", href: "/admin/blog", icon: BookOpen },
+      { label: "Admission Scheduler", href: "/admin/admission-scheduler", icon: CalendarRange },
     ],
   },
   {
