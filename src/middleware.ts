@@ -49,6 +49,10 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
+  if (pathname.startsWith("/staff") && !["admin", "staff"].includes(role)) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   if (pathname.startsWith("/partner/dashboard") && !["partner", "admin"].includes(role)) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }

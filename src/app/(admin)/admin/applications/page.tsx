@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Search, Eye, Edit2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Search, Eye, Edit2, RefreshCw, AlertTriangle, UserCheck } from "lucide-react";
 import Link from "next/link";
 
 const DB_STATUS_VALUES = [
@@ -48,7 +48,10 @@ interface AppRow {
   studentFirstName: string | null;
   studentLastName: string | null;
   studentCountry: string | null;
+  assignedStaffId: string | null;
 }
+
+interface StaffOption { userId: string; name: string; }
 
 function studentName(row: AppRow) {
   if (row.passportGivenName && row.passportSurname) return `${row.passportGivenName} ${row.passportSurname}`;
@@ -71,6 +74,9 @@ export default function AdminApplicationsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<DbStatus>("under_review");
   const [saving, setSaving] = useState(false);
+  const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [assignStaffId, setAssignStaffId] = useState<string>("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -89,6 +95,37 @@ export default function AdminApplicationsPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Load staff list once for assignment dropdown
+  useEffect(() => {
+    fetch("/api/admin/staff")
+      .then(r => r.json())
+      .then(d => setStaffOptions(
+        (d.staff ?? []).filter((s: any) => s.isActive).map((s: any) => ({
+          userId: s.userId,
+          name: `${s.firstName} ${s.lastName}`.trim(),
+        }))
+      ))
+      .catch(() => {});
+  }, []);
+
+  async function saveAssignment(id: string, staffId: string | null) {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/applications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, assignedStaffId: staffId }),
+      });
+      if (!res.ok) throw new Error();
+      setRows(prev => prev.map(r => r.id === id ? { ...r, assignedStaffId: staffId } : r));
+      setAssigningId(null);
+    } catch {
+      alert("Failed to assign staff.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -215,7 +252,7 @@ export default function AdminApplicationsPage() {
             <table className="w-full text-sm min-w-[900px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid #F1F5F9", backgroundColor: "#FAFAFA" }}>
-                  {["App ID", "Student", "Program", "University", "Country", "Status", "Date", ""].map((h) => (
+                  {["App ID", "Student", "Program", "University", "Country", "Status", "Assigned To", "Date", ""].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
                       {h}
                     </th>
@@ -289,6 +326,43 @@ export default function AdminApplicationsPage() {
                           >
                             {cfg.label}
                           </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {assigningId === row.id ? (
+                          <div className="flex items-center gap-1">
+                            <select
+                              value={assignStaffId}
+                              onChange={e => setAssignStaffId(e.target.value)}
+                              className="border rounded-lg px-2 py-1 text-xs bg-white focus:outline-none"
+                              style={{ borderColor: "#E2E8F0" }}
+                            >
+                              <option value="">Unassigned</option>
+                              {staffOptions.map(s => (
+                                <option key={s.userId} value={s.userId}>{s.name}</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => saveAssignment(row.id, assignStaffId || null)}
+                              disabled={saving}
+                              className="text-[11px] font-bold px-2 py-1 rounded-lg text-white disabled:opacity-50"
+                              style={{ backgroundColor: "#1B3A6B" }}
+                            >
+                              {saving ? "…" : "OK"}
+                            </button>
+                            <button onClick={() => setAssigningId(null)} className="text-[11px] px-1" style={{ color: "#94A3B8" }}>✕</button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => { setAssigningId(row.id); setAssignStaffId(row.assignedStaffId ?? ""); }}
+                            className="text-xs px-2.5 py-1 rounded-full border hover:border-blue-300 transition-colors"
+                            style={{ borderColor: "#E2E8F0", color: row.assignedStaffId ? "#1B3A6B" : "#94A3B8" }}
+                            title="Assign staff"
+                          >
+                            {row.assignedStaffId
+                              ? (staffOptions.find(s => s.userId === row.assignedStaffId)?.name ?? "Assigned")
+                              : "Unassigned"}
+                          </button>
                         )}
                       </td>
                       <td className="px-4 py-3 text-xs whitespace-nowrap" style={{ color: "#94A3B8" }}>

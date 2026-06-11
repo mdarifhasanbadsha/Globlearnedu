@@ -80,7 +80,9 @@ const patchSchema = z.object({
     "processing", "interview", "pre_admission", "student_confirms",
     "university_deposit", "final_admission", "student_accepts",
     "service_charge_payment", "jw202_issued", "complete", "withdrawn", "cancelled",
-  ]),
+  ]).optional(),
+  assignedStaffId: z.string().uuid().nullable().optional(),
+  isUrgent: z.boolean().optional(),
 });
 
 export async function PATCH(request: NextRequest) {
@@ -93,18 +95,26 @@ export async function PATCH(request: NextRequest) {
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
 
-  const { id, status } = parsed.data;
+  const { id, status, assignedStaffId, isUrgent } = parsed.data;
 
   const app = await db.query.applications.findFirst({ where: eq(applications.id, id) });
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const setData: Record<string, unknown> = { updatedAt: new Date() };
+  if (status) {
+    setData.status = status;
+    if (status === "complete") setData.completedAt = new Date();
+  }
+  if (assignedStaffId !== undefined) setData.assignedStaffId = assignedStaffId;
+  if (isUrgent !== undefined) setData.isUrgent = isUrgent;
+
   const [updated] = await db
     .update(applications)
-    .set({ status, updatedAt: new Date(), ...(status === "complete" ? { completedAt: new Date() } : {}) })
+    .set(setData)
     .where(eq(applications.id, id))
     .returning();
 
-  if (status !== app.status) {
+  if (status && status !== app.status) {
     const student = await db.query.users.findFirst({ where: eq(users.id, app.studentId) });
     const statusInfo = STATUS_DESCRIPTIONS[status];
     if (student?.email && statusInfo) {
