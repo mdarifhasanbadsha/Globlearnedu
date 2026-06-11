@@ -40,7 +40,7 @@ export const PROGRAM_CODES: Record<string, string> = {
   "default": "G",
 };
 
-export function generateApplicationNumber(programLevel?: string): string {
+export async function generateApplicationNumber(programLevel?: string): Promise<string> {
   const code = programLevel
     ? (PROGRAM_CODES[programLevel] ?? PROGRAM_CODES["default"])
     : PROGRAM_CODES["default"];
@@ -48,6 +48,8 @@ export function generateApplicationNumber(programLevel?: string): string {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  const serial = String(Math.floor(Math.random() * 900) + 1).padStart(3, "0");
-  return `${code}${year}${month}${day}${serial}`;
+  const prefix = `${code}${year}${month}${day}`;
+  const { getNextSerial } = await import("@/lib/db/sequences");
+  const serial = String(await getNextSerial(prefix)).padStart(3, "0");
+  return `${prefix}${serial}`;
 }

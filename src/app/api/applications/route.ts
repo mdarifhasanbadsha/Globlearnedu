@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { scholarshipType, programLevel, selectedUniversities } = parsed.data;
-  const applicationNumber = generateApplicationNumber(programLevel);
+  const applicationNumber = await generateApplicationNumber(programLevel);
 
   const partner = session.user.role === "partner"
     ? await db.query.partners.findFirst({ where: eq(partners.userId, session.user.id) })
