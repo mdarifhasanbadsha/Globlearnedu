@@ -13,6 +13,7 @@ import {
   Settings,
   Mail,
   CalendarRange,
+  BarChart2,
   ExternalLink,
 } from "lucide-react";
 
@@ -44,7 +45,8 @@ const NAV: { section: string; items: NavItem[] }[] = [
     section: "People",
     items: [
       { label: "Partners", href: "/admin/partners", icon: Briefcase },
-      { label: "Staff", href: "/admin/staff", icon: UserCheck },
+      { label: "Staff", href: "/admin/staff", icon: UserCheck, exact: true },
+      { label: "Performance", href: "/admin/staff/performance", icon: BarChart2 },
     ],
   },
   {
