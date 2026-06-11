@@ -11,6 +11,7 @@ import {
   Briefcase,
   UserCheck,
   Settings,
+  Mail,
   ExternalLink,
 } from "lucide-react";
 
@@ -47,6 +48,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
   {
     section: "System",
     items: [
+      { label: "Email Templates", href: "/admin/email-templates", icon: Mail },
       { label: "Settings", href: "/admin/settings", icon: Settings },
     ],
   },

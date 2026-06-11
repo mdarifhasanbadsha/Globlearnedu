@@ -1,7 +1,31 @@
 import { sendEmail } from "./resend";
 import * as templates from "./templates";
+import { db } from "@/lib/db";
+import { emailTemplates } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com";
+
+// Substitute {{variableName}} placeholders in a template string
+function render(template: string, vars: Record<string, string>): string {
+  return Object.entries(vars).reduce(
+    (str, [key, value]) => str.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value ?? ""),
+    template
+  );
+}
+
+// Look up an active DB template override by triggerEvent
+async function getDbTemplate(triggerEvent: string): Promise<{ subject: string; bodyHtml: string } | null> {
+  try {
+    const [row] = await db
+      .select({ subject: emailTemplates.subject, bodyHtml: emailTemplates.bodyHtml })
+      .from(emailTemplates)
+      .where(and(eq(emailTemplates.triggerEvent, triggerEvent), eq(emailTemplates.isActive, true)))
+      .limit(1);
+    if (row?.bodyHtml) return { subject: row.subject, bodyHtml: row.bodyHtml };
+  } catch { /* DB unavailable — fall back to hardcoded */ }
+  return null;
+}
 
 export async function sendApplicationReceivedNotification(data: {
   studentEmail: string;
@@ -12,22 +36,31 @@ export async function sendApplicationReceivedNotification(data: {
   partnerEmail?: string;
   partnerName?: string;
 }) {
-  const studentTemplate = templates.applicationReceivedStudent({
+  const trackingUrl = `${BASE_URL}/track?id=${data.applicationId}`;
+  const studentVars = {
     studentName: data.studentName,
     applicationId: data.applicationId,
-    universities: data.universities,
+    universities: data.universities.join(", "),
     program: data.program,
-    trackingUrl: `${BASE_URL}/track?id=${data.applicationId}`,
-  });
+    trackingUrl,
+  };
+  const dbStudent = await getDbTemplate("application_received_student");
+  const studentTemplate = dbStudent
+    ? { subject: render(dbStudent.subject, studentVars), html: render(dbStudent.bodyHtml, studentVars) }
+    : templates.applicationReceivedStudent({ ...studentVars, universities: data.universities });
   await sendEmail({ to: data.studentEmail, ...studentTemplate });
 
   if (data.partnerEmail && data.partnerName) {
-    const partnerTemplate = templates.applicationReceivedPartner({
+    const partnerVars = {
       partnerName: data.partnerName,
       studentName: data.studentName,
       applicationId: data.applicationId,
       program: data.program,
-    });
+    };
+    const dbPartner = await getDbTemplate("application_received_partner");
+    const partnerTemplate = dbPartner
+      ? { subject: render(dbPartner.subject, partnerVars), html: render(dbPartner.bodyHtml, partnerVars) }
+      : templates.applicationReceivedPartner(partnerVars);
     await sendEmail({ to: data.partnerEmail, ...partnerTemplate });
   }
 }
@@ -40,10 +73,18 @@ export async function sendStatusUpdateNotification(data: {
   statusDescription: string;
   nextStep: string;
 }) {
-  const template = templates.statusUpdateEmail({
-    ...data,
+  const vars = {
+    studentName: data.studentName,
+    applicationId: data.applicationId,
+    newStatus: data.newStatus,
+    statusDescription: data.statusDescription,
+    nextStep: data.nextStep,
     trackingUrl: `${BASE_URL}/track?id=${data.applicationId}`,
-  });
+  };
+  const dbT = await getDbTemplate("status_update");
+  const template = dbT
+    ? { subject: render(dbT.subject, vars), html: render(dbT.bodyHtml, vars) }
+    : templates.statusUpdateEmail({ ...vars });
   await sendEmail({ to: data.studentEmail, ...template });
 }
 
@@ -57,10 +98,20 @@ export async function sendAdmissionOfferNotification(data: {
   intakeDate: string;
   staffName: string;
 }) {
-  const template = templates.admissionOfferEmail({
-    ...data,
+  const vars = {
+    studentName: data.studentName,
+    applicationId: data.applicationId,
+    universityName: data.universityName,
+    programName: data.programName,
+    scholarshipType: data.scholarshipType,
+    intakeDate: data.intakeDate,
+    staffName: data.staffName,
     trackingUrl: `${BASE_URL}/track?id=${data.applicationId}`,
-  });
+  };
+  const dbT = await getDbTemplate("admission_offer");
+  const template = dbT
+    ? { subject: render(dbT.subject, vars), html: render(dbT.bodyHtml, vars) }
+    : templates.admissionOfferEmail({ ...vars });
   await sendEmail({ to: data.studentEmail, ...template });
 }
 
