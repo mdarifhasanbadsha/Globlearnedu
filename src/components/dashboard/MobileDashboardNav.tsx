@@ -246,7 +246,7 @@ export default function MobileDashboardNav() {
 
             {/* Sign out */}
             <button
-              onClick={() => { window.location.href = "/sign-out"; }}
+              onClick={() => { window.location.href = "/api/auth/logout"; }}
               style={{
                 display: "block",
                 width: "100%",

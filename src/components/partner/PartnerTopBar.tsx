@@ -62,7 +62,7 @@ export default function PartnerTopBar({ userName, userInitials }: Props) {
               </Link>
               <div className="border-t my-1" style={{ borderColor: "#F1F5F9" }} />
               <button
-                onClick={() => { window.location.href = "/sign-out"; }}
+                onClick={() => { window.location.href = "/api/auth/logout"; }}
                 className="flex items-center gap-2.5 px-4 py-2.5 text-sm w-full text-left hover:bg-red-50 text-red-600"
               >
                 <LogOut size={14} />Sign out

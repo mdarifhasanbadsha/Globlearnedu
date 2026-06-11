@@ -1,13 +1,9 @@
 "use client";
 import { useEffect } from "react";
-import { signOut } from "next-auth/react";
 
 export default function SignOutPage() {
   useEffect(() => {
-    signOut({ redirect: false })
-      .finally(() => {
-        window.location.href = "/api/auth/signout";
-      });
+    window.location.replace("/api/auth/logout");
   }, []);
 
   return (
