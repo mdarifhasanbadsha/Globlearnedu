@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { applications, notifications as notifTable, payments } from "@/lib/db/schema";
+import { applications, notifications as notifTable, payments, users } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import {
   Clock, FileText, Bell, Download,
   MapPin, MessageCircle, Check,
 } from "lucide-react";
+import VerificationBanner from "./_VerificationBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -134,12 +135,19 @@ export default async function DashboardPage() {
   const userId = (session?.user as any)?.id as string | undefined;
   const firstName = (session?.user as any)?.firstName ?? (session?.user?.name ?? "there").split(" ")[0];
 
-  const app = userId
-    ? await db.query.applications.findFirst({
-        where: eq(applications.studentId, userId),
-        orderBy: [desc(applications.createdAt)],
-      })
-    : null;
+  const [userRecord, app] = await Promise.all([
+    userId
+      ? db.select({ emailVerified: users.emailVerified }).from(users).where(eq(users.id, userId)).limit(1).then((r) => r[0])
+      : Promise.resolve(null),
+    userId
+      ? db.query.applications.findFirst({
+          where: eq(applications.studentId, userId),
+          orderBy: [desc(applications.createdAt)],
+        })
+      : Promise.resolve(null),
+  ]);
+
+  const isEmailVerified = !!userRecord?.emailVerified;
 
   const [recentNotices, recentPayments] = await Promise.all([
     userId
@@ -175,6 +183,9 @@ export default async function DashboardPage() {
 
         {/* ── LEFT ─────────────────────────────────────── */}
         <div className="space-y-6">
+
+          {/* Email verification banner */}
+          {!isEmailVerified && <VerificationBanner />}
 
           {/* Welcome card */}
           <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, #1B3A6B 0%, #0A1628 100%)" }}>

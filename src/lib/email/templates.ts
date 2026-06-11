@@ -52,6 +52,51 @@ function infoBox(content: string, color = "#1B3A6B"): string {
   return `<div style="background:#EEF4FF;border-left:4px solid ${color};border-radius:0 8px 8px 0;padding:14px 16px;margin:16px 0;font-size:13px;color:#1E3A5F;line-height:1.6;">${content}</div>`;
 }
 
+export function emailVerificationTemplate(data: {
+  firstName: string;
+  verifyUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: "Verify your email address — Globlearn Education",
+    html: baseTemplate(`
+      <h2 style="color:#1B3A6B;font-size:22px;margin:0 0 8px;">Verify your email address</h2>
+      <p style="font-size:15px;color:#374151;">Hi <strong>${data.firstName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        Thank you for joining Globlearn Education. Please verify your email address to activate your account and receive important updates about your application.
+      </p>
+      <div style="text-align:center;margin:28px 0;">
+        ${ctaButton("Verify my email", data.verifyUrl)}
+      </div>
+      <p style="font-size:12px;color:#9CA3AF;text-align:center;">
+        This link expires in 24 hours. If you did not create an account, you can safely ignore this email.
+      </p>
+    `),
+  };
+}
+
+export function passwordResetTemplate(data: {
+  firstName: string;
+  resetUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: "Reset your password — Globlearn Education",
+    html: baseTemplate(`
+      <h2 style="color:#1B3A6B;font-size:22px;margin:0 0 8px;">Reset your password</h2>
+      <p style="font-size:15px;color:#374151;">Hi <strong>${data.firstName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        We received a request to reset the password for your Globlearn Education account. Click the button below to choose a new password.
+      </p>
+      <div style="text-align:center;margin:28px 0;">
+        ${ctaButton("Reset my password", data.resetUrl)}
+      </div>
+      ${infoBox("This link expires in <strong>1 hour</strong>. If you did not request a password reset, your account is safe — simply ignore this email.", "#C8102E")}
+      <p style="font-size:12px;color:#9CA3AF;text-align:center;">
+        For security, never share this link with anyone.
+      </p>
+    `),
+  };
+}
+
 export function applicationReceivedStudent(data: {
   studentName: string;
   applicationId: string;

@@ -5,6 +5,11 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { createToken } from "@/lib/auth/verification";
+import { sendEmail } from "@/lib/email/resend";
+import { emailVerificationTemplate } from "@/lib/email/templates";
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com";
 
 function validatePassword(password: string): string | null {
   if (password.length < 8) return "Password must be at least 8 characters";
@@ -60,6 +65,19 @@ export async function POST(request: NextRequest) {
         isActive: true,
       })
       .returning({ id: users.id, email: users.email, role: users.role });
+
+    // Send verification email (non-blocking — don't fail registration if email fails)
+    try {
+      const token = await createToken("verify", newUser.id);
+      const verifyUrl = `${BASE_URL}/verify-email?token=${token}`;
+      const tpl = emailVerificationTemplate({
+        firstName,
+        verifyUrl,
+      });
+      await sendEmail({ to: newUser.email, subject: tpl.subject, html: tpl.html });
+    } catch (emailErr) {
+      console.error("Verification email failed:", emailErr);
+    }
 
     return NextResponse.json({
       success: true,
