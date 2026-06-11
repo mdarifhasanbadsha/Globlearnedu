@@ -15,26 +15,23 @@ import Step7ChinaStatus from "./steps/Step7ChinaStatus";
 import Step8Documents from "./steps/Step8Documents";
 import Step9Review from "./steps/Step9Review";
 
-const DEGREE_PREFIX: Record<string, string> = {
-  "MBBS / Medicine": "MB",
-  "Dentistry / Stomatology": "DN",
-  "Bachelor's Degree": "B",
-  "Master's Degree": "M",
-  "PhD / Doctorate": "D",
-  "Language Program": "L",
-  "Foundation / Pre-University": "P",
-  "Short Course / Exchange": "SC",
+const SCHOLARSHIP_MAP: Record<string, "csc" | "university" | "provincial" | "self_sponsored"> = {
+  csc:        "csc",
+  university: "university",
+  provincial: "provincial",
+  self:       "self_sponsored",
 };
 
-function buildAppId(degreeLevel: string): string {
-  const prefix = DEGREE_PREFIX[degreeLevel] ?? "AP";
-  const now = new Date();
-  const y = now.getFullYear();
-  const mo = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  const serial = String(Math.floor(Math.random() * 900) + 1).padStart(3, "0");
-  return `${prefix}${y}${mo}${d}${serial}`;
-}
+const DEGREE_MAP: Record<string, "bachelor" | "master" | "phd" | "language" | "diploma" | "foundation" | "short_course" | "mbbs"> = {
+  "MBBS / Medicine":                "mbbs",
+  "Bachelor's":                     "bachelor",
+  "Master's":                       "master",
+  "PhD":                            "phd",
+  "Chinese Language":               "language",
+  "Diploma":                        "diploma",
+  "Foundation / Pre-University":    "foundation",
+  "Short Course / Exchange":        "short_course",
+};
 
 const STEP_LABELS = [
   "Program", "Personal", "Contact", "Family", "Academic",
@@ -48,6 +45,8 @@ export default function ApplicationForm() {
   const [data, setData] = useState<FormData>(INITIAL_FORM);
   const [submitted, setSubmitted] = useState(false);
   const [appId, setAppId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   function update(updates: Partial<FormData>) {
     setData((prev) => ({ ...prev, ...updates }));
@@ -56,16 +55,68 @@ export default function ApplicationForm() {
   function next() { setStep((s) => Math.min(TOTAL, s + 1)); window.scrollTo(0, 0); }
   function back() { setStep((s) => Math.max(1, s - 1)); window.scrollTo(0, 0); }
 
+  async function handleSubmit() {
+    if (submitting) return;
+    setSubmitting(true);
+    setSubmitError("");
+
+    const scholarshipType = SCHOLARSHIP_MAP[data.fundingType];
+    const programLevel    = DEGREE_MAP[data.degreeLevel];
+
+    if (!scholarshipType || !programLevel) {
+      setSubmitError("Please complete Step 1 — funding type and degree level are required.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (data.selectedUniversities.length === 0) {
+      setSubmitError("Please select at least one university in Step 1.");
+      setSubmitting(false);
+      return;
+    }
+
+    const payload = {
+      scholarshipType,
+      programLevel,
+      selectedUniversities: data.selectedUniversities.map((u) => ({
+        universityId:   u.id,
+        universityName: u.nameEn,
+        programName:    data.universityMajors[u.id] || programLevel,
+      })),
+    };
+
+    try {
+      const res = await fetch("/api/applications", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.application?.applicationNumber) {
+        setAppId(result.application.applicationNumber);
+        setSubmitted(true);
+      } else {
+        const msg = typeof result.error === "string"
+          ? result.error
+          : "Submission failed. Please try again or contact your advisor.";
+        setSubmitError(msg);
+      }
+    } catch {
+      setSubmitError("Network error. Check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   const stepProps = { data, onChange: update };
 
   return (
     <div className="max-w-3xl mx-auto">
       <StepIndicator current={step} total={TOTAL} labels={STEP_LABELS} />
 
-      <div
-        className="bg-white rounded-2xl border p-6 md:p-8"
-        style={{ borderColor: "#E2E8F0" }}
-      >
+      <div className="bg-white rounded-2xl border p-6 md:p-8" style={{ borderColor: "#E2E8F0" }}>
         {step === 1 && <Step1Program {...stepProps} />}
         {step === 2 && <Step2Personal {...stepProps} />}
         {step === 3 && <Step3Contact {...stepProps} />}
@@ -77,16 +128,15 @@ export default function ApplicationForm() {
         {step === 9 && (
           <Step9Review
             {...stepProps}
-            onSubmit={() => { setAppId(buildAppId(data.degreeLevel)); setSubmitted(true); }}
+            onSubmit={handleSubmit}
+            submitting={submitting}
+            submitError={submitError}
           />
         )}
 
         {/* Nav buttons (not shown on Step 9 — it has its own submit) */}
         {step < 9 && (
-          <div
-            className="flex items-center justify-between mt-8 pt-6 border-t"
-            style={{ borderColor: "#F1F5F9" }}
-          >
+          <div className="flex items-center justify-between mt-8 pt-6 border-t" style={{ borderColor: "#F1F5F9" }}>
             <button
               onClick={back}
               disabled={step === 1}
@@ -111,23 +161,14 @@ export default function ApplicationForm() {
       {submitted && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
           <div className="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl"
-              style={{ backgroundColor: "#F0FDF4" }}
-            >
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl" style={{ backgroundColor: "#F0FDF4" }}>
               🎉
             </div>
-            <h2 className="text-2xl font-black mb-2" style={{ color: "#1B3A6B" }}>
-              Application submitted!
-            </h2>
-            <p className="text-sm mb-2" style={{ color: "#64748B" }}>
-              Your Application ID is:
-            </p>
-            <p className="text-lg font-mono font-black mb-4" style={{ color: "#C8102E" }}>
-              {appId}
-            </p>
+            <h2 className="text-2xl font-black mb-2" style={{ color: "#1B3A6B" }}>Application submitted!</h2>
+            <p className="text-sm mb-2" style={{ color: "#64748B" }}>Your Application ID is:</p>
+            <p className="text-lg font-mono font-black mb-4" style={{ color: "#C8102E" }}>{appId}</p>
             <p className="text-sm mb-8" style={{ color: "#64748B" }}>
-              Globlearn Education will review your application within 24 hours.
+              Globlearn Education will review your application within 24 hours. You can track progress in your dashboard.
             </p>
             <div className="flex flex-col gap-3">
               <a

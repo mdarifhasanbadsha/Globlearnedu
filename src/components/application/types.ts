@@ -1,5 +1,16 @@
 // ── Shared types for the 9-step application form ──────────────────────────────
 
+export type UniversityChoice = {
+  id: string;
+  slug: string;
+  nameEn: string;
+  city: string;
+  province: string;
+  tier985: boolean;
+  tier211: boolean;
+  isPartner: boolean;
+};
+
 export type AcademicEntry = {
   institution: string;
   degree: string;
@@ -23,8 +34,9 @@ export type FormData = {
   // Step 1 — Program
   fundingType: string;
   degreeLevel: string;
-  selectedUniversities: string[];
-  universityPrograms: Record<string, string>;
+  selectedUniversities: UniversityChoice[];
+  universityMajors: Record<string, string>;    // keyed by university id
+  interestMajors: string[];                    // additional interested fields
   // Step 2 — Personal
   surname: string;
   givenNames: string;
@@ -34,6 +46,9 @@ export type FormData = {
   gender: string;
   nationality: string;
   passportNumber: string;
+  passportIssueDay: string;
+  passportIssueMonth: string;
+  passportIssueYear: string;
   passportExpiryDay: string;
   passportExpiryMonth: string;
   passportExpiryYear: string;
@@ -110,11 +125,12 @@ export const EMPTY_WORK: WorkEntry = {
 
 export const INITIAL_FORM: FormData = {
   fundingType: "", degreeLevel: "",
-  selectedUniversities: [], universityPrograms: {},
+  selectedUniversities: [], universityMajors: {}, interestMajors: [],
   surname: "", givenNames: "",
   dobDay: "", dobMonth: "", dobYear: "",
   gender: "", nationality: "",
   passportNumber: "",
+  passportIssueDay: "", passportIssueMonth: "", passportIssueYear: "",
   passportExpiryDay: "", passportExpiryMonth: "", passportExpiryYear: "",
   religion: "", maritalStatus: "",
   whatsapp: "", email: "", address: "",

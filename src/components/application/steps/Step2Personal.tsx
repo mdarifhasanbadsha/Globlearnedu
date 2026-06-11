@@ -9,6 +9,7 @@ const MONTHS = [
 ];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
 const YEARS_DOB = Array.from({ length: 60 }, (_, i) => String(2006 - i));
+const YEARS_ISSUE  = Array.from({ length: 30 }, (_, i) => String(2026 - i));  // 2026 → 1997
 const YEARS_EXPIRY = Array.from({ length: 20 }, (_, i) => String(2025 + i));
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -133,21 +134,38 @@ export default function Step2Personal({ data, onChange }: Props) {
           />
         </Field>
         <div>
-          <label className={LABEL_CLS}>Passport expiry date <span style={{ color: "#C8102E" }}>*</span></label>
+          <label className={LABEL_CLS}>Passport issue date <span style={{ color: "#C8102E" }}>*</span></label>
           <div className="grid grid-cols-3 gap-2">
-            <select value={data.passportExpiryDay} onChange={(e) => set("passportExpiryDay", e.target.value)} className={SELECT_CLS}>
+            <select value={data.passportIssueDay} onChange={(e) => set("passportIssueDay", e.target.value)} className={SELECT_CLS}>
               <option value="">Day</option>
               {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
-            <select value={data.passportExpiryMonth} onChange={(e) => set("passportExpiryMonth", e.target.value)} className={SELECT_CLS}>
+            <select value={data.passportIssueMonth} onChange={(e) => set("passportIssueMonth", e.target.value)} className={SELECT_CLS}>
               <option value="">Month</option>
               {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
-            <select value={data.passportExpiryYear} onChange={(e) => set("passportExpiryYear", e.target.value)} className={SELECT_CLS}>
+            <select value={data.passportIssueYear} onChange={(e) => set("passportIssueYear", e.target.value)} className={SELECT_CLS}>
               <option value="">Year</option>
-              {YEARS_EXPIRY.map((y) => <option key={y} value={y}>{y}</option>)}
+              {YEARS_ISSUE.map((y) => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
+        </div>
+      </div>
+      <div className="mb-4">
+        <label className={LABEL_CLS}>Passport expiry date <span style={{ color: "#C8102E" }}>*</span></label>
+        <div className="grid grid-cols-3 gap-2 sm:w-1/2">
+          <select value={data.passportExpiryDay} onChange={(e) => set("passportExpiryDay", e.target.value)} className={SELECT_CLS}>
+            <option value="">Day</option>
+            {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <select value={data.passportExpiryMonth} onChange={(e) => set("passportExpiryMonth", e.target.value)} className={SELECT_CLS}>
+            <option value="">Month</option>
+            {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <select value={data.passportExpiryYear} onChange={(e) => set("passportExpiryYear", e.target.value)} className={SELECT_CLS}>
+            <option value="">Year</option>
+            {YEARS_EXPIRY.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
         </div>
       </div>
 

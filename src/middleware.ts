@@ -19,6 +19,7 @@ const publicPaths = [
   "/sign-out",
   "/forgot-password",
   "/reset-password",
+  "/verify-email",
 ];
 
 function isPublicPath(pathname: string): boolean {

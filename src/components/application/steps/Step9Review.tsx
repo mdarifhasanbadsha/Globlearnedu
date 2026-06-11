@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Upload } from "lucide-react";
+import { ChevronDown, ChevronUp, Upload, Loader2 } from "lucide-react";
 import type { FormData } from "../types";
-import { universitiesData } from "~/lib/data/universities";
 
-type Props = { data: FormData; onChange: (u: Partial<FormData>) => void; onSubmit: () => void };
+type Props = {
+  data: FormData;
+  onChange: (u: Partial<FormData>) => void;
+  onSubmit: () => void;
+  submitting?: boolean;
+  submitError?: string;
+};
 
 function ReviewSection({ title, items, editStep }: { title: string; items: { label: string; value: string }[]; editStep?: number }) {
   const [open, setOpen] = useState(true);
@@ -50,13 +55,11 @@ const TERMS = [
   "I have read and agree to Globlearn Education's Terms of Service and Privacy Policy.",
 ];
 
-export default function Step9Review({ data, onChange, onSubmit }: Props) {
+export default function Step9Review({ data, onChange, onSubmit, submitting = false, submitError = "" }: Props) {
   const [payTab, setPayTab] = useState<"card" | "qr" | "bank">("card");
   const [payProof, setPayProof] = useState<string>("");
 
-  const uniNames = data.selectedUniversities
-    .map((s) => universitiesData[s]?.name ?? s)
-    .join(", ");
+  const uniNames = data.selectedUniversities.map((u) => u.nameEn).join(", ");
 
   const allTerms = data.term1 && data.term2 && data.term3 && data.term4;
 
@@ -293,17 +296,27 @@ export default function Step9Review({ data, onChange, onSubmit }: Props) {
         </div>
       </div>
 
+      {submitError && (
+        <div className="rounded-xl px-4 py-3 mb-4 text-sm border" style={{ backgroundColor: "#FEF2F2", borderColor: "#FECACA", color: "#991B1B" }}>
+          {submitError}
+        </div>
+      )}
+
       {/* Submit button */}
       <button
         type="button"
         onClick={onSubmit}
-        disabled={!allTerms}
-        className="w-full py-4 rounded-xl text-base font-black text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled={!allTerms || submitting}
+        className="w-full py-4 rounded-xl text-base font-black text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ backgroundColor: "#C8102E" }}
       >
-        Submit application &amp; pay 500 RMB deposit →
+        {submitting ? (
+          <><Loader2 size={18} className="animate-spin" />Submitting application…</>
+        ) : (
+          "Submit application & pay 500 RMB deposit →"
+        )}
       </button>
-      {!allTerms && (
+      {!allTerms && !submitting && (
         <p className="text-xs text-center mt-2" style={{ color: "#94A3B8" }}>
           Please check all 4 boxes above to submit.
         </p>

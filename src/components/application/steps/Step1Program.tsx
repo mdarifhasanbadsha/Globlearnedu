@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { Check, Search, X, Info } from "lucide-react";
-import type { FormData } from "../types";
-import { universitiesData } from "~/lib/data/universities";
+import { useState, useEffect, useRef } from "react";
+import { Check, Search, X, Info, Plus, Trash2, AlertCircle } from "lucide-react";
+import type { FormData, UniversityChoice } from "../types";
 
 type Props = { data: FormData; onChange: (u: Partial<FormData>) => void };
 
 const FUNDING_OPTIONS = [
-  { id: "csc", label: "CSC Government Scholarship", desc: "Full tuition + ¥2,500–¥3,500/month stipend", recommended: true },
-  { id: "university", label: "University Scholarship", desc: "50–100% tuition waiver, less competitive", recommended: false },
-  { id: "provincial", label: "Provincial Scholarship", desc: "Jiangsu, Hubei, Shandong & more", recommended: false },
-  { id: "self", label: "Self-sponsored", desc: "¥14,000–¥35,000/year — affordable cost", recommended: false },
+  { id: "csc",        label: "CSC Government Scholarship",     desc: "Full tuition + ¥2,500–¥3,500/month stipend", recommended: true },
+  { id: "university", label: "University Scholarship",          desc: "50–100% tuition waiver, less competitive" },
+  { id: "provincial", label: "Provincial Scholarship",          desc: "Jiangsu, Hubei, Shandong & more" },
+  { id: "self",       label: "Self-sponsored",                  desc: "¥14,000–¥35,000/year — affordable cost" },
 ];
 
 const DEGREE_LEVELS = [
@@ -21,68 +19,73 @@ const DEGREE_LEVELS = [
 ];
 
 export default function Step1Program({ data, onChange }: Props) {
-  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
-  const [preSelectedMsg, setPreSelectedMsg] = useState("");
+  const [results, setResults] = useState<UniversityChoice[]>([]);
+  const [searching, setSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Fetch universities from real DB — debounced
   useEffect(() => {
-    const slug = searchParams.get("university");
-    if (slug && data.selectedUniversities.length === 0) {
-      const found = universitiesData[slug];
-      if (found) {
-        onChange({ selectedUniversities: [slug] });
-        setPreSelectedMsg(
-          `${found.name} has been pre-selected based on your choice. You can add up to 4 more universities below.`
-        );
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const params = new URLSearchParams({ limit: "40" });
+        if (search.trim()) params.set("search", search.trim());
+        const res = await fetch(`/api/universities?${params}`);
+        const data = await res.json();
+        setResults(data.universities ?? []);
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
       }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    }, 300);
+  }, [search]);
 
-  const allUniversities = useMemo(() => Object.values(universitiesData), []);
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return allUniversities;
-    return allUniversities.filter(
-      (u) => u.name.toLowerCase().includes(q) || u.city.toLowerCase().includes(q)
-    );
-  }, [search, allUniversities]);
-
-  function toggleUniversity(slug: string) {
+  function toggleUniversity(uni: UniversityChoice) {
     const current = data.selectedUniversities;
-    if (current.includes(slug)) {
-      const nextPrograms = { ...data.universityPrograms };
-      delete nextPrograms[slug];
-      onChange({ selectedUniversities: current.filter((s) => s !== slug), universityPrograms: nextPrograms });
+    const exists = current.find((u) => u.id === uni.id);
+    if (exists) {
+      const nextMajors = { ...data.universityMajors };
+      delete nextMajors[uni.id];
+      onChange({ selectedUniversities: current.filter((u) => u.id !== uni.id), universityMajors: nextMajors });
     } else if (current.length < 5) {
-      onChange({ selectedUniversities: [...current, slug] });
+      onChange({ selectedUniversities: [...current, uni] });
     }
   }
 
-  function setProgram(slug: string, program: string) {
-    onChange({ universityPrograms: { ...data.universityPrograms, [slug]: program } });
+  function setMajor(uniId: string, major: string) {
+    onChange({ universityMajors: { ...data.universityMajors, [uniId]: major } });
+  }
+
+  function addInterestMajor() {
+    onChange({ interestMajors: [...(data.interestMajors ?? []), ""] });
+  }
+
+  function setInterestMajor(idx: number, val: string) {
+    const arr = [...(data.interestMajors ?? [])];
+    arr[idx] = val;
+    onChange({ interestMajors: arr });
+  }
+
+  function removeInterestMajor(idx: number) {
+    onChange({ interestMajors: (data.interestMajors ?? []).filter((_, i) => i !== idx) });
   }
 
   return (
     <div>
-      {preSelectedMsg && (
-        <div className="flex items-start gap-3 p-4 rounded-xl mb-6" style={{ backgroundColor: "#EFF6FF", border: "1px solid #BFDBFE" }}>
-          <Info size={16} style={{ color: "#3B82F6", flexShrink: 0, marginTop: "2px" }} />
-          <p className="text-sm font-medium" style={{ color: "#1D4ED8" }}>{preSelectedMsg}</p>
-        </div>
-      )}
       <h2 className="text-xl font-black mb-1" style={{ color: "#1B3A6B" }}>
         Choose your program and universities
       </h2>
       <p className="text-sm mb-8" style={{ color: "#64748B" }}>
-        Select up to 5 universities. All must be the same degree level (exception: language programs can be combined with one degree program).
+        Select up to 5 universities as preferences. All should be the same degree level.
       </p>
 
-      {/* ── Funding type ────────────────────────────── */}
+      {/* ── Funding type ─────────────────────────── */}
       <div className="mb-8">
         <p className="text-sm font-bold mb-4 pb-2" style={{ color: "#1B3A6B", borderBottom: "1px solid #F1F5F9" }}>
-          Funding type — select one
+          Funding type — select one <span style={{ color: "#C8102E" }}>*</span>
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {FUNDING_OPTIONS.map((opt) => {
@@ -97,14 +100,12 @@ export default function Step1Program({ data, onChange }: Props) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-bold leading-snug" style={{ color: sel ? "#C8102E" : "#1B3A6B" }}>
-                      {opt.label}
-                    </p>
+                    <p className="text-sm font-bold leading-snug" style={{ color: sel ? "#C8102E" : "#1B3A6B" }}>{opt.label}</p>
                     <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>{opt.desc}</p>
                   </div>
                   {opt.recommended && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white flex-shrink-0" style={{ backgroundColor: "#C8102E" }}>
-                      Recommended
+                      Popular
                     </span>
                   )}
                 </div>
@@ -120,10 +121,10 @@ export default function Step1Program({ data, onChange }: Props) {
         </div>
       </div>
 
-      {/* ── Degree level ────────────────────────────── */}
+      {/* ── Degree level ─────────────────────────── */}
       <div className="mb-8">
         <p className="text-sm font-bold mb-4 pb-2" style={{ color: "#1B3A6B", borderBottom: "1px solid #F1F5F9" }}>
-          Degree level — select one
+          Degree level — select one <span style={{ color: "#C8102E" }}>*</span>
         </p>
         <div className="flex flex-wrap gap-2">
           {DEGREE_LEVELS.map((level) => {
@@ -143,140 +144,167 @@ export default function Step1Program({ data, onChange }: Props) {
         </div>
       </div>
 
-      {/* ── University selection ─────────────────────── */}
+      {/* ── University selection ──────────────────── */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4 pb-2" style={{ borderBottom: "1px solid #F1F5F9" }}>
           <p className="text-sm font-bold" style={{ color: "#1B3A6B" }}>
-            Select universities (max 5)
+            Select universities (preference order, max 5) <span style={{ color: "#C8102E" }}>*</span>
           </p>
-          <span
-            className="text-xs font-bold px-2.5 py-1 rounded-full"
-            style={{
-              backgroundColor: data.selectedUniversities.length >= 5 ? "#FEF2F2" : "#EEF4FF",
-              color: data.selectedUniversities.length >= 5 ? "#C8102E" : "#1B3A6B",
-            }}
-          >
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: data.selectedUniversities.length >= 5 ? "#FEF2F2" : "#EEF4FF", color: data.selectedUniversities.length >= 5 ? "#C8102E" : "#1B3A6B" }}>
             {data.selectedUniversities.length} / 5
           </span>
         </div>
 
-        {/* Chips for selected */}
+        {/* Selected chips */}
         {data.selectedUniversities.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {data.selectedUniversities.map((slug) => {
-              const uni = universitiesData[slug];
-              return (
-                <span
-                  key={slug}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full text-white"
-                  style={{ backgroundColor: "#1B3A6B" }}
-                >
-                  {uni?.name}
-                  <button type="button" onClick={() => toggleUniversity(slug)} className="hover:opacity-70">
-                    <X size={11} />
-                  </button>
-                </span>
-              );
-            })}
+            {data.selectedUniversities.map((uni, i) => (
+              <span key={uni.id} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full text-white" style={{ backgroundColor: "#1B3A6B" }}>
+                <span className="text-[10px] opacity-70">#{i + 1}</span>
+                {uni.nameEn}
+                {uni.isPartner && <span className="text-[9px] font-bold px-1 rounded" style={{ backgroundColor: "#FFD700", color: "#92610A" }}>Partner</span>}
+                <button type="button" onClick={() => toggleUniversity(uni)} className="hover:opacity-70 ml-0.5">
+                  <X size={10} />
+                </button>
+              </span>
+            ))}
           </div>
         )}
 
         {/* Search */}
-        <div className="relative mb-4">
+        <div className="relative mb-3">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "#94A3B8" }} />
           <input
             type="text"
-            placeholder="Search university name or city…"
+            placeholder="Search by university name, city, or province…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full border border-gray-200 rounded-lg pl-9 pr-4 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1B3A6B]"
           />
+          {searching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: "#E2E8F0", borderTopColor: "#1B3A6B" }} />
+          )}
         </div>
 
         {/* University cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
-          {filtered.map((uni) => {
-            const sel = data.selectedUniversities.includes(uni.slug);
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-80 overflow-y-auto pr-1">
+          {results.map((uni) => {
+            const sel = !!data.selectedUniversities.find((u) => u.id === uni.id);
             const maxed = data.selectedUniversities.length >= 5 && !sel;
-            const hasCsc = uni.scholarships.some((s) => s.toLowerCase().includes("csc"));
             return (
               <button
-                key={uni.slug}
+                key={uni.id}
                 type="button"
-                onClick={() => toggleUniversity(uni.slug)}
+                onClick={() => toggleUniversity(uni)}
                 disabled={maxed}
-                className="text-left p-4 rounded-xl border-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="text-left p-3.5 rounded-xl border-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ borderColor: sel ? "#C8102E" : "#E2E8F0", backgroundColor: sel ? "#FEF2F2" : "white" }}
               >
-                <div className="flex items-start gap-2">
-                  <div
-                    className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors"
-                    style={{ borderColor: sel ? "#C8102E" : "#CBD5E1", backgroundColor: sel ? "#C8102E" : "white" }}
-                  >
-                    {sel && <Check size={11} color="white" strokeWidth={3} />}
+                <div className="flex items-start gap-2.5">
+                  <div className="w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ borderColor: sel ? "#C8102E" : "#CBD5E1", backgroundColor: sel ? "#C8102E" : "white" }}>
+                    {sel && <Check size={10} color="white" strokeWidth={3} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold leading-tight truncate" style={{ color: "#1B3A6B" }}>
-                      {uni.name}
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: "#94A3B8" }}>
-                      {uni.city} · {uni.tuitionRMB}/yr
-                    </p>
-                    <div className="flex gap-1 mt-1.5 flex-wrap">
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#EEF4FF", color: "#1B3A6B" }}>
-                        {uni.tier}
-                      </span>
-                      {hasCsc && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#F0FDF4", color: "#166534" }}>
-                          CSC
-                        </span>
-                      )}
+                    <p className="text-sm font-bold leading-tight truncate" style={{ color: "#1B3A6B" }}>{uni.nameEn}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#94A3B8" }}>{uni.city}{uni.province ? `, ${uni.province}` : ""}</p>
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {uni.tier985 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF2F2", color: "#C8102E" }}>985</span>}
+                      {uni.tier211 && !uni.tier985 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#EEF4FF", color: "#1B3A6B" }}>211</span>}
+                      {uni.isPartner && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FFFBEB", color: "#92610A" }}>Partner</span>}
                     </div>
                   </div>
                 </div>
               </button>
             );
           })}
+          {!searching && results.length === 0 && (
+            <div className="col-span-2 py-8 text-center text-sm" style={{ color: "#94A3B8" }}>
+              {search.trim() ? `No universities found for "${search}"` : "Type to search all 1,500+ universities"}
+            </div>
+          )}
         </div>
-
         {data.selectedUniversities.length >= 5 && (
-          <p className="mt-3 text-xs font-semibold" style={{ color: "#C8102E" }}>
+          <p className="mt-2 text-xs font-semibold" style={{ color: "#C8102E" }}>
             Maximum 5 universities selected. Remove one to add another.
           </p>
         )}
       </div>
 
-      {/* ── Per-university program ───────────────────── */}
+      {/* ── Expected major per university ────────────── */}
       {data.selectedUniversities.length > 0 && (
-        <div>
-          <p className="text-sm font-bold mb-4 pb-2" style={{ color: "#1B3A6B", borderBottom: "1px solid #F1F5F9" }}>
-            Select program for each university
+        <div className="mb-6">
+          <p className="text-sm font-bold mb-1 pb-2" style={{ color: "#1B3A6B", borderBottom: "1px solid #F1F5F9" }}>
+            Expected major / field of study
+          </p>
+          <p className="text-xs mb-4" style={{ color: "#64748B" }}>
+            Enter your intended major at each university. If unsure, write your preferred subject area.
           </p>
           <div className="space-y-3">
-            {data.selectedUniversities.map((slug) => {
-              const uni = universitiesData[slug];
-              if (!uni) return null;
-              return (
-                <div key={slug} className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <span className="text-sm font-semibold sm:w-52 flex-shrink-0 truncate" style={{ color: "#1B3A6B" }}>
-                    {uni.name}
+            {data.selectedUniversities.map((uni, i) => (
+              <div key={uni.id} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:w-52 flex-shrink-0">
+                  <span className="text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ backgroundColor: "#1B3A6B" }}>
+                    {i + 1}
                   </span>
-                  <select
-                    value={data.universityPrograms[slug] ?? ""}
-                    onChange={(e) => setProgram(slug, e.target.value)}
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1B3A6B]"
-                  >
-                    <option value="">— Select program —</option>
-                    {uni.programs.map((p) => (
-                      <option key={p.slug} value={p.slug}>{p.name}</option>
-                    ))}
-                  </select>
+                  <span className="text-sm font-semibold truncate" style={{ color: "#1B3A6B" }}>{uni.nameEn}</span>
                 </div>
-              );
-            })}
+                <input
+                  type="text"
+                  placeholder="e.g. Clinical Medicine, Computer Science, Business Administration…"
+                  value={data.universityMajors[uni.id] ?? ""}
+                  onChange={(e) => setMajor(uni.id, e.target.value)}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1B3A6B]"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Additional interested majors */}
+          <div className="mt-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold" style={{ color: "#64748B" }}>
+                Other interested fields of study (optional)
+              </p>
+              {(data.interestMajors ?? []).length < 3 && (
+                <button
+                  type="button"
+                  onClick={addInterestMajor}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors"
+                  style={{ borderColor: "#E2E8F0", color: "#1B3A6B" }}
+                >
+                  <Plus size={11} />
+                  Add field
+                </button>
+              )}
+            </div>
+            {(data.interestMajors ?? []).map((m, idx) => (
+              <div key={idx} className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="e.g. Biomedical Engineering"
+                  value={m}
+                  onChange={(e) => setInterestMajor(idx, e.target.value)}
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#1B3A6B]"
+                />
+                <button type="button" onClick={() => removeInterestMajor(idx)} className="text-red-400 hover:text-red-600">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}
+
+      {/* ── Globlearn disclaimer ──────────────────── */}
+      <div className="flex items-start gap-3 p-4 rounded-xl border mt-2" style={{ backgroundColor: "#FFFBEB", borderColor: "#FDE68A" }}>
+        <AlertCircle size={15} style={{ color: "#D97706", flexShrink: 0, marginTop: 1 }} />
+        <p className="text-xs leading-relaxed" style={{ color: "#92400E" }}>
+          <strong>Programme availability notice:</strong> If your selected programme is not available at your chosen
+          universities, Globlearn Education reserves the right to place you in a similar programme at a comparable
+          institution based on availability, your academic profile, and scholarship requirements. Our advisors will
+          contact you before making any changes.
+        </p>
+      </div>
     </div>
   );
 }
