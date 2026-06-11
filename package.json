@@ -9,7 +9,8 @@
     "deploy": "opennextjs-cloudflare build --openNextConfigPath ./open-next.config.ts && wrangler deploy",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "import:universities": "npx tsx scripts/import-universities.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
