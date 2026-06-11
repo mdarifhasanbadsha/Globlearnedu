@@ -30,7 +30,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     section: "Overview",
     items: [
       { label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
-      { label: "Applications", href: "/admin/applications", icon: FileText, badge: "89" },
+      { label: "Applications", href: "/admin/applications", icon: FileText },
     ],
   },
   {

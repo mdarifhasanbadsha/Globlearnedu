@@ -1,92 +1,116 @@
+import { auth } from "@/lib/auth/config";
+import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { partners, users, applications, payments } from "@/lib/db/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { DollarSign, Users, TrendingUp, Plus } from "lucide-react";
 
-const MOCK_PARTNERS = [
-  {
-    id: "P001",
-    name: "South Asia Study Abroad",
-    email: "contact@sastudy.in",
-    country: "India",
-    students: 31,
-    admitted: 26,
-    pending: 5,
-    commissionPaid: 52000,
-    commissionPending: 10000,
-    status: "Active",
-    joined: "2023-11-05",
-  },
-  {
-    id: "P002",
-    name: "Ahmed Counseling Services",
-    email: "ahmed@acservices.ng",
-    country: "Nigeria",
-    students: 24,
-    admitted: 19,
-    pending: 5,
-    commissionPaid: 38000,
-    commissionPending: 10000,
-    status: "Active",
-    joined: "2024-01-15",
-  },
-  {
-    id: "P003",
-    name: "Africa Education Hub",
-    email: "info@africaedhub.gh",
-    country: "Ghana",
-    students: 18,
-    admitted: 14,
-    pending: 4,
-    commissionPaid: 28000,
-    commissionPending: 8000,
-    status: "Active",
-    joined: "2024-03-20",
-  },
-  {
-    id: "P004",
-    name: "Gulf Education Partners",
-    email: "info@gulfedu.ae",
-    country: "UAE",
-    students: 12,
-    admitted: 9,
-    pending: 3,
-    commissionPaid: 18000,
-    commissionPending: 6000,
-    status: "Active",
-    joined: "2024-07-10",
-  },
-  {
-    id: "P005",
-    name: "East Africa Study Group",
-    email: "info@eastudy.ke",
-    country: "Kenya",
-    students: 8,
-    admitted: 5,
-    pending: 3,
-    commissionPaid: 10000,
-    commissionPending: 6000,
-    status: "Active",
-    joined: "2025-01-22",
-  },
-  {
-    id: "P006",
-    name: "Dhaka Education Consultants",
-    email: "dhaka@decons.bd",
-    country: "Bangladesh",
-    students: 15,
-    admitted: 11,
-    pending: 4,
-    commissionPaid: 22000,
-    commissionPending: 8000,
-    status: "Pending",
-    joined: "2025-04-01",
-  },
-];
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Partners — Globlearn Admin" };
 
-const totalStudents = MOCK_PARTNERS.reduce((s, p) => s + p.students, 0);
-const totalAdmitted = MOCK_PARTNERS.reduce((s, p) => s + p.admitted, 0);
-const totalCommission = MOCK_PARTNERS.reduce((s, p) => s + p.commissionPaid, 0);
-const totalPending = MOCK_PARTNERS.reduce((s, p) => s + p.commissionPending, 0);
+const ADMITTED_STATUSES = ["final_admission", "student_accepts", "service_charge_payment", "jw202_issued", "complete"];
+const COMMISSION_RATE = 0.2;
+const DEFAULT_SERVICE_CHARGE = 10000;
 
-export default function AdminPartnersPage() {
+export default async function AdminPartnersPage() {
+  const session = await auth();
+  const role = (session?.user as any)?.role;
+  if (!session?.user?.id || !["admin", "staff"].includes(role)) redirect("/sign-in");
+
+  // Partners with user info
+  const partnerRows = await db
+    .select({
+      id: partners.id,
+      userId: partners.userId,
+      agencyName: partners.agencyName,
+      agencyCountry: partners.agencyCountry,
+      isApproved: partners.isApproved,
+      createdAt: partners.createdAt,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      userIsActive: users.isActive,
+    })
+    .from(partners)
+    .leftJoin(users, eq(partners.userId, users.id))
+    .orderBy(partners.createdAt);
+
+  if (partnerRows.length === 0) {
+    return (
+      <div className="max-w-[1200px] mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-black" style={{ color: "#0A1628" }}>Partners</h1>
+          <p className="text-sm mt-0.5 text-gray-400">No partners registered yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Application stats per partner
+  const appStats = await db.execute(sql`
+    SELECT
+      partner_id::text,
+      COUNT(*)::int                                                                                        AS total,
+      COUNT(*) FILTER (WHERE status IN (${sql.raw(ADMITTED_STATUSES.map(s => `'${s}'`).join(","))}))::int AS admitted
+    FROM applications
+    WHERE partner_id IS NOT NULL
+    GROUP BY partner_id
+  `);
+
+  const appMap: Record<string, { total: number; admitted: number }> = {};
+  for (const r of appStats.rows as any[]) {
+    appMap[r.partner_id] = { total: r.total ?? 0, admitted: r.admitted ?? 0 };
+  }
+
+  // Commission stats per partner
+  const commStats = await db.execute(sql`
+    SELECT
+      a.partner_id::text,
+      COALESCE(SUM(p.amount) FILTER (WHERE a.service_charge_paid = TRUE), 0)::numeric AS paid_amount,
+      COUNT(*) FILTER (WHERE a.service_charge_paid = TRUE)::int                        AS paid_count,
+      COUNT(*) FILTER (WHERE a.service_charge_paid = FALSE
+                         AND a.status IN (${sql.raw(ADMITTED_STATUSES.map(s => `'${s}'`).join(","))}))::int AS pending_count
+    FROM applications a
+    LEFT JOIN payments p ON p.application_id = a.id AND p.type = 'service_charge' AND p.status = 'paid'
+    WHERE a.partner_id IS NOT NULL
+    GROUP BY a.partner_id
+  `);
+
+  const commMap: Record<string, { paidAmount: number; paidCount: number; pendingCount: number }> = {};
+  for (const r of commStats.rows as any[]) {
+    commMap[r.partner_id] = {
+      paidAmount: parseFloat(r.paid_amount ?? "0"),
+      paidCount: r.paid_count ?? 0,
+      pendingCount: r.pending_count ?? 0,
+    };
+  }
+
+  const rows = partnerRows.map(p => {
+    const apps = appMap[p.id] ?? { total: 0, admitted: 0 };
+    const comm = commMap[p.id] ?? { paidAmount: 0, paidCount: 0, pendingCount: 0 };
+    const commissionPaid = comm.paidAmount * COMMISSION_RATE;
+    const commissionPending = comm.pendingCount * DEFAULT_SERVICE_CHARGE * COMMISSION_RATE;
+    const displayName = p.agencyName || [p.firstName, p.lastName].filter(Boolean).join(" ") || p.email || "—";
+    return {
+      id: p.id,
+      displayName,
+      email: p.email ?? "—",
+      country: p.agencyCountry ?? "—",
+      isApproved: p.isApproved,
+      userIsActive: p.userIsActive,
+      joinedAt: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—",
+      students: apps.total,
+      admitted: apps.admitted,
+      commissionPaid,
+      commissionPending,
+    };
+  }).sort((a, b) => b.students - a.students);
+
+  const totalStudents = rows.reduce((s, r) => s + r.students, 0);
+  const totalAdmitted = rows.reduce((s, r) => s + r.admitted, 0);
+  const totalCommPaid = rows.reduce((s, r) => s + r.commissionPaid, 0);
+  const totalCommPending = rows.reduce((s, r) => s + r.commissionPending, 0);
+
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
       {/* Header */}
@@ -94,26 +118,18 @@ export default function AdminPartnersPage() {
         <div>
           <h1 className="text-2xl font-black" style={{ color: "#0A1628" }}>Partners</h1>
           <p className="text-sm mt-0.5" style={{ color: "#64748B" }}>
-            {MOCK_PARTNERS.length} registered partners · commission rate 20%
+            {rows.length} registered · {rows.filter(r => r.isApproved).length} approved · commission rate 20%
           </p>
         </div>
-        <button
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
-          style={{ backgroundColor: "#C8102E" }}
-          onClick={() => alert("Invite partner flow — connect to backend.")}
-        >
-          <Plus size={15} />
-          Invite Partner
-        </button>
       </div>
 
       {/* KPI cards */}
-      <div className="grid gap-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Students", value: totalStudents.toString(), icon: Users, bg: "#EEF4FF", color: "#1B3A6B" },
           { label: "Admitted", value: totalAdmitted.toString(), icon: TrendingUp, bg: "#DCFCE7", color: "#166534" },
-          { label: "Commission Paid", value: `¥${totalCommission.toLocaleString()}`, icon: DollarSign, bg: "#FEF9C3", color: "#854D0E" },
-          { label: "Commission Pending", value: `¥${totalPending.toLocaleString()}`, icon: DollarSign, bg: "#FFEDD5", color: "#9A3412" },
+          { label: "Commission Paid", value: `¥${Math.round(totalCommPaid).toLocaleString()}`, icon: DollarSign, bg: "#FEF9C3", color: "#854D0E" },
+          { label: "Commission Pending", value: `¥${Math.round(totalCommPending).toLocaleString()}`, icon: DollarSign, bg: "#FFEDD5", color: "#9A3412" },
         ].map((card) => {
           const Icon = card.icon;
           return (
@@ -134,69 +150,48 @@ export default function AdminPartnersPage() {
           <table className="w-full text-sm min-w-[900px]">
             <thead>
               <tr style={{ borderBottom: "1px solid #F1F5F9", backgroundColor: "#FAFAFA" }}>
-                {["ID", "Partner", "Country", "Students", "Admitted", "Paid", "Pending", "Status", "Joined"].map((h) => (
-                  <th
-                    key={h}
-                    className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider"
-                    style={{ color: "#94A3B8" }}
-                  >
-                    {h}
-                  </th>
+                {["Partner", "Country", "Students", "Admitted", "Commission Paid", "Comm. Pending", "Status", "Joined"].map(h => (
+                  <th key={h} className="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider" style={{ color: "#94A3B8" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {MOCK_PARTNERS.map((p, i) => (
-                <tr
-                  key={p.id}
-                  className="transition-colors hover:bg-gray-50"
-                  style={{ borderBottom: i < MOCK_PARTNERS.length - 1 ? "1px solid #F8FAFC" : "none" }}
-                >
-                  <td className="px-5 py-3.5 font-mono text-xs font-bold" style={{ color: "#94A3B8" }}>
-                    {p.id}
-                  </td>
+              {rows.map((p, i) => (
+                <tr key={p.id} className="transition-colors hover:bg-gray-50" style={{ borderBottom: i < rows.length - 1 ? "1px solid #F8FAFC" : "none" }}>
                   <td className="px-5 py-3.5">
-                    <p className="font-bold text-sm" style={{ color: "#0A1628" }}>{p.name}</p>
+                    <p className="font-bold text-sm" style={{ color: "#0A1628" }}>{p.displayName}</p>
                     <p className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>{p.email}</p>
                   </td>
                   <td className="px-5 py-3.5 text-xs" style={{ color: "#64748B" }}>{p.country}</td>
                   <td className="px-5 py-3.5 text-sm font-bold text-center" style={{ color: "#1B3A6B" }}>{p.students}</td>
                   <td className="px-5 py-3.5 text-sm font-bold text-center" style={{ color: "#166534" }}>{p.admitted}</td>
                   <td className="px-5 py-3.5 text-xs font-semibold" style={{ color: "#0A1628" }}>
-                    ¥{p.commissionPaid.toLocaleString()}
+                    ¥{Math.round(p.commissionPaid).toLocaleString()}
                   </td>
                   <td className="px-5 py-3.5 text-xs font-semibold" style={{ color: "#9A3412" }}>
-                    ¥{p.commissionPending.toLocaleString()}
+                    ¥{Math.round(p.commissionPending).toLocaleString()}
                   </td>
                   <td className="px-5 py-3.5">
                     <span
                       className="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                      style={
-                        p.status === "Active"
-                          ? { backgroundColor: "#DCFCE7", color: "#166534" }
-                          : { backgroundColor: "#FEF9C3", color: "#854D0E" }
-                      }
+                      style={p.isApproved
+                        ? { backgroundColor: "#DCFCE7", color: "#166534" }
+                        : { backgroundColor: "#FEF9C3", color: "#854D0E" }}
                     >
-                      {p.status}
+                      {p.isApproved ? "Approved" : "Pending"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-xs whitespace-nowrap" style={{ color: "#94A3B8" }}>{p.joined}</td>
+                  <td className="px-5 py-3.5 text-xs whitespace-nowrap" style={{ color: "#94A3B8" }}>{p.joinedAt}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr style={{ borderTop: "2px solid #E2E8F0", backgroundColor: "#F8FAFC" }}>
-                <td className="px-5 py-3.5 text-xs font-bold" style={{ color: "#475569" }} colSpan={3}>
-                  Totals
-                </td>
+                <td className="px-5 py-3.5 text-xs font-bold" style={{ color: "#475569" }} colSpan={2}>Totals</td>
                 <td className="px-5 py-3.5 text-sm font-black text-center" style={{ color: "#1B3A6B" }}>{totalStudents}</td>
                 <td className="px-5 py-3.5 text-sm font-black text-center" style={{ color: "#166534" }}>{totalAdmitted}</td>
-                <td className="px-5 py-3.5 text-xs font-black" style={{ color: "#0A1628" }}>
-                  ¥{totalCommission.toLocaleString()}
-                </td>
-                <td className="px-5 py-3.5 text-xs font-black" style={{ color: "#9A3412" }}>
-                  ¥{totalPending.toLocaleString()}
-                </td>
+                <td className="px-5 py-3.5 text-xs font-black" style={{ color: "#0A1628" }}>¥{Math.round(totalCommPaid).toLocaleString()}</td>
+                <td className="px-5 py-3.5 text-xs font-black" style={{ color: "#9A3412" }}>¥{Math.round(totalCommPending).toLocaleString()}</td>
                 <td colSpan={2} />
               </tr>
             </tfoot>
