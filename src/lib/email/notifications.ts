@@ -1,8 +1,28 @@
 import { sendEmail } from "./resend";
 import * as templates from "./templates";
 import { db } from "@/lib/db";
-import { emailTemplates } from "@/lib/db/schema";
+import { emailTemplates, notifications } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+
+/** Insert an in-portal notification. Silently ignores errors. */
+export async function writePortalNotification(data: {
+  userId: string;
+  title: string;
+  message: string;
+  applicationId?: string;
+}): Promise<void> {
+  try {
+    await db.insert(notifications).values({
+      userId: data.userId,
+      applicationId: data.applicationId ?? null,
+      title: data.title,
+      message: data.message,
+      channel: "in_portal",
+      isRead: false,
+      sentAt: new Date(),
+    });
+  } catch { /* non-critical — email is the primary channel */ }
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com";
 

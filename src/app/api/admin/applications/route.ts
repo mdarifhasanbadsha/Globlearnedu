@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { applications, users, partners } from "@/lib/db/schema";
 import { eq, desc, ilike, or } from "drizzle-orm";
 import { z } from "zod";
-import { sendStatusUpdateNotification, STATUS_DESCRIPTIONS } from "@/lib/email/notifications";
+import { sendStatusUpdateNotification, writePortalNotification, STATUS_DESCRIPTIONS } from "@/lib/email/notifications";
 
 function requireAdmin(role?: string) {
   return role === "admin" || role === "staff";
@@ -127,6 +127,12 @@ export async function PATCH(request: NextRequest) {
         nextStep: statusInfo.nextStep,
       }).catch(() => {});
     }
+    await writePortalNotification({
+      userId: app.studentId,
+      applicationId: app.id,
+      title: `Application update: ${status.replace(/_/g, " ")}`,
+      message: statusInfo?.description ?? `Your application ${app.applicationNumber} status has been updated.`,
+    });
   }
 
   return NextResponse.json({ application: updated });

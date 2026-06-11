@@ -7,7 +7,7 @@ import { applications, users, partners } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import { generateApplicationNumber } from "@/lib/utils";
-import { sendApplicationReceivedNotification } from "@/lib/email/notifications";
+import { sendApplicationReceivedNotification, writePortalNotification } from "@/lib/email/notifications";
 
 const createSchema = z.object({
   scholarshipType: z.enum(["csc", "university", "provincial", "self_sponsored"]),
@@ -102,6 +102,13 @@ export async function POST(request: NextRequest) {
       program: programLevel,
     }).catch(() => {});
   }
+
+  await writePortalNotification({
+    userId: session.user.id,
+    applicationId: newApp.id,
+    title: "Application submitted",
+    message: `Your application ${applicationNumber} has been received. Globlearn Education will review your documents within 24 hours.`,
+  });
 
   return NextResponse.json({ application: newApp }, { status: 201 });
 }
