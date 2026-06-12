@@ -40,6 +40,34 @@ export const PROGRAM_CODES: Record<string, string> = {
   "default": "G",
 };
 
+// ── University description cleaner ──────────────────────────────────────────
+
+function generateDescriptionFallback(d: {
+  nameEn: string;
+  nameCn?: string | null;
+  city?: string | null;
+  province?: string | null;
+  tier?: string;
+}): string {
+  const tier = d.tier || "leading";
+  const location = [d.city, d.province].filter(Boolean).join(", ");
+  return `${d.nameEn}${d.nameCn ? ` (${d.nameCn})` : ""} is a ${tier} university located in ${location || "China"}. International students can apply for various degree programs with scholarship opportunities including CSC, university, and provincial scholarships. Contact Globlearn Education to learn about admission requirements, tuition fees, and available English-taught programs.`;
+}
+
+export function cleanDescription(
+  desc: string | null | undefined,
+  fallbackData: { nameEn: string; nameCn?: string | null; city?: string | null; province?: string | null; tier?: string }
+): string {
+  if (!desc) return generateDescriptionFallback(fallbackData);
+  // Strip long runs of CJK characters (20+ consecutive = scraped Chinese text)
+  const cjkBlockRegex = /[一-鿿　-〿＀-￯]{20,}/g;
+  let cleaned = desc.replace(cjkBlockRegex, "").trim();
+  // Clean up multiple spaces and orphaned punctuation left by CJK removal
+  cleaned = cleaned.replace(/\s+/g, " ").replace(/\s+([.,;:!?])/g, "$1").trim();
+  if (cleaned.length < 80) return generateDescriptionFallback(fallbackData);
+  return cleaned;
+}
+
 export async function generateApplicationNumber(programLevel?: string): Promise<string> {
   const code = programLevel
     ? (PROGRAM_CODES[programLevel] ?? PROGRAM_CODES["default"])

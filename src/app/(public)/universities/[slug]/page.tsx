@@ -11,6 +11,7 @@ import { eq, and, ne } from "drizzle-orm";
 import ApplyCTA from "~/components/shared/ApplyCTA";
 import WhatsAppButton from "~/components/shared/WhatsAppButton";
 import WhatsAppNudge from "~/components/shared/WhatsAppNudge";
+import { cleanDescription } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -25,14 +26,24 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const [uni] = await db
-    .select({ nameEn: universities.nameEn, description: universities.description, metaTitle: universities.metaTitle, metaDescription: universities.metaDescription })
+    .select({ nameEn: universities.nameEn, nameCn: universities.nameCn, city: universities.city, province: universities.province, description: universities.description, metaTitle: universities.metaTitle, metaDescription: universities.metaDescription })
     .from(universities)
     .where(eq(universities.slug, slug))
     .limit(1);
   if (!uni) return { title: "University Not Found" };
+  const cleanedDesc = cleanDescription(uni.description, { nameEn: uni.nameEn, nameCn: uni.nameCn, city: uni.city, province: uni.province });
+  const pageTitle = uni.metaTitle ?? `${uni.nameEn} | Study in China | Globlearn Education`;
   return {
-    title: uni.metaTitle ?? `${uni.nameEn} | Study in China | Globlearn Education`,
-    description: uni.metaDescription ?? uni.description?.substring(0, 160) ?? `Apply to ${uni.nameEn} through Globlearn Education.`,
+    title: { absolute: pageTitle },
+    description: uni.metaDescription ?? cleanedDesc.substring(0, 160),
+    openGraph: {
+      title: pageTitle,
+      description: uni.metaDescription ?? cleanedDesc.substring(0, 160),
+    },
+    twitter: {
+      title: pageTitle,
+      description: uni.metaDescription ?? cleanedDesc.substring(0, 160),
+    },
   };
 }
 
@@ -77,8 +88,15 @@ export default async function UniversityPage({
       .limit(3),
   ]);
 
-  // Derived display values
+  // Clean description — strips scraped Chinese text blocks
   const tierLabel = university.tier985 ? "985" : university.tier211 ? "211" : "Regular";
+  const descriptionClean = cleanDescription(university.description, {
+    nameEn: university.nameEn,
+    nameCn: university.nameCn,
+    city: university.city,
+    province: university.province,
+    tier: tierLabel,
+  });
   const accentColor = university.tier985 ? "#C8102E" : university.tier211 ? "#1B3A6B" : "#475569";
   const accentBg = university.tier985 ? "#FEF2F2" : university.tier211 ? "#EFF6FF" : "#F8FAFC";
 
@@ -95,7 +113,7 @@ export default async function UniversityPage({
   const highlights: string[] = [
     university.tier985 ? "One of China's prestigious 985 universities" : null,
     university.tier211 && !university.tier985 ? "Recognized among China's top 211 universities" : null,
-    university.qsRanking ? `Ranked #${university.qsRanking} in QS World University Rankings` : null,
+    university.qsRanking && university.qsRanking <= 500 ? `Ranked #${university.qsRanking} in QS World University Rankings` : null,
     university.internationalStudents
       ? `Home to ${university.internationalStudents.toLocaleString()}+ international students`
       : null,
@@ -150,9 +168,14 @@ export default async function UniversityPage({
                 >
                   {tierLabel} University
                 </span>
-                {university.qsRanking && (
+                {university.qsRanking && university.qsRanking <= 500 && (
                   <span className="text-xs font-semibold text-[#FFD700]">
                     QS Top {university.qsRanking}
+                  </span>
+                )}
+                {university.qsRanking && university.qsRanking > 500 && university.qsRanking <= 1500 && (
+                  <span className="text-xs font-semibold text-[#FFD700]">
+                    QS Ranked
                   </span>
                 )}
               </div>
@@ -166,11 +189,9 @@ export default async function UniversityPage({
                 <MapPin size={15} />
                 {[university.city, university.province].filter(Boolean).join(", ")} · China
               </p>
-              {university.description && (
-                <p className="text-white/70 text-base mb-8 max-w-xl leading-relaxed">
-                  {university.description.substring(0, 220)}{university.description.length > 220 ? "…" : ""}
-                </p>
-              )}
+              <p className="text-white/70 text-base mb-8 max-w-xl leading-relaxed">
+                {descriptionClean.substring(0, 220)}{descriptionClean.length > 220 ? "…" : ""}
+              </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
@@ -187,18 +208,24 @@ export default async function UniversityPage({
               </div>
             </div>
 
-            {/* Stats grid */}
+            {/* Stats grid — only show stats with real data */}
             <div className="grid grid-cols-2 gap-3 w-full lg:w-auto lg:min-w-[260px]">
-              {[
-                { icon: <Calendar size={18} />, label: "Established", value: university.founded ? String(university.founded) : "—" },
-                { icon: <Users size={18} />, label: "Students", value: university.totalStudents?.toLocaleString() ?? "—" },
-                { icon: <GraduationCap size={18} />, label: "Intl. Students", value: university.internationalStudents?.toLocaleString() ?? "—" },
-                { icon: <Building2 size={18} />, label: "Programs", value: universityPrograms.length > 0 ? `${universityPrograms.length} offered` : "Contact" },
-              ].map((s) => (
-                <div key={s.label} className="bg-white/10 rounded-xl p-4 text-center">
-                  <div className="text-[#FFD700] flex justify-center mb-2">{s.icon}</div>
-                  <div className="text-white font-bold text-sm leading-snug">{s.value}</div>
-                  <div className="text-white/50 text-xs mt-1">{s.label}</div>
+              {([
+                university.founded
+                  ? { icon: <Calendar size={18} />, label: "Established", value: String(university.founded) }
+                  : null,
+                university.totalStudents
+                  ? { icon: <Users size={18} />, label: "Students", value: university.totalStudents.toLocaleString() }
+                  : null,
+                university.internationalStudents
+                  ? { icon: <GraduationCap size={18} />, label: "Intl. Students", value: university.internationalStudents.toLocaleString() }
+                  : null,
+                { icon: <Building2 size={18} />, label: "Programs", value: universityPrograms.length > 0 ? `${universityPrograms.length} offered` : "View All" },
+              ] as const).filter(Boolean).map((s) => (
+                <div key={s!.label} className="bg-white/10 rounded-xl p-4 text-center">
+                  <div className="text-[#FFD700] flex justify-center mb-2">{s!.icon}</div>
+                  <div className="text-white font-bold text-sm leading-snug">{s!.value}</div>
+                  <div className="text-white/50 text-xs mt-1">{s!.label}</div>
                 </div>
               ))}
             </div>
@@ -215,9 +242,7 @@ export default async function UniversityPage({
               <h2 className="text-2xl font-black text-[#1B3A6B] mb-5">
                 Why {university.nameEn.split(" ").slice(0, 3).join(" ")}?
               </h2>
-              {university.description && (
-                <p className="text-gray-600 leading-relaxed mb-6">{university.description}</p>
-              )}
+              <p className="text-gray-600 leading-relaxed mb-6">{descriptionClean}</p>
               {highlights.length > 0 && (
                 <div className="space-y-2">
                   {highlights.map((h) => (

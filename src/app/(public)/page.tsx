@@ -14,9 +14,9 @@ import { BlogPreview } from "@/components/home/BlogPreview";
 import { FinalCTA } from "@/components/home/FinalCTA";
 
 export const metadata: Metadata = {
-  title: "Study in China 2026–2027 — Scholarships, Universities & Visa Guidance | Globlearn Education",
+  title: { absolute: "Study in China 2026–2027 — Scholarships, Universities & Visa Guidance | Globlearn Education" },
   description:
-    "Globlearn Education helps students from 80+ countries study in China. CSC Government Scholarships, 280+ universities, MBBS, Engineering, Business and more. Expert visa guidance. Affordable cost. Apply now.",
+    "Globlearn Education helps students from 80+ countries study in China. CSC Government Scholarships, 1,500+ universities, MBBS, Engineering, Business and more. Expert visa guidance. Affordable cost. Apply now.",
   keywords: [
     "study in China",
     "study in China with scholarship",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Study in China 2026–2027 — Scholarships & University Admission | Globlearn Education",
     description:
-      "Join 5,000+ students from 80+ countries who chose Globlearn Education for studying in China. CSC scholarships, 280+ universities, expert visa guidance. Affordable cost.",
+      "Join 5,000+ students from 80+ countries who chose Globlearn Education for studying in China. CSC scholarships, 1,500+ universities, expert visa guidance. Affordable cost.",
     url: "https://globlearnedu.com",
     siteName: "Globlearn Education",
     type: "website",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Study in China 2026–2027 | Globlearn Education",
     description:
-      "Expert guidance for studying in China — CSC scholarships, 280+ universities, visa support. 5,000+ students placed from 80+ countries.",
+      "Expert guidance for studying in China — CSC scholarships, 1,500+ universities, visa support. 5,000+ students placed from 80+ countries.",
   },
   alternates: {
     canonical: "https://globlearnedu.com",

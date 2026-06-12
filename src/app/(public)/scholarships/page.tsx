@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 import WhatsAppButton from "~/components/shared/WhatsAppButton";
 import WhatsAppNudge from "~/components/shared/WhatsAppNudge";
+import ApplyButton from "~/components/shared/ApplyButton";
 
 export const metadata: Metadata = {
   title: "China Scholarships 2026 — CSC, University & Provincial",
@@ -148,12 +149,7 @@ export default function ScholarshipsPage() {
             Globlearn Education applies to all four scholarship types simultaneously — maximising your chances of funding your studies in China.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/universities"
-              className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-[#C8102E] hover:bg-[#A50D25] rounded-lg transition-colors"
-            >
-              Apply Now — Affordable Cost
-            </Link>
+            <ApplyButton />
             <WhatsAppButton
               size="lg"
               label="Check my eligibility"
@@ -304,12 +300,7 @@ export default function ScholarshipsPage() {
             Globlearn Education prepares your CSC, University, and Provincial scholarship applications simultaneously — maximising your funding chances with one service.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/universities"
-              className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-[#C8102E] hover:bg-[#A50D25] rounded-lg transition-colors"
-            >
-              Browse Universities &amp; Apply
-            </Link>
+            <ApplyButton label="Apply Now — Affordable Cost" />
             <WhatsAppButton
               size="lg"
               label="Ask about my eligibility"

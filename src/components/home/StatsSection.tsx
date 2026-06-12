@@ -5,7 +5,7 @@ import { useCountUp, useScrollAnimation } from "@/hooks/useScrollAnimation";
 type StatConfig = { target: number; suffix: string; label: string; sub: string };
 
 const STATS: StatConfig[] = [
-  { target: 280,  suffix: "+",  label: "Universities",     sub: "partner institutions in China" },
+  { target: 1500, suffix: "+",  label: "Universities",     sub: "Chinese universities in our database" },
   { target: 5000, suffix: "+",  label: "Students Placed",  sub: "successfully enrolled across programs" },
   { target: 99,   suffix: "%",  label: "Visa Guidance",    sub: "success rate based on student outcomes" },
   { target: 80,   suffix: "+",  label: "Countries",        sub: "nationalities served worldwide" },

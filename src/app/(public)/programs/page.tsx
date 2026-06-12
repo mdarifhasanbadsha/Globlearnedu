@@ -50,14 +50,14 @@ export default function ProgramsPage() {
             Find Your Perfect Program
           </h1>
           <p className="text-white/70 text-lg mb-10 max-w-2xl mx-auto">
-            From MBBS to PhD, Foundation to Short Course — 8 program pathways at 280+ universities across China.
+            From MBBS to PhD, Foundation to Short Course — 8 program pathways at 1,500+ universities across China.
             All intakes for 2026–2027 are now open.
           </p>
           {/* Stats row */}
           <div className="flex flex-wrap justify-center gap-8 text-center">
             {[
               { value: "8", label: "Program Types" },
-              { value: "280+", label: "Universities" },
+              { value: "1,500+", label: "Universities" },
               { value: "4 Types", label: "Scholarships" },
               { value: "80+", label: "Countries Served" },
             ].map((s) => (

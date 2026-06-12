@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const TRUST_BADGES = [
@@ -11,6 +12,8 @@ const TRUST_BADGES = [
 ];
 
 export function FinalCTA() {
+  const { data: session } = useSession();
+  const applyHref = session?.user ? "/dashboard/apply" : "/sign-up";
   const sectionRef = useScrollAnimation(0.1);
   const badgesRef  = useScrollAnimation(0.2);
 
@@ -81,7 +84,7 @@ export function FinalCTA() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
           <Link
-            href="/universities"
+            href={applyHref}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-white font-bold text-base transition-all active:scale-95"
             style={{ backgroundColor: "#C8102E", animation: "cta-pulse-glow 3s ease-in-out infinite" }}
             onMouseEnter={e => {

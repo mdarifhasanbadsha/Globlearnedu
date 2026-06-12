@@ -15,6 +15,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import ApplyCTA from "~/components/shared/ApplyCTA";
+import ApplyButton from "~/components/shared/ApplyButton";
 import WhatsAppButton from "~/components/shared/WhatsAppButton";
 import WhatsAppNudge from "~/components/shared/WhatsAppNudge";
 import { programsData, programsList } from "~/lib/data/programs";
@@ -32,8 +33,16 @@ export async function generateMetadata({
   const program = programsData[slug];
   if (!program) return { title: "Program Not Found" };
   return {
-    title: `${program.name} in China`,
+    title: `${program.name} in China 2026–2027`,
     description: program.tagline,
+    openGraph: {
+      title: `${program.name} in China 2026–2027 | Globlearn Education`,
+      description: program.tagline,
+    },
+    twitter: {
+      title: `${program.name} in China 2026–2027 | Globlearn Education`,
+      description: program.tagline,
+    },
   };
 }
 
@@ -95,12 +104,7 @@ export default async function ProgramPage({
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/universities"
-                  className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-[#C8102E] hover:bg-[#A50D25] rounded-lg transition-colors"
-                >
-                  Apply Now — Affordable Cost
-                </Link>
+                <ApplyButton />
                 <WhatsAppButton
                   size="lg"
                   label="Ask us on WhatsApp"

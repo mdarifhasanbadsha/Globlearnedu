@@ -6,7 +6,7 @@ import Link from "next/link";
 type HeroProps = { applyHref?: string };
 
 const STATS = [
-  { value: "280+",   label: "Universities" },
+  { value: "1,500+", label: "Universities" },
   { value: "5,000+", label: "Students Placed" },
   { value: "99%",    label: "Visa Guidance" },
   { value: "80+",    label: "Countries" },

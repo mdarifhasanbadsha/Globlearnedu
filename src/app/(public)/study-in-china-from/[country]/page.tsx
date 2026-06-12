@@ -12,6 +12,7 @@ import {
   MapPin,
 } from "lucide-react";
 import ApplyCTA from "~/components/shared/ApplyCTA";
+import ApplyButton from "~/components/shared/ApplyButton";
 import WhatsAppButton from "~/components/shared/WhatsAppButton";
 import { countriesData, countriesList } from "~/lib/data/countries";
 
@@ -99,12 +100,7 @@ export default async function CountryPage({
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/universities"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white bg-[#C8102E] hover:bg-[#A50D25] rounded-lg transition-colors"
-                >
-                  Apply Now <ArrowRight size={18} />
-                </Link>
+                <ApplyButton label="Apply Now" />
                 <WhatsAppButton
                   size="lg"
                   label="Talk to an advisor"
