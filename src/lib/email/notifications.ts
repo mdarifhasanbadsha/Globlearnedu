@@ -51,23 +51,31 @@ export async function sendApplicationReceivedNotification(data: {
   studentEmail: string;
   studentName: string;
   applicationId: string;
-  universities: string[];
+  universities: Array<string | { name: string; major?: string }>;
   program: string;
   partnerEmail?: string;
   partnerName?: string;
 }) {
+  // Normalise to objects so templates can render "University — Major"
+  const universityObjects = data.universities.map((u) =>
+    typeof u === "string" ? { name: u, major: undefined } : u
+  );
+  const universityStrings = universityObjects.map((u) =>
+    u.major ? `${u.name} (${u.major})` : u.name
+  );
+
   const trackingUrl = `${BASE_URL}/track?id=${data.applicationId}`;
   const studentVars = {
     studentName: data.studentName,
     applicationId: data.applicationId,
-    universities: data.universities.join(", "),
+    universities: universityStrings.join(", "),
     program: data.program,
     trackingUrl,
   };
   const dbStudent = await getDbTemplate("application_received_student");
   const studentTemplate = dbStudent
     ? { subject: render(dbStudent.subject, studentVars), html: render(dbStudent.bodyHtml, studentVars) }
-    : templates.applicationReceivedStudent({ ...studentVars, universities: data.universities });
+    : templates.applicationReceivedStudent({ ...studentVars, universities: universityStrings });
   await sendEmail({ to: data.studentEmail, ...studentTemplate });
 
   if (data.partnerEmail && data.partnerName) {

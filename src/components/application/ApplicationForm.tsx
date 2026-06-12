@@ -82,6 +82,7 @@ export default function ApplicationForm() {
         universityId:   u.id,
         universityName: u.nameEn,
         programName:    data.universityMajors[u.id] || programLevel,
+        expectedMajor:  data.universityMajors[u.id] || "",
       })),
     };
 

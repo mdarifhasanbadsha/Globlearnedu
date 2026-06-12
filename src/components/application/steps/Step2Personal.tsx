@@ -8,9 +8,25 @@ const MONTHS = [
   "July","August","September","October","November","December",
 ];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
-const YEARS_DOB = Array.from({ length: 60 }, (_, i) => String(2006 - i));
-const YEARS_ISSUE  = Array.from({ length: 30 }, (_, i) => String(2026 - i));  // 2026 → 1997
+// Age range 15–75: born 2009 → 1950
+const YEARS_DOB    = Array.from({ length: 60 }, (_, i) => String(2009 - i));
+const YEARS_ISSUE  = Array.from({ length: 30 }, (_, i) => String(2026 - i));
 const YEARS_EXPIRY = Array.from({ length: 20 }, (_, i) => String(2025 + i));
+
+const MONTH_NUMS: Record<string, number> = {
+  January:1,February:2,March:3,April:4,May:5,June:6,
+  July:7,August:8,September:9,October:10,November:11,December:12,
+};
+
+function expiryWarning(day: string, month: string, year: string): string | null {
+  if (!day || !month || !year) return null;
+  const expiry = new Date(Number(year), MONTH_NUMS[month] - 1, Number(day));
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() + 18);
+  if (expiry < new Date()) return "⚠ Passport appears to have already expired. Please renew before applying.";
+  if (expiry < cutoff)    return "⚠ Passport expires within 18 months. Universities and Chinese visa authorities require at least 18 months validity at the time of entry. Consider renewing.";
+  return null;
+}
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -27,6 +43,8 @@ export default function Step2Personal({ data, onChange }: Props) {
   function set(key: keyof FormData, val: string) {
     onChange({ [key]: val } as Partial<FormData>);
   }
+
+  const passportExpiryAlert = expiryWarning(data.passportExpiryDay, data.passportExpiryMonth, data.passportExpiryYear);
 
   return (
     <div>
@@ -167,6 +185,11 @@ export default function Step2Personal({ data, onChange }: Props) {
             {YEARS_EXPIRY.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
+        {passportExpiryAlert && (
+          <div className="mt-2 rounded-lg px-3 py-2 text-xs font-semibold" style={{ backgroundColor: "#FEF3C7", color: "#92400E", border: "1px solid #FDE68A" }}>
+            {passportExpiryAlert}
+          </div>
+        )}
       </div>
 
       {/* Religion + Marital status */}

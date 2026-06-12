@@ -2518,3 +2518,41 @@ export const countryRegions = [
   "Central Asia",
   "Middle East",
 ];
+
+// ── Flat country name list for form dropdowns ────────────────────────────────
+// Uses Intl.DisplayNames to generate all valid country names, with common
+// student-origin countries pinned at the top.
+const PINNED_COUNTRIES = [
+  "Bangladesh", "Nigeria", "Pakistan", "India", "Ghana",
+  "Kenya", "Egypt", "Ethiopia", "Cameroon", "Zimbabwe",
+  "Saudi Arabia", "Iran", "Indonesia", "Malaysia", "Morocco",
+  "Philippines", "Tanzania", "Uganda", "Zambia", "Afghanistan",
+];
+
+function buildCountriesList(): string[] {
+  try {
+    const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+    const allCodes = Array.from({ length: 26 }, (_, i) =>
+      String.fromCharCode(65 + i)
+    ).flatMap(a =>
+      Array.from({ length: 26 }, (_, i) => a + String.fromCharCode(65 + i))
+    );
+    const all = allCodes
+      .map(code => {
+        try { return regionNames.of(code) ?? null; }
+        catch { return null; }
+      })
+      .filter((name): name is string =>
+        name !== null && !name.includes("Unknown") && name.length > 1
+      )
+      .sort();
+    return [
+      ...PINNED_COUNTRIES,
+      ...all.filter(c => !PINNED_COUNTRIES.includes(c)),
+    ];
+  } catch {
+    return PINNED_COUNTRIES;
+  }
+}
+
+export const COUNTRIES_LIST: string[] = buildCountriesList();

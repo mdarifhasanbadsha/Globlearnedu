@@ -204,7 +204,37 @@ export default function Step5Academic({ data, onChange }: Props) {
           </label>
         </div>
 
-        {data.hasWorkExperience && (
+        {/* PhD research section */}
+      {(data.degreeLevel === "PhD" || data.degreeLevel === "phd") && (
+        <div className="border rounded-xl p-5 mb-6" style={{ borderColor: "#1B3A6B30", backgroundColor: "#EEF4FF" }}>
+          <p className="text-sm font-black mb-1" style={{ color: "#1B3A6B" }}>PhD Research Details</p>
+          <p className="text-xs mb-4" style={{ color: "#64748B" }}>
+            Required for PhD applications. Describe your intended research area and proposal.
+          </p>
+          <div className="space-y-4">
+            <Field label="Research area / field" required>
+              <input
+                type="text"
+                value={data.phdResearchArea}
+                onChange={(e) => onChange({ phdResearchArea: e.target.value })}
+                placeholder="e.g. Artificial Intelligence, Cancer Biology, Environmental Engineering"
+                className={INPUT_CLS}
+              />
+            </Field>
+            <Field label="Research proposal / statement (brief)" required>
+              <textarea
+                rows={4}
+                value={data.phdResearchProposal}
+                onChange={(e) => onChange({ phdResearchProposal: e.target.value })}
+                placeholder="Briefly describe your proposed research topic, objectives, and methodology…"
+                className={INPUT_CLS}
+              />
+            </Field>
+          </div>
+        </div>
+      )}
+
+      {data.hasWorkExperience && (
           <div className="mt-5">
             {data.workHistory.map((entry, i) => (
               <div key={i} className="border rounded-xl p-4 mb-4" style={{ borderColor: "#E2E8F0", backgroundColor: "white" }}>

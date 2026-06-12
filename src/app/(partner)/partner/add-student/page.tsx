@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { COUNTRIES_LIST as COUNTRIES } from "@/lib/data/countries";
 
 const INPUT_CLS =
   "w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1B3A6B]/20 focus:border-[#1B3A6B] transition-colors";
@@ -17,18 +18,6 @@ const FUNDING_TYPES = [
 ];
 
 const DEGREES = ["MBBS / Medicine", "Dentistry / Stomatology", "Bachelor's Degree", "Master's Degree", "PhD / Doctorate", "Language Program", "Foundation / Pre-University"];
-
-const COUNTRIES = [
-  "Afghanistan", "Algeria", "Angola", "Argentina", "Bangladesh", "Benin", "Bolivia", "Botswana",
-  "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Chad", "Colombia", "Congo", "Côte d'Ivoire",
-  "Democratic Republic of Congo", "Ecuador", "Egypt", "Ethiopia", "Gabon", "Gambia", "Ghana",
-  "Guinea", "India", "Indonesia", "Iran", "Iraq", "Jordan", "Kenya", "Laos", "Lebanon",
-  "Liberia", "Libya", "Madagascar", "Malawi", "Malaysia", "Mali", "Mauritania", "Morocco",
-  "Mozambique", "Myanmar", "Namibia", "Nepal", "Niger", "Nigeria", "Pakistan", "Palestine",
-  "Peru", "Philippines", "Rwanda", "Saudi Arabia", "Senegal", "Sierra Leone", "Somalia",
-  "South Africa", "South Sudan", "Sri Lanka", "Sudan", "Syria", "Tanzania", "Thailand",
-  "Togo", "Tunisia", "Turkey", "Uganda", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
-];
 
 type FormState = {
   fundingType: string;

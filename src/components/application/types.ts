@@ -102,6 +102,9 @@ export type FormData = {
   chinaCurrentUniversity: string;
   chinaCurrentAddress: string;
   chinaAcknowledge: boolean;
+  // PhD research (Step 5, only when degreeLevel === "PhD")
+  phdResearchArea: string;
+  phdResearchProposal: string;
   // Step 8 — Documents
   documents: Record<string, string>;
   // Step 9 — Review & Pay
@@ -143,6 +146,7 @@ export const INITIAL_FORM: FormData = {
   sponsorOccupation: "", sponsorPhone: "", sponsorIncome: "",
   academicHistory: [{ ...EMPTY_ACADEMIC }],
   hasWorkExperience: false, workHistory: [],
+  phdResearchArea: "", phdResearchProposal: "",
   englishTestType: "", englishScore: "", englishTestDate: "",
   hasChineseProficiency: false,
   hskLevel: "", hskScore: "", hskTestDate: "",
@@ -162,29 +166,5 @@ export const INPUT_CLS =
 export const LABEL_CLS = "block text-sm font-semibold text-gray-700 mb-1.5";
 export const SELECT_CLS = INPUT_CLS;
 
-// ── Countries list ─────────────────────────────────────────────────────────────
-
-export const COUNTRIES = [
-  "Afghanistan", "Albania", "Algeria", "Angola", "Argentina", "Armenia",
-  "Australia", "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus",
-  "Belgium", "Benin", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil",
-  "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon",
-  "Canada", "Chad", "Chile", "Colombia", "Congo", "Costa Rica",
-  "Côte d'Ivoire", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark",
-  "DR Congo", "Ecuador", "Egypt", "Eritrea", "Ethiopia", "Finland", "France",
-  "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Guatemala", "Guinea",
-  "Honduras", "Hungary", "India", "Indonesia", "Iran", "Iraq", "Ireland",
-  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya",
-  "Kuwait", "Kyrgyzstan", "Laos", "Lebanon", "Liberia", "Libya", "Madagascar",
-  "Malawi", "Malaysia", "Maldives", "Mali", "Mauritania", "Mauritius", "Mexico",
-  "Moldova", "Mongolia", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nepal",
-  "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Norway",
-  "Oman", "Pakistan", "Palestine", "Panama", "Peru", "Philippines",
-  "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda",
-  "Saudi Arabia", "Senegal", "Sierra Leone", "Singapore", "Somalia",
-  "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka",
-  "Sudan", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania",
-  "Thailand", "Togo", "Tunisia", "Turkey", "Turkmenistan", "Uganda",
-  "Ukraine", "United Arab Emirates", "United Kingdom", "United States",
-  "Uzbekistan", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
-];
+// ── Countries list — re-exported from the Intl-based source ───────────────────
+export { COUNTRIES_LIST as COUNTRIES } from "@/lib/data/countries";

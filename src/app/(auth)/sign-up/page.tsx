@@ -4,13 +4,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
-
-const COUNTRIES = [
-  "Bangladesh", "Nigeria", "Pakistan", "India", "Ghana", "Kenya",
-  "Egypt", "Ethiopia", "Cameroon", "Zimbabwe", "Saudi Arabia", "Iran",
-  "Indonesia", "Malaysia", "Morocco", "Philippines", "Tanzania",
-  "Uganda", "Zambia", "Afghanistan", "Other",
-];
+import { COUNTRIES_LIST as COUNTRIES } from "@/lib/data/countries";
 
 function getPasswordStrength(p: string): { score: number; label: string; color: string } {
   let score = 0;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { applications, users, activityLog } from "@/lib/db/schema";
+import { applications, users, partners, activityLog } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { sendStatusUpdateNotification, STATUS_DESCRIPTIONS, writePortalNotification } from "@/lib/email/notifications";
 
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       message: `Your application status has been updated to: ${newLabel}.`,
     });
 
-    // 3. Email notification
+    // 3. Email notification to student
     const statusInfo = STATUS_DESCRIPTIONS[status];
     const student = await db.query.users.findFirst({ where: eq(users.id, app.studentId) });
     if (student?.email && statusInfo) {
@@ -124,6 +124,38 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         statusDescription: statusInfo.description,
         nextStep: statusInfo.nextStep,
       }).catch(() => {});
+    }
+
+    // 4. Partner portal notification + email (if application came via partner)
+    if (app.partnerId) {
+      const partnerRow = await db
+        .select({ userId: partners.userId })
+        .from(partners)
+        .where(eq(partners.id, app.partnerId))
+        .limit(1);
+      if (partnerRow[0]) {
+        const partnerUser = await db.query.users.findFirst({ where: eq(users.id, partnerRow[0].userId) });
+        if (partnerUser) {
+          // In-portal notification
+          await writePortalNotification({
+            userId: partnerUser.id,
+            applicationId: id,
+            title: `Student Update — ${app.applicationNumber}`,
+            message: `Application ${app.applicationNumber} status changed to: ${newLabel}.`,
+          });
+          // Email (fire-and-forget, same status update template)
+          if (partnerUser.email && statusInfo) {
+            sendStatusUpdateNotification({
+              studentEmail: partnerUser.email,
+              studentName: `${partnerUser.firstName ?? ""} ${partnerUser.lastName ?? ""}`.trim() || partnerUser.email,
+              applicationId: app.applicationNumber,
+              newStatus: newLabel,
+              statusDescription: statusInfo.description,
+              nextStep: statusInfo.nextStep,
+            }).catch(() => {});
+          }
+        }
+      }
     }
   }
 

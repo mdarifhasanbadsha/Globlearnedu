@@ -40,12 +40,37 @@ export default function Step6Language({ data, onChange }: Props) {
         Select your English test and enter your score. Chinese proficiency is optional.
       </p>
 
-      {/* MBBS callout */}
-      <div className="rounded-xl p-4 mb-8 border" style={{ backgroundColor: "#EEF4FF", borderColor: "#1B3A6B20" }}>
-        <p className="text-xs font-semibold" style={{ color: "#1B3A6B" }}>
-          ℹ For MBBS programs: English proficiency is required. IELTS 5.5+ recommended. MOI letters accepted from recognised institutions.
-        </p>
-      </div>
+      {/* Program-specific language callout */}
+      {(data.degreeLevel === "MBBS / Medicine" || data.degreeLevel === "mbbs") && (
+        <div className="rounded-xl p-4 mb-6 border" style={{ backgroundColor: "#EEF4FF", borderColor: "#1B3A6B20" }}>
+          <p className="text-xs font-semibold" style={{ color: "#1B3A6B" }}>
+            ℹ For MBBS programs: English proficiency is required. IELTS 5.5+ recommended. MOI letters accepted from recognised institutions.
+          </p>
+        </div>
+      )}
+      {(data.degreeLevel === "PhD" || data.degreeLevel === "phd" || data.degreeLevel === "PhD / Doctorate") && (
+        <div className="rounded-xl p-4 mb-6 border" style={{ backgroundColor: "#FFF7ED", borderColor: "#FED7AA" }}>
+          <p className="text-xs font-semibold" style={{ color: "#92400E" }}>
+            ℹ For PhD programs: Strong English proficiency is important. Most universities require IELTS 6.0+ or TOEFL 80+. HSK proficiency is a significant advantage for Chinese-medium doctoral research programs.
+          </p>
+        </div>
+      )}
+      {(data.degreeLevel === "Master's" || data.degreeLevel === "master" || data.degreeLevel === "Master's Degree") && (
+        <div className="rounded-xl p-4 mb-6 border" style={{ backgroundColor: "#F0FFF4", borderColor: "#BBF7D0" }}>
+          <p className="text-xs font-semibold" style={{ color: "#166534" }}>
+            ℹ For Master's programs: English proficiency is typically required. IELTS 5.5–6.5 or TOEFL 75–90 is the common requirement range depending on the university.
+          </p>
+        </div>
+      )}
+      {/* Generic fallback callout for other degree types */}
+      {!["MBBS / Medicine", "mbbs", "PhD", "phd", "PhD / Doctorate", "Master's", "master", "Master's Degree"].includes(data.degreeLevel) && (
+        <div className="rounded-xl p-4 mb-6 border" style={{ backgroundColor: "#EEF4FF", borderColor: "#1B3A6B20" }}>
+          <p className="text-xs font-semibold" style={{ color: "#1B3A6B" }}>
+            ℹ English proficiency requirements vary by program and university. IELTS 5.0+ or equivalent is generally sufficient for undergraduate and language programs.
+          </p>
+        </div>
+      )}
+      <div className="mb-8" />
 
       {/* English test selector */}
       <p className="text-xs font-bold tracking-widest uppercase mb-4 pb-2" style={{ color: "#94A3B8", borderBottom: "1px solid #F1F5F9" }}>
