@@ -184,3 +184,35 @@ body {
     50%       { box-shadow: 0 8px 48px rgba(200,16,46,0.65); }
   }
 }
+
+/* ── KEN BURNS (hero background) ────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes ken-burns {
+    0%   { transform: scale(1.10) translate(0, 0); }
+    33%  { transform: scale(1.16) translate(-1.2%, -0.6%); }
+    66%  { transform: scale(1.12) translate(0.8%, 0.5%); }
+    100% { transform: scale(1.10) translate(0, 0); }
+  }
+}
+
+/* ── CHINESE SYMBOL FLOAT ANIMATIONS ─────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes symbol-float-a {
+    0%, 100% { transform: translateY(0)   rotate(0deg);   opacity: 0.07; }
+    50%       { transform: translateY(-22px) rotate(6deg);  opacity: 0.13; }
+  }
+  @keyframes symbol-float-b {
+    0%, 100% { transform: translateY(0)   translateX(0)    rotate(0deg);  opacity: 0.06; }
+    40%       { transform: translateY(-16px) translateX(10px) rotate(-5deg); opacity: 0.12; }
+    80%       { transform: translateY(-8px)  translateX(-6px) rotate(3deg);  opacity: 0.09; }
+  }
+  @keyframes symbol-float-c {
+    0%, 100% { transform: translateY(0)   rotate(0deg);   opacity: 0.08; }
+    30%       { transform: translateY(-28px) rotate(-8deg); opacity: 0.14; }
+    70%       { transform: translateY(-10px) rotate(4deg);  opacity: 0.10; }
+  }
+  @keyframes cursor-ring-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1);    opacity: 0.7; }
+    50%       { transform: translate(-50%, -50%) scale(1.18); opacity: 0.4; }
+  }
+}

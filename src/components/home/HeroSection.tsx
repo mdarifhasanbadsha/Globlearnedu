@@ -12,28 +12,44 @@ const STATS = [
   { value: "80+",    label: "Countries" },
 ];
 
-// Local photos — permanent, never break
 const SLIDES = [
   { src: "/images/hero-china.jpg",   alt: "Guilin Li River karst mountains, China" },
   { src: "/images/hero-china-2.jpg", alt: "Great Wall of China" },
   { src: "/images/hero-china-3.jpg", alt: "Shanghai Pudong skyline, China" },
 ];
 
-const SLIDE_DURATION = 6000; // ms per slide
+// Floating Chinese characters — education & culture themed
+const SYMBOLS = [
+  { char: "中", top: "8%",  left: "4%",  size: 30, anim: "symbol-float-a", dur: "12s", delay: "0s" },
+  { char: "华", top: "14%", left: "91%", size: 24, anim: "symbol-float-b", dur: "15s", delay: "2.2s" },
+  { char: "学", top: "38%", left: "94%", size: 34, anim: "symbol-float-c", dur: "10s", delay: "0.8s" },
+  { char: "龙", top: "62%", left: "6%",  size: 38, anim: "symbol-float-a", dur: "14s", delay: "3s" },
+  { char: "福", top: "76%", left: "88%", size: 26, anim: "symbol-float-b", dur: "11s", delay: "1.5s" },
+  { char: "道", top: "22%", left: "16%", size: 20, anim: "symbol-float-c", dur: "18s", delay: "4s" },
+  { char: "文", top: "82%", left: "18%", size: 22, anim: "symbol-float-a", dur: "13s", delay: "2.6s" },
+  { char: "山", top: "48%", left: "2%",  size: 28, anim: "symbol-float-b", dur: "16s", delay: "1s" },
+  { char: "天", top: "88%", left: "62%", size: 24, anim: "symbol-float-c", dur: "12s", delay: "3.5s" },
+  { char: "人", top: "10%", left: "48%", size: 18, anim: "symbol-float-a", dur: "20s", delay: "0.3s" },
+  { char: "心", top: "56%", left: "78%", size: 30, anim: "symbol-float-b", dur: "9s",  delay: "2s" },
+  { char: "国", top: "30%", left: "75%", size: 22, anim: "symbol-float-c", dur: "15s", delay: "4.5s" },
+];
+
+const SLIDE_DURATION = 6000;
 
 export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
-  const [mounted,    setMounted]    = useState(false);
-  const [current,    setCurrent]    = useState(0);
-  const [isHovered,  setIsHovered]  = useState(false);
-  const [mouse,      setMouse]      = useState({ x: 0, y: 0 });
+  const [mounted,   setMounted]   = useState(false);
+  const [current,   setCurrent]   = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  // Normalised −0.5→0.5 for parallax
+  const [mouse,     setMouse]     = useState({ x: 0, y: 0 });
+  // Pixel position for cursor follower
+  const [cursor,    setCursor]    = useState({ x: -300, y: -300 });
 
-  // Entrance animation
   useEffect(() => {
     const id = setTimeout(() => setMounted(true), 60);
     return () => clearTimeout(id);
   }, []);
 
-  // Auto-advance slideshow
   const advance = useCallback(() => {
     setCurrent(c => (c + 1) % SLIDES.length);
   }, []);
@@ -45,9 +61,16 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
 
   function handleMouseMove(e: React.MouseEvent<HTMLElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left)  / rect.width  - 0.5; // −0.5 → 0.5
-    const y = (e.clientY - rect.top)   / rect.height - 0.5;
-    setMouse({ x, y });
+    const rx = e.clientX - rect.left;
+    const ry = e.clientY - rect.top;
+    setMouse({ x: rx / rect.width - 0.5, y: ry / rect.height - 0.5 });
+    setCursor({ x: rx, y: ry });
+  }
+
+  function handleMouseLeave() {
+    setIsHovered(false);
+    setMouse({ x: 0, y: 0 });
+    setCursor({ x: -300, y: -300 });
   }
 
   return (
@@ -56,9 +79,9 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
       style={{ backgroundColor: "#0A1628" }}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMouse({ x: 0, y: 0 }); }}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* ── Slideshow photos — crossfade, Ken Burns idle, parallax on hover ── */}
+      {/* ── Slideshow — crossfade + Ken Burns idle + parallax shift on hover (no scale) ── */}
       {SLIDES.map((slide, i) => (
         <div
           key={slide.src}
@@ -73,27 +96,26 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
             opacity: i === current ? 1 : 0,
             ...(i === current && isHovered
               ? {
-                  transform: `translate(${mouse.x * -22}px, ${mouse.y * -14}px) scale(1.12)`,
-                  transition: "opacity 1.4s ease-in-out, transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94)",
+                  // Parallax shift — translate only, NO scale
+                  transform: `translate(${mouse.x * -20}px, ${mouse.y * -12}px)`,
+                  transition: "opacity 1.4s ease-in-out, transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)",
                 }
               : i === current
               ? {
                   animation: "ken-burns 22s ease-in-out infinite",
                   transition: "opacity 1.4s ease-in-out",
                 }
-              : {
-                  transition: "opacity 1.4s ease-in-out",
-                }),
+              : { transition: "opacity 1.4s ease-in-out" }),
           }}
         />
       ))}
 
-      {/* ── Dark overlay ── */}
+      {/* ── Dark gradient overlay ── */}
       <div
         aria-hidden
         style={{
-          position: "absolute", inset: 0, zIndex: 1,
-          background: "linear-gradient(to bottom, rgba(10,22,40,0.55) 0%, rgba(10,22,40,0.72) 55%, rgba(10,22,40,0.92) 100%)",
+          position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
+          background: "linear-gradient(to bottom, rgba(10,22,40,0.52) 0%, rgba(10,22,40,0.70) 55%, rgba(10,22,40,0.90) 100%)",
         }}
       />
       {/* Vignette */}
@@ -101,22 +123,45 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
         aria-hidden
         style={{
           position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
-          background: "radial-gradient(ellipse at center, transparent 50%, rgba(10,22,40,0.5) 100%)",
+          background: "radial-gradient(ellipse at center, transparent 45%, rgba(10,22,40,0.55) 100%)",
         }}
       />
 
       {/* ── Grid overlay ── */}
-      <div aria-hidden className="hero-grid" style={{ position: "absolute", inset: 0, zIndex: 1, opacity: 0.2, pointerEvents: "none" }} />
+      <div aria-hidden className="hero-grid" style={{ position: "absolute", inset: 0, zIndex: 1, opacity: 0.18, pointerEvents: "none" }} />
 
-      {/* ── Orbs — respond to cursor ── */}
+      {/* ── Floating Chinese symbols ── */}
+      <div aria-hidden style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none", overflow: "hidden" }}>
+        {SYMBOLS.map((s) => (
+          <span
+            key={s.char + s.top}
+            style={{
+              position: "absolute",
+              top: s.top,
+              left: s.left,
+              fontSize: s.size,
+              color: "rgba(255,255,255,0.08)",
+              fontWeight: 900,
+              fontFamily: "'Noto Serif SC', 'Source Han Serif', serif",
+              animation: `${s.anim} ${s.dur} ease-in-out ${s.delay} infinite`,
+              userSelect: "none",
+              lineHeight: 1,
+            }}
+          >
+            {s.char}
+          </span>
+        ))}
+      </div>
+
+      {/* ── Ambient orbs (respond to cursor with lag) ── */}
       <div
         aria-hidden
         style={{
           position: "absolute", top: "-10%", left: "-5%",
-          width: "600px", height: "600px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(200,16,46,0.13) 0%, transparent 70%)",
-          transform: `translate(${mouse.x * 38}px, ${mouse.y * 24}px)`,
-          transition: "transform 0.7s ease-out",
+          width: "580px", height: "580px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(200,16,46,0.12) 0%, transparent 70%)",
+          transform: `translate(${mouse.x * 36}px, ${mouse.y * 22}px)`,
+          transition: "transform 0.8s ease-out",
           zIndex: 2, pointerEvents: "none",
         }}
       />
@@ -124,15 +169,53 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
         aria-hidden
         style={{
           position: "absolute", bottom: "-10%", right: "-5%",
-          width: "700px", height: "700px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(41,171,226,0.10) 0%, transparent 70%)",
-          transform: `translate(${mouse.x * -38}px, ${mouse.y * -24}px)`,
-          transition: "transform 0.9s ease-out",
+          width: "680px", height: "680px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(41,171,226,0.09) 0%, transparent 70%)",
+          transform: `translate(${mouse.x * -36}px, ${mouse.y * -22}px)`,
+          transition: "transform 1s ease-out",
           zIndex: 2, pointerEvents: "none",
         }}
       />
 
-      {/* ── Slide dots ── */}
+      {/* ── Cursor follower circle ── */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: cursor.x,
+          top: cursor.y,
+          width: "72px",
+          height: "72px",
+          borderRadius: "50%",
+          border: "1.5px solid rgba(200,16,46,0.55)",
+          boxShadow: "0 0 18px rgba(200,16,46,0.25), inset 0 0 12px rgba(200,16,46,0.08)",
+          animation: "cursor-ring-pulse 2.4s ease-in-out infinite",
+          opacity: isHovered ? 1 : 0,
+          transition: "opacity 0.3s ease, left 0.12s cubic-bezier(0.25,0.46,0.45,0.94), top 0.12s cubic-bezier(0.25,0.46,0.45,0.94)",
+          zIndex: 3,
+          pointerEvents: "none",
+        }}
+      />
+      {/* Inner dot */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: cursor.x,
+          top: cursor.y,
+          width: "7px",
+          height: "7px",
+          borderRadius: "50%",
+          backgroundColor: "rgba(255,255,255,0.8)",
+          transform: "translate(-50%, -50%)",
+          opacity: isHovered ? 1 : 0,
+          transition: "opacity 0.2s ease, left 0.05s linear, top 0.05s linear",
+          zIndex: 3,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* ── Slide dot indicators ── */}
       <div
         style={{
           position: "absolute", bottom: "28px", left: "50%", transform: "translateX(-50%)",
@@ -268,7 +351,6 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
           ))}
         </div>
 
-        {/* Disclaimer */}
         <p
           className={`transition-all duration-700 ${mounted ? "opacity-100" : "opacity-0"}`}
           style={{ marginTop: "16px", color: "rgba(255,255,255,0.22)", fontSize: "11px", transitionDelay: "1.1s" }}
