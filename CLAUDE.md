@@ -180,7 +180,8 @@ GET/POST /api/settings           ← admin settings (QR codes etc)
 GET /api/partner/students        ← partner's student list
 GET /api/partner/commissions     ← partner commission data
 GET /api/notifications           ← user notifications
-POST /api/notifications/read     ← mark notifications as read
+POST /api/notifications/read     ← mark notifications as read (supports { ids } or { markAll: true })
+GET /api/applications/track      ← public lookup by applicationNumber or passportNumber (no auth)
 ```
 
 ---
@@ -295,8 +296,29 @@ Step 10: Final verification
 
 ## IMPORTANT NOTES
 
-- University admin page still shows 16 hardcoded universities — needs to read from DB (1,500 real)
 - Session sign-out uses `/sign-out` page route for reliable cookie clearing
 - Role-based redirects: admin→/admin, partner→/partner, student→/dashboard
-- All mock/demo data in admin panel will be replaced as each Phase 5 step completes
 - `data/universities.json` is gitignored — local import script only
+
+---
+
+## KNOWN ISSUES FIXED (pre-Phase 6 session)
+
+All student dashboard pages wired to real DB (previously showing hardcoded demo data):
+
+- **My Application page** (`/dashboard/application`) — now fetches real application by studentId; empty state with "Start Application" CTA if none found
+- **Documents page** (`/dashboard/documents`) — now reads real documents JSONB field; shows uploaded/missing status per document type; extracted to `_DocumentsClient.tsx`
+- **Notices sidebar badge** — DashboardSidebar now accepts `unreadCount` prop; layout fetches real unread count from DB on every request
+- **Notices page** (`/dashboard/notices`) — was already real DB; now auto-marks all as read on page visit via `useEffect` + `POST /api/notifications/read { markAll: true }`
+- **Payments page** (`/dashboard/payments`) — was already real DB (no change needed)
+- **Public track page** (`/track`) — redesigned: input form with Application ID format validation; logged-in users with an application auto-redirect to `/track/[applicationNumber]`; no more demo stage stepper on public page
+- **Track detail page** (`/track/[id]`) — NEW: queries DB by applicationNumber; shows real stage; 404 error page if not found (never shows demo data)
+- **Track API** (`GET /api/applications/track`) — NEW public endpoint: accepts `?applicationNumber=` or `?passportNumber=`; returns `{ found, applicationNumber }`; no auth required
+- **Mobile bottom bar track** — validates Application ID format before navigating; calls `/api/applications/track` API; shows inline error if not found
+- **Notifications read API** (`POST /api/notifications/read`) — now supports `{ markAll: true }` in addition to `{ ids: [...] }`
+
+New files created:
+- `src/app/(public)/track/[id]/page.tsx` — real application tracking detail page
+- `src/app/(public)/track/_TrackForm.tsx` — client component with format validation
+- `src/app/api/applications/track/route.ts` — public lookup API
+- `src/app/(student)/dashboard/documents/_DocumentsClient.tsx` — extracted client component

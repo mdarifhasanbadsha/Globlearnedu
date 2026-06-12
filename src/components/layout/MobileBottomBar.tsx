@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
+const APP_ID_PATTERN = /^[A-Z]{1,3}\d{11}$/;
+
 export function MobileBottomBar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -18,13 +20,44 @@ export function MobileBottomBar() {
     pathname.startsWith("/staff")
   ) return null;
   const [trackId, setTrackId] = useState("");
+  const [trackError, setTrackError] = useState("");
+  const [trackLoading, setTrackLoading] = useState(false);
 
-  function handleTrack() {
-    const id = trackId.trim();
-    if (id) {
-      router.push(`/track?id=${encodeURIComponent(id)}`);
+  async function handleTrack() {
+    const trimmed = trackId.trim();
+    if (!trimmed) return;
+    setTrackError("");
+
+    const upper = trimmed.toUpperCase();
+
+    // Validate if it looks like an app ID but doesn't match the pattern
+    if (/^[A-Z]{1,3}\d+$/i.test(upper) && !APP_ID_PATTERN.test(upper)) {
+      setTrackError("Please enter a valid Application ID (e.g. MD20260608001)");
+      return;
+    }
+
+    setTrackLoading(true);
+    try {
+      let url: string;
+      if (APP_ID_PATTERN.test(upper)) {
+        url = `/api/applications/track?applicationNumber=${encodeURIComponent(upper)}`;
+      } else {
+        url = `/api/applications/track?passportNumber=${encodeURIComponent(trimmed)}`;
+      }
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.found) {
+        setTrackError("No application found with this ID.");
+        return;
+      }
+      router.push(`/track/${data.applicationNumber}`);
       setTrackOpen(false);
       setTrackId("");
+      setTrackError("");
+    } catch {
+      setTrackError("Something went wrong. Please try again.");
+    } finally {
+      setTrackLoading(false);
     }
   }
 
@@ -226,23 +259,30 @@ export function MobileBottomBar() {
             <input
               type="text"
               value={trackId}
-              onChange={(e) => setTrackId(e.target.value)}
+              onChange={(e) => { setTrackId(e.target.value); setTrackError(""); }}
               onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-              placeholder="e.g. MB20260608001 or Passport No."
+              placeholder="e.g. MD20260608001 or Passport No."
               style={{
                 width: "100%",
                 padding: "14px 16px",
                 fontSize: "15px",
                 borderRadius: "10px",
-                border: "1.5px solid #e2e8f0",
+                border: `1.5px solid ${trackError ? "#C8102E" : "#e2e8f0"}`,
                 outline: "none",
-                marginBottom: "12px",
+                marginBottom: "8px",
                 color: "#111827",
               }}
             />
 
+            {trackError && (
+              <p style={{ fontSize: "12px", color: "#C8102E", marginBottom: "8px", paddingLeft: "2px" }}>
+                {trackError}
+              </p>
+            )}
+
             <button
               onClick={handleTrack}
+              disabled={trackLoading}
               style={{
                 width: "100%",
                 padding: "14px",
@@ -252,12 +292,13 @@ export function MobileBottomBar() {
                 backgroundColor: "#C8102E",
                 borderRadius: "10px",
                 border: "none",
-                cursor: "pointer",
+                cursor: trackLoading ? "not-allowed" : "pointer",
+                opacity: trackLoading ? 0.7 : 1,
                 boxShadow: "0 4px 16px rgba(200,16,46,0.35)",
                 marginBottom: "12px",
               }}
             >
-              Track Application
+              {trackLoading ? "Searching…" : "Track Application"}
             </button>
 
             <p style={{ textAlign: "center", fontSize: "12px", color: "#94a3b8" }}>

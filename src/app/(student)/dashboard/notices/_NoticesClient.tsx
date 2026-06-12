@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, CheckCircle2, Info, Check } from "lucide-react";
 
 type Notice = {
@@ -43,6 +43,19 @@ export default function NoticesClient({ notices }: Props) {
     new Set(notices.filter((n) => n.isRead).map((n) => n.id))
   );
   const [markingAll, setMarkingAll] = useState(false);
+
+  // Auto-mark all as read when page is opened
+  useEffect(() => {
+    const hasUnread = notices.some((n) => !n.isRead);
+    if (!hasUnread) return;
+    setReadIds(new Set(notices.map((n) => n.id)));
+    fetch("/api/notifications/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ markAll: true }),
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const unreadCount = notices.filter((n) => !readIds.has(n.id)).length;
 

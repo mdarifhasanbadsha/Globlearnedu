@@ -10,7 +10,19 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { ids } = await req.json().catch(() => ({ ids: [] }));
+  const body = await req.json().catch(() => ({}));
+
+  if (body.markAll === true) {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(
+        and(eq(notifications.userId, session.user.id), eq(notifications.isRead, false)),
+      );
+    return NextResponse.json({ updated: "all" });
+  }
+
+  const { ids } = body as { ids?: string[] };
   if (!Array.isArray(ids) || ids.length === 0) {
     return NextResponse.json({ updated: 0 });
   }

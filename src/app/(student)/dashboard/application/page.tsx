@@ -1,23 +1,45 @@
+export const dynamic = "force-dynamic";
+
+import { auth } from "@/lib/auth/config";
+import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { applications } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
-import { ArrowRight, Clock, MessageSquare } from "lucide-react";
+import { ArrowRight, Clock, MessageSquare, Plus } from "lucide-react";
 
 const TOTAL_STAGES = 14;
-const CURRENT_STAGE = 5;
 
-const APP = {
-  appId: "MB20260602001",
-  submittedDate: "2 June 2026",
-  stageName: "Application submitted to universities",
-  stageDesc:
-    "Your file has been sent to Wuhan University, Jilin University, and Sichuan University. Admissions offices typically respond within 4–8 weeks.",
+const STATUS_STAGE: Record<string, number> = {
+  submitted: 1, under_review: 2, documents_approved: 3, applied_per_university: 4,
+  processing: 5, interview: 6, pre_admission: 7, student_confirms: 8,
+  university_deposit: 9, final_admission: 10, student_accepts: 11,
+  service_charge_payment: 12, jw202_issued: 13, complete: 14,
+  withdrawn: 0, cancelled: 0,
+};
+
+const STATUS_NAMES: Record<string, string> = {
+  submitted: "Submitted", under_review: "Under Review", documents_approved: "Documents Approved",
+  applied_per_university: "Applied to Universities", processing: "Processing at University",
+  interview: "Interview", pre_admission: "Pre-Admission", student_confirms: "Student Confirms",
+  university_deposit: "University Deposit", final_admission: "Final Admission Notice",
+  student_accepts: "Student Accepts Offer", service_charge_payment: "Service Charge Payment",
+  jw202_issued: "JW202 Issued", complete: "Complete", withdrawn: "Withdrawn", cancelled: "Cancelled",
+};
+
+const SCHOLARSHIP_LABELS: Record<string, string> = {
+  csc: "CSC Government Scholarship", university: "University Scholarship",
+  provincial: "Provincial Scholarship", self_sponsored: "Self-Sponsored",
+};
+
+const PROGRAM_LABELS: Record<string, string> = {
+  mbbs: "MBBS / Medicine", bachelor: "Bachelor's Degree", master: "Master's Degree",
+  phd: "PhD", language: "Chinese Language", diploma: "Diploma / Vocational",
+  foundation: "Foundation / Pre-University", short_course: "Short Course / Exchange",
 };
 
 function Section({
-  title,
-  waMessage,
-  items,
-  actionHref,
-  actionLabel,
+  title, waMessage, items, actionHref, actionLabel,
 }: {
   title: string;
   waMessage?: string;
@@ -52,9 +74,7 @@ function Section({
         className="flex items-center justify-between px-5 py-4 border-b"
         style={{ borderColor: "#F1F5F9", backgroundColor: "#FAFAFA" }}
       >
-        <p className="text-sm font-black" style={{ color: "#1B3A6B" }}>
-          {title}
-        </p>
+        <p className="text-sm font-black" style={{ color: "#1B3A6B" }}>{title}</p>
         {action}
       </div>
       <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
@@ -73,17 +93,70 @@ function Section({
   );
 }
 
-export default function ApplicationPage() {
-  const progress = Math.round((CURRENT_STAGE / TOTAL_STAGES) * 100);
+export default async function ApplicationPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+
+  const app = await db.query.applications.findFirst({
+    where: eq(applications.studentId, session.user.id),
+    orderBy: [desc(applications.createdAt)],
+  });
+
+  if (!app) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-black mb-1" style={{ color: "#1B3A6B" }}>My Application</h1>
+        </div>
+        <div className="bg-white border rounded-2xl p-12 text-center" style={{ borderColor: "#E2E8F0" }}>
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ backgroundColor: "#EEF4FF" }}
+          >
+            <Plus size={28} style={{ color: "#1B3A6B" }} />
+          </div>
+          <p className="text-base font-bold mb-2" style={{ color: "#1B3A6B" }}>No application yet</p>
+          <p className="text-sm mb-6" style={{ color: "#64748B" }}>
+            You haven't submitted an application. Start one and our team will guide you through every step.
+          </p>
+          <Link
+            href="/dashboard/apply"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white text-sm font-bold"
+            style={{ backgroundColor: "#C8102E" }}
+          >
+            Start Application <ArrowRight size={14} />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const currentStage = STATUS_STAGE[app.status] ?? 1;
+  const progress = currentStage > 0 ? Math.round((currentStage / TOTAL_STAGES) * 100) : 0;
+  const stageName = STATUS_NAMES[app.status] ?? app.status.replace(/_/g, " ");
+  const submittedDate = new Date(app.createdAt).toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+
+  const unis = (app.selectedUniversities as { universityId: string; universityName: string; programName: string }[]) ?? [];
+  const parentInfo = (app.parentInfo as Record<string, string>) ?? {};
+  const sponsorInfo = (app.sponsorInfo as Record<string, string | boolean>) ?? {};
+  const academics = (app.academicHistory as Record<string, string | number>[]) ?? [];
+  const english = (app.englishProficiency as Record<string, string>) ?? {};
+  const chinese = (app.chineseProficiency as Record<string, string | boolean | number>) ?? {};
+  const docs = (app.documents as Record<string, string>) ?? {};
+  const docCount = Object.values(docs).filter(Boolean).length;
+
+  const waMsg = `Hi! I'd like to make a change to my application ${app.applicationNumber}.`;
+
+  const firstAcademic = academics[0] ?? {};
 
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-black mb-1" style={{ color: "#1B3A6B" }}>
-          My Application
-        </h1>
+        <h1 className="text-2xl font-black mb-1" style={{ color: "#1B3A6B" }}>My Application</h1>
         <p className="text-sm" style={{ color: "#64748B" }}>
-          Submitted application — {APP.appId}
+          Application — {app.applicationNumber}
         </p>
       </div>
 
@@ -97,41 +170,35 @@ export default function ApplicationPage() {
             <div className="flex items-center gap-2 mb-1">
               <Clock size={14} style={{ opacity: 0.6 }} />
               <span className="text-xs font-semibold" style={{ opacity: 0.6 }}>
-                Submitted {APP.submittedDate}
+                Submitted {submittedDate}
               </span>
             </div>
-            <p className="text-base font-black">{APP.appId}</p>
+            <p className="text-base font-black">{app.applicationNumber}</p>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-xs font-semibold mb-0.5" style={{ opacity: 0.6 }}>
-              Current stage
-            </p>
+            <p className="text-xs font-semibold mb-0.5" style={{ opacity: 0.6 }}>Current stage</p>
             <p className="text-2xl font-black">
-              {CURRENT_STAGE}
-              <span className="text-sm font-medium" style={{ opacity: 0.6 }}>
-                {" / "}{TOTAL_STAGES}
-              </span>
+              {currentStage > 0 ? currentStage : "—"}
+              {currentStage > 0 && (
+                <span className="text-sm font-medium" style={{ opacity: 0.6 }}>{" / "}{TOTAL_STAGES}</span>
+              )}
             </p>
           </div>
         </div>
 
-        <div className="h-2 rounded-full mb-4" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-          <div
-            className="h-full rounded-full"
-            style={{ width: `${progress}%`, backgroundColor: "#FFD700" }}
-          />
-        </div>
+        {currentStage > 0 && (
+          <div className="h-2 rounded-full mb-4" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
+            <div className="h-full rounded-full" style={{ width: `${progress}%`, backgroundColor: "#FFD700" }} />
+          </div>
+        )}
 
         <p className="text-sm font-bold mb-1" style={{ color: "#FFD700" }}>
-          Stage {CURRENT_STAGE}: {APP.stageName}
-        </p>
-        <p className="text-xs leading-relaxed" style={{ opacity: 0.7 }}>
-          {APP.stageDesc}
+          {currentStage > 0 ? `Stage ${currentStage}: ` : ""}{stageName}
         </p>
 
         <div className="mt-5">
           <Link
-            href="/track"
+            href={`/track/${app.applicationNumber}`}
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-white"
             style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
           >
@@ -144,87 +211,90 @@ export default function ApplicationPage() {
       <div className="space-y-4">
         <Section
           title="Program & Universities"
-          waMessage="Hi! I'd like to request a change to my program or university selection. My application ID is MB20260602001."
+          waMessage={`Hi! I'd like to request a change to my program or university selection. My application ID is ${app.applicationNumber}.`}
           items={[
-            { label: "Funding type", value: "CSC Government Scholarship" },
-            { label: "Degree level", value: "MBBS / Medicine" },
-            { label: "1st choice", value: "Wuhan University — MBBS (English)" },
-            { label: "2nd choice", value: "Jilin University — MBBS (English)" },
-            { label: "3rd choice", value: "Sichuan University — Clinical Medicine (MBBS)" },
+            { label: "Funding type", value: SCHOLARSHIP_LABELS[app.scholarshipType] ?? app.scholarshipType ?? "" },
+            { label: "Degree level", value: PROGRAM_LABELS[app.programLevel ?? ""] ?? app.programLevel ?? "" },
+            ...unis.map((u, i) => ({
+              label: `${["1st", "2nd", "3rd", "4th", "5th"][i] ?? `${i + 1}th`} choice`,
+              value: `${u.universityName} — ${u.programName}`,
+            })),
           ]}
         />
 
         <Section
           title="Personal Information"
-          waMessage="Hi! I'd like to update my personal information. My application ID is MB20260602001."
+          waMessage={`Hi! I'd like to update my personal information. My application ID is ${app.applicationNumber}.`}
           items={[
-            { label: "Surname", value: "RAHMAN" },
-            { label: "Given names", value: "AHMED FARHAN" },
-            { label: "Date of birth", value: "15 March 2002" },
-            { label: "Gender", value: "Male" },
-            { label: "Nationality", value: "Bangladesh" },
-            { label: "Passport number", value: "BK1234567" },
-            { label: "Passport expiry", value: "20 January 2030" },
-            { label: "Marital status", value: "Single" },
+            { label: "Surname", value: app.passportSurname ?? "" },
+            { label: "Given names", value: app.passportGivenName ?? "" },
+            { label: "Date of birth", value: app.dateOfBirth ?? "" },
+            { label: "Gender", value: app.gender ?? "" },
+            { label: "Nationality", value: app.nationality ?? "" },
+            { label: "Passport number", value: app.passportNumber ?? "" },
+            { label: "Passport expiry", value: app.passportExpiry ?? "" },
+            { label: "Religion", value: app.religion ?? "" },
           ]}
         />
 
         <Section
           title="Contact Details"
-          waMessage="Hi! I'd like to update my contact details. My application ID is MB20260602001."
+          waMessage={`Hi! I'd like to update my contact details. My application ID is ${app.applicationNumber}.`}
           items={[
-            { label: "WhatsApp", value: "+880 1712 345678" },
-            { label: "Email", value: "ahmed.rahman@gmail.com" },
-            { label: "Street address", value: "45 Green Road, Dhaka 1000" },
-            { label: "Country of residence", value: "Bangladesh" },
-            { label: "Emergency contact", value: "Fatima Rahman (Mother)" },
-            { label: "Emergency phone", value: "+880 1987 654321" },
+            { label: "Phone / WhatsApp", value: app.phone ?? "" },
+            { label: "Email", value: app.email ?? "" },
+            { label: "Address", value: app.addressDetailed ?? "" },
+            { label: "City", value: app.addressCity ?? "" },
+            { label: "Country of residence", value: app.addressCountry ?? "" },
           ]}
         />
 
         <Section
           title="Family & Sponsor"
-          waMessage="Hi! I'd like to update my family or sponsor details. My application ID is MB20260602001."
+          waMessage={`Hi! I'd like to update my family or sponsor details. My application ID is ${app.applicationNumber}.`}
           items={[
-            { label: "Father's name", value: "Mohammed Rahman" },
-            { label: "Father's occupation", value: "Government Officer" },
-            { label: "Mother's name", value: "Fatima Rahman" },
-            { label: "Mother's occupation", value: "Homemaker" },
-            { label: "Sponsor", value: "Parent" },
-            { label: "Income range", value: "$15,000 – $30,000 USD / year" },
+            { label: "Father's name", value: parentInfo.fatherName ?? "" },
+            { label: "Father's occupation", value: parentInfo.fatherOccupation ?? "" },
+            { label: "Mother's name", value: parentInfo.motherName ?? "" },
+            { label: "Mother's occupation", value: parentInfo.motherOccupation ?? "" },
+            { label: "Sponsor", value: sponsorInfo.isSameAsParent ? "Parent" : (sponsorInfo.sponsorName as string | undefined) ?? "" },
+            { label: "Annual income range", value: (sponsorInfo.annualIncomeRange as string | undefined) ?? "" },
           ]}
         />
 
-        <Section
-          title="Academic Background"
-          waMessage="Hi! I'd like to update my academic details. My application ID is MB20260602001."
-          items={[
-            { label: "Qualification", value: "Higher Secondary Certificate (HSC)" },
-            { label: "Institution", value: "Dhaka College" },
-            { label: "Field of study", value: "Science" },
-            { label: "Country", value: "Bangladesh" },
-            { label: "Grade / GPA", value: "5.0 / 5.0" },
-            { label: "Year completed", value: "2022" },
-          ]}
-        />
+        {academics.length > 0 && (
+          <Section
+            title="Academic Background"
+            waMessage={`Hi! I'd like to update my academic details. My application ID is ${app.applicationNumber}.`}
+            items={[
+              { label: "Qualification", value: String(firstAcademic.qualification ?? "") },
+              { label: "Institution", value: String(firstAcademic.institution ?? "") },
+              { label: "Field of study", value: String(firstAcademic.fieldOfStudy ?? "") },
+              { label: "Country", value: String(firstAcademic.country ?? "") },
+              { label: "Grade / GPA", value: String(firstAcademic.grade ?? "") },
+              { label: "Year completed", value: String(firstAcademic.endYear ?? "") },
+            ]}
+          />
+        )}
 
-        <Section
-          title="Language Proficiency"
-          waMessage="Hi! I'd like to update my language proficiency details. My application ID is MB20260602001."
-          items={[
-            { label: "English test", value: "IELTS" },
-            { label: "Score", value: "6.5" },
-            { label: "Test date", value: "May 2025" },
-            { label: "Chinese proficiency", value: "Not applicable" },
-          ]}
-        />
+        {english.testType && (
+          <Section
+            title="Language Proficiency"
+            waMessage={`Hi! I'd like to update my language proficiency details. My application ID is ${app.applicationNumber}.`}
+            items={[
+              { label: "English test", value: english.testType?.toUpperCase() ?? "" },
+              { label: "Score", value: english.score ?? "" },
+              { label: "Test date", value: english.testDate ?? "" },
+              { label: "Chinese proficiency", value: chinese.hasHSK ? `HSK Level ${chinese.hskLevel ?? ""}` : "None" },
+            ]}
+          />
+        )}
 
         <Section
           title="China Status"
-          waMessage="Hi! I need to update my China status information. My application ID is MB20260602001."
+          waMessage={`Hi! I need to update my China status information. My application ID is ${app.applicationNumber}.`}
           items={[
-            { label: "Currently in China", value: "No" },
-            { label: "Visa process", value: "Will apply from home country after offer letter" },
+            { label: "Currently in China", value: app.isCurrentlyInChina ? "Yes" : "No" },
           ]}
         />
 
@@ -234,9 +304,7 @@ export default function ApplicationPage() {
             className="flex items-center justify-between px-5 py-4 border-b"
             style={{ borderColor: "#F1F5F9", backgroundColor: "#FAFAFA" }}
           >
-            <p className="text-sm font-black" style={{ color: "#1B3A6B" }}>
-              Documents
-            </p>
+            <p className="text-sm font-black" style={{ color: "#1B3A6B" }}>Documents</p>
             <Link
               href="/dashboard/documents"
               className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
@@ -246,22 +314,28 @@ export default function ApplicationPage() {
             </Link>
           </div>
           <div className="px-5 py-5">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0"
-                style={{ backgroundColor: "#16A34A" }}
-              >
-                7
+            {docCount > 0 ? (
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0"
+                  style={{ backgroundColor: "#16A34A" }}
+                >
+                  {docCount}
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: "#1B3A6B" }}>
+                    {docCount} document{docCount !== 1 ? "s" : ""} uploaded
+                  </p>
+                  <p className="text-xs" style={{ color: "#94A3B8" }}>
+                    Go to Documents to upload or manage files
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-bold" style={{ color: "#1B3A6B" }}>
-                  7 documents uploaded
-                </p>
-                <p className="text-xs" style={{ color: "#94A3B8" }}>
-                  All 7 required documents approved ✓
-                </p>
-              </div>
-            </div>
+            ) : (
+              <p className="text-sm" style={{ color: "#94A3B8" }}>
+                No documents uploaded yet. Visit the Documents page to upload your files.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -275,9 +349,7 @@ export default function ApplicationPage() {
           Need to update something in your application?
         </p>
         <a
-          href={`https://wa.me/8615655031556?text=${encodeURIComponent(
-            "Hi! I'd like to make a change to my application MB20260602001."
-          )}`}
+          href={`https://wa.me/8615655031556?text=${encodeURIComponent(waMsg)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-bold"

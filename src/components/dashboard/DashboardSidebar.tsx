@@ -20,14 +20,15 @@ type NavItem = {
   locked?: boolean;
 };
 
-const NAV: { section: string; items: NavItem[] }[] = [
+function buildNav(unreadCount: number): { section: string; items: NavItem[] }[] {
+  return [
   {
     section: "My Application",
     items: [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
       { label: "My Application", href: "/dashboard/application", icon: FileText },
       { label: "Documents", href: "/dashboard/documents", icon: FolderOpen },
-      { label: "Notices", href: "/dashboard/notices", icon: Bell, badge: 2 },
+      { label: "Notices", href: "/dashboard/notices", icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
     ],
   },
   {
@@ -44,7 +45,8 @@ const NAV: { section: string; items: NavItem[] }[] = [
       { label: "China Guide", href: "/dashboard/guide", icon: Map, locked: true },
     ],
   },
-];
+];}
+
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   const Icon = item.icon;
@@ -98,8 +100,9 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   return <Link href={item.href}>{content}</Link>;
 }
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
+  const NAV = buildNav(unreadCount);
 
   function isActive(item: NavItem) {
     if (item.exact) return pathname === item.href;
