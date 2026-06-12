@@ -14,7 +14,9 @@ type QueueItem = {
   assignedStaffId: string | null;
   assignedStaffName: string;
   studentName: string;
+  passportName: string | null;
   university: string;
+  expectedMajors: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -166,10 +168,10 @@ export default function StaffQueueClient({
       ) : (
         <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#E2E8F0" }}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[900px]">
+            <table className="w-full text-sm min-w-[1100px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid #F1F5F9", backgroundColor: "#FAFAFA" }}>
-                  {["App ID", "Student", "Program", "University", "Status", "Assigned To", "Updated", ""].map(h => (
+                  {["App ID", "Student", "Program", "University", "Expected Major", "Status", "Assigned To", "Updated", ""].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
                       {h}
                     </th>
@@ -193,13 +195,21 @@ export default function StaffQueueClient({
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <p className="font-semibold text-sm" style={{ color: "#0A1628" }}>{item.studentName}</p>
+                        <p className="font-semibold text-sm" style={{ color: "#0A1628" }}>
+                          {item.passportName || item.studentName}
+                        </p>
+                        {item.passportName && item.passportName !== item.studentName && (
+                          <p className="text-[11px]" style={{ color: "#64748B" }}>{item.studentName}</p>
+                        )}
                         <p className="text-[11px]" style={{ color: "#94A3B8" }}>{item.nationality}</p>
                       </td>
                       <td className="px-4 py-3.5 text-xs capitalize" style={{ color: "#64748B" }}>
                         {PROGRAM_LABELS[item.programLevel] ?? item.programLevel}
                       </td>
                       <td className="px-4 py-3.5 text-xs" style={{ color: "#64748B" }}>{item.university}</td>
+                      <td className="px-4 py-3.5 text-xs" style={{ color: "#64748B" }}>
+                        {item.expectedMajors || <span style={{ color: "#CBD5E1" }}>—</span>}
+                      </td>
                       <td className="px-4 py-3.5">
                         <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: st.bg, color: st.color }}>
                           {st.label}

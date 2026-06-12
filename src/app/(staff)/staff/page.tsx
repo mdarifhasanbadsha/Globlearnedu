@@ -26,6 +26,8 @@ export default async function StaffQueuePage() {
       nationality: applications.nationality,
       isUrgent: applications.isUrgent,
       assignedStaffId: applications.assignedStaffId,
+      passportSurname: applications.passportSurname,
+      passportGivenName: applications.passportGivenName,
       selectedUniversities: applications.selectedUniversities,
       createdAt: applications.createdAt,
       updatedAt: applications.updatedAt,
@@ -65,9 +67,15 @@ export default async function StaffQueuePage() {
     assignedStaffId: r.assignedStaffId,
     assignedStaffName: r.assignedStaffId ? (staffMap[r.assignedStaffId] ?? "Unassigned") : "Unassigned",
     studentName: [r.studentFirstName, r.studentLastName].filter(Boolean).join(" ") || r.studentEmail || "—",
+    passportName: [r.passportGivenName, r.passportSurname].filter(Boolean).join(" ") || null,
     university: (() => {
       const univs = r.selectedUniversities as Array<{ universityName?: string }>;
       return Array.isArray(univs) && univs.length > 0 ? (univs[0].universityName ?? "—") : "—";
+    })(),
+    expectedMajors: (() => {
+      const univs = r.selectedUniversities as Array<{ expectedMajor?: string }>;
+      if (!Array.isArray(univs)) return "";
+      return univs.map(u => u.expectedMajor).filter(Boolean).join(", ");
     })(),
     createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
     updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),

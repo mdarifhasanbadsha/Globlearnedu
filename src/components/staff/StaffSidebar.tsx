@@ -16,25 +16,27 @@ type NavItem = {
   href: string;
   icon: LucideIcon;
   exact?: boolean;
-  badge?: string;
+  badge?: number;
 };
 
-const NAV: { section: string; items: NavItem[] }[] = [
-  {
-    section: "Work",
-    items: [
-      { label: "Application Queue", href: "/staff", icon: ClipboardList, exact: true, badge: "12" },
-      { label: "My Reviews", href: "/staff/applications", icon: FileSearch },
-    ],
-  },
-  {
-    section: "Account",
-    items: [
-      { label: "Notices", href: "/staff/notices", icon: Bell, badge: "2" },
-      { label: "Profile", href: "/staff/profile", icon: User },
-    ],
-  },
-];
+function buildNav(queueCount: number, unreadCount: number): { section: string; items: NavItem[] }[] {
+  return [
+    {
+      section: "Work",
+      items: [
+        { label: "Application Queue", href: "/staff", icon: ClipboardList, exact: true, badge: queueCount > 0 ? queueCount : undefined },
+        { label: "My Reviews", href: "/staff/applications", icon: FileSearch },
+      ],
+    },
+    {
+      section: "Account",
+      items: [
+        { label: "Notices", href: "/staff/notices", icon: Bell, badge: unreadCount > 0 ? unreadCount : undefined },
+        { label: "Profile", href: "/staff/profile", icon: User },
+      ],
+    },
+  ];
+}
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   const Icon = item.icon;
@@ -56,7 +58,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         )}
         <Icon size={16} style={{ color: active ? "#059669" : "#64748B", flexShrink: 0 }} />
         <span className="flex-1">{item.label}</span>
-        {item.badge && (
+        {item.badge !== undefined && (
           <span
             className="text-[10px] font-black px-1.5 py-0.5 rounded-full text-white"
             style={{ backgroundColor: active ? "#059669" : "#1B3A6B" }}
@@ -69,8 +71,15 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   );
 }
 
-export default function StaffSidebar() {
+export default function StaffSidebar({
+  queueCount = 0,
+  unreadCount = 0,
+}: {
+  queueCount?: number;
+  unreadCount?: number;
+}) {
   const pathname = usePathname();
+  const NAV = buildNav(queueCount, unreadCount);
 
   function isActive(item: NavItem) {
     if (item.exact) return pathname === item.href;

@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
 import { applications, users, partners } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import AppDetailClient from "./_AppDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -40,11 +40,19 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
       email: applications.email,
       addressCity: applications.addressCity,
       addressCountry: applications.addressCountry,
+      // Academic / work / language
+      academicHistory: applications.academicHistory,
+      workExperience: applications.workExperience,
+      englishProficiency: applications.englishProficiency,
+      chineseProficiency: applications.chineseProficiency,
+      parentInfo: applications.parentInfo,
+      sponsorInfo: applications.sponsorInfo,
       // Internals
       internalNotes: applications.internalNotes,
       documents: applications.documents,
       depositPaid: applications.depositPaid,
       serviceChargePaid: applications.serviceChargePaid,
+      partnerId: applications.partnerId,
       createdAt: applications.createdAt,
       updatedAt: applications.updatedAt,
       // Student
@@ -63,10 +71,17 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
 
   const r = rows[0];
 
-  // Get partner name if any
+  // Resolve partner name
   let partnerName = "Direct";
-  if (r.studentId) {
-    // no partnerId on application row selected above, but we can infer
+  if (r.partnerId) {
+    const partnerRow = await db
+      .select({ agencyName: partners.agencyName, agencyCountry: partners.agencyCountry })
+      .from(partners)
+      .where(eq(partners.id, r.partnerId))
+      .limit(1);
+    if (partnerRow[0]) {
+      partnerName = [partnerRow[0].agencyName, partnerRow[0].agencyCountry].filter(Boolean).join(", ");
+    }
   }
 
   // Parse internal notes
@@ -103,7 +118,18 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
     city: r.addressCity ?? "—",
     country: r.addressCountry ?? r.nationality ?? "—",
     university: primaryUniversity,
-    universities: r.selectedUniversities as Array<{ universityName?: string }>,
+    universities: r.selectedUniversities as Array<{ universityName?: string; programName?: string; expectedMajor?: string }>,
+    // Extended fields
+    academicHistory: (r.academicHistory ?? []) as Array<Record<string, string>>,
+    workExperience: (r.workExperience ?? []) as Array<Record<string, string>>,
+    englishProficiency: (r.englishProficiency ?? {}) as Record<string, string>,
+    chineseProficiency: (r.chineseProficiency ?? {}) as Record<string, string>,
+    parentInfo: (r.parentInfo ?? {}) as Record<string, string>,
+    sponsorInfo: (r.sponsorInfo ?? {}) as Record<string, string>,
+    documents: (r.documents ?? {}) as Record<string, string>,
+    depositPaid: r.depositPaid ?? false,
+    serviceChargePaid: r.serviceChargePaid ?? false,
+    partnerName,
     staffNotes,
     createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
     updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
