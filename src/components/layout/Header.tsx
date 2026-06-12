@@ -75,10 +75,12 @@ export function Header() {
           right: 0,
           zIndex: 50,
           height: "68px",
-          backgroundColor: "white",
+          backgroundColor: scrolled ? "rgba(255,255,255,0.95)" : "white",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
           borderBottom: scrolled ? "1px solid #e2e8f0" : "1px solid #f1f5f9",
-          boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.06)" : "none",
-          transition: "box-shadow 0.2s, border-color 0.2s",
+          boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.07)" : "none",
+          transition: "background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease",
         }}
       >
         <div
@@ -335,6 +337,18 @@ export function Header() {
                 textDecoration: "none",
                 whiteSpace: "nowrap",
                 minHeight: "44px",
+                transition: "background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
+                boxShadow: "0 2px 10px rgba(200,16,46,0.3)",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = "#A50D25";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(200,16,46,0.45)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = "#C8102E";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 10px rgba(200,16,46,0.3)";
               }}
             >
               Apply Now

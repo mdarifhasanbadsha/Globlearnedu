@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 type HeroProps = { applyHref?: string };
@@ -10,13 +13,59 @@ const STATS = [
 ];
 
 export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const id = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(id);
+  }, []);
+
+  const base = "transition-all";
+  const hidden = "opacity-0 translate-y-6";
+  const show = "opacity-100 translate-y-0";
+
+  function enter(delay: string) {
+    return `${base} ${mounted ? show : hidden}`;
+  }
+
   return (
     <section
       className="hero-grid min-h-screen flex items-center relative overflow-hidden"
       style={{ backgroundColor: "#0A1628" }}
     >
+      {/* Animated orbs */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: "-10%",
+          left: "-5%",
+          width: "600px",
+          height: "600px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(200,16,46,0.10) 0%, transparent 70%)",
+          animation: "orb-drift-1 20s ease-in-out infinite",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          bottom: "-10%",
+          right: "-5%",
+          width: "700px",
+          height: "700px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(41,171,226,0.09) 0%, transparent 70%)",
+          animation: "orb-drift-2 24s ease-in-out infinite",
+          pointerEvents: "none",
+        }}
+      />
+
       {/* Top glow */}
       <div
+        aria-hidden
         style={{
           position: "absolute",
           top: 0,
@@ -24,27 +73,24 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
           transform: "translateX(-50%)",
           width: "800px",
           height: "400px",
-          background:
-            "radial-gradient(ellipse at center, rgba(27,58,107,0.6) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse at center, rgba(27,58,107,0.6) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
 
       <div className="relative w-full max-w-5xl mx-auto px-4 lg:px-6 py-16 lg:py-24 text-center">
-        {/* Badge */}
+
+        {/* Badge — enters first */}
         <div
+          className={`inline-flex items-center gap-2 mb-6 transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
+            transitionDelay: "0.1s",
             border: "1px solid rgba(255,255,255,0.15)",
             borderRadius: "999px",
             padding: "6px 16px",
-            marginBottom: "24px",
           }}
         >
           <span
-            className="animate-pulse-dot"
             style={{
               width: "8px",
               height: "8px",
@@ -52,43 +98,40 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
               backgroundColor: "#C8102E",
               flexShrink: 0,
               display: "inline-block",
+              animation: "pulse 2s infinite",
             }}
           />
-          <span
-            style={{
-              color: "rgba(255,255,255,0.75)",
-              fontSize: "13px",
-              fontWeight: "600",
-              letterSpacing: "0.03em",
-            }}
-          >
+          <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "13px", fontWeight: "600", letterSpacing: "0.03em" }}>
             Admission 2026–2027 — Now Open
           </span>
         </div>
 
-        {/* Headline */}
+        {/* H1 */}
         <h1
-          className="text-3xl sm:text-4xl lg:text-6xl font-black text-white leading-tight mb-6"
-          style={{ letterSpacing: "-0.02em" }}
+          className={`text-3xl sm:text-4xl lg:text-6xl font-black text-white leading-tight mb-6 transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          style={{ letterSpacing: "-0.02em", transitionDelay: "0.3s" }}
         >
           Your Future Begins in China{" "}
           <span className="gradient-text">— Start Today.</span>
         </h1>
 
-        {/* Subheadline */}
+        {/* Subtitle */}
         <p
-          className="text-sm sm:text-lg text-white/60 leading-relaxed max-w-2xl mx-auto mb-10"
+          className={`text-sm sm:text-lg text-white/60 leading-relaxed max-w-2xl mx-auto mb-10 transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          style={{ transitionDelay: "0.5s" }}
         >
           Globlearn Education has helped{" "}
           <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>5,000+ students</span>{" "}
           from{" "}
           <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>80+ countries</span>{" "}
-          gain admission to China&apos;s top universities — with expert scholarship guidance
-          and end-to-end support.
+          gain admission to China&apos;s top universities — with expert scholarship guidance and end-to-end support.
         </p>
 
         {/* CTAs */}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center mb-12">
+        <div
+          className={`flex flex-col sm:flex-row flex-wrap gap-3 justify-center mb-12 transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          style={{ transitionDelay: "0.7s" }}
+        >
           <Link
             href={applyHref}
             style={{
@@ -103,22 +146,15 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
               fontWeight: "700",
               fontSize: "15px",
               textDecoration: "none",
-              boxShadow: "0 8px 32px rgba(200,16,46,0.4)",
+              animation: "cta-pulse-glow 3s ease-in-out infinite",
+              transition: "transform 0.2s ease, background-color 0.2s ease",
             }}
+            onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-2px)")}
+            onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
           >
             Apply Now — Affordable Cost
-            <svg
-              style={{ width: "16px", height: "16px" }}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
+            <svg style={{ width: "16px", height: "16px" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </Link>
           <Link
@@ -134,18 +170,25 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
               fontWeight: "600",
               fontSize: "15px",
               textDecoration: "none",
+              transition: "border-color 0.2s ease, transform 0.2s ease",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)";
+              e.currentTarget.style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
             Explore Universities
           </Link>
         </div>
 
-        {/* Stats row — 2×2 on mobile, 4×1 on desktop */}
+        {/* Stats row */}
         <div
-          className="grid grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto rounded-2xl overflow-hidden"
-          style={{
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
+          className={`grid grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto rounded-2xl overflow-hidden transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+          style={{ border: "1px solid rgba(255,255,255,0.08)", transitionDelay: "0.9s" }}
         >
           {STATS.map((stat, i) => (
             <div
@@ -154,32 +197,16 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
                 padding: "20px 12px",
                 textAlign: "center",
                 backgroundColor: "rgba(255,255,255,0.03)",
-                borderRight:
-                  i < STATS.length - 1
-                    ? "1px solid rgba(255,255,255,0.08)"
-                    : "none",
+                borderRight: i < STATS.length - 1 ? "1px solid rgba(255,255,255,0.08)" : "none",
+                transition: "background-color 0.2s ease",
               }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.06)")}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.03)")}
             >
-              <div
-                style={{
-                  fontSize: "clamp(1.4rem, 4vw, 1.75rem)",
-                  fontWeight: "900",
-                  color: "white",
-                  lineHeight: 1,
-                  marginBottom: "6px",
-                }}
-              >
+              <div style={{ fontSize: "clamp(1.4rem, 4vw, 1.75rem)", fontWeight: "900", color: "white", lineHeight: 1, marginBottom: "6px" }}>
                 {stat.value}
               </div>
-              <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: "500",
-                  color: "rgba(255,255,255,0.45)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
+              <div style={{ fontSize: "10px", fontWeight: "500", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 {stat.label}
               </div>
             </div>
@@ -188,11 +215,8 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
 
         {/* Disclaimer */}
         <p
-          style={{
-            marginTop: "16px",
-            color: "rgba(255,255,255,0.25)",
-            fontSize: "11px",
-          }}
+          className={`transition-all duration-700 ${mounted ? "opacity-100" : "opacity-0"}`}
+          style={{ marginTop: "16px", color: "rgba(255,255,255,0.25)", fontSize: "11px", transitionDelay: "1.1s" }}
         >
           * Visa decisions are made by the Chinese Embassy. 99% reflects our guidance success based on student outcomes.
         </p>
