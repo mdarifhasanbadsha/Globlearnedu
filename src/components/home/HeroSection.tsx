@@ -81,7 +81,7 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
     >
-      {/* ── Slideshow — crossfade + Ken Burns idle + parallax shift on hover (no scale) ── */}
+      {/* ── Slideshow — crossfade + Ken Burns always running, zero mouse response ── */}
       {SLIDES.map((slide, i) => (
         <div
           key={slide.src}
@@ -94,18 +94,8 @@ export function HeroSection({ applyHref = "/sign-up" }: HeroProps) {
             backgroundPosition: "center",
             willChange: "transform, opacity",
             opacity: i === current ? 1 : 0,
-            ...(i === current && isHovered
-              ? {
-                  // Parallax shift — translate only, NO scale
-                  transform: `translate(${mouse.x * -20}px, ${mouse.y * -12}px)`,
-                  transition: "opacity 1.4s ease-in-out, transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)",
-                }
-              : i === current
-              ? {
-                  animation: "ken-burns 22s ease-in-out infinite",
-                  transition: "opacity 1.4s ease-in-out",
-                }
-              : { transition: "opacity 1.4s ease-in-out" }),
+            animation: i === current ? "ken-burns 22s ease-in-out infinite" : undefined,
+            transition: "opacity 1.4s ease-in-out",
           }}
         />
       ))}
