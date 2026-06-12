@@ -32,7 +32,8 @@ export async function generateMetadata({
     .limit(1);
   if (!uni) return { title: "University Not Found" };
   const cleanedDesc = cleanDescription(uni.description, { nameEn: uni.nameEn, nameCn: uni.nameCn, city: uni.city, province: uni.province });
-  const pageTitle = uni.metaTitle ?? `${uni.nameEn} | Study in China | Globlearn Education`;
+  const location = [uni.city, uni.province].filter(Boolean).join(", ") || "China";
+  const pageTitle = uni.metaTitle ?? `${uni.nameEn}${uni.nameCn ? ` (${uni.nameCn})` : ""} — Study in ${location}, China | Globlearn Education`;
   return {
     title: { absolute: pageTitle },
     description: uni.metaDescription ?? cleanedDesc.substring(0, 160),
@@ -208,17 +209,17 @@ export default async function UniversityPage({
               </div>
             </div>
 
-            {/* Stats grid — only show stats with real data */}
+            {/* Stats grid — only show stats with real data (guard against null, 0, and empty string) */}
             <div className="grid grid-cols-2 gap-3 w-full lg:w-auto lg:min-w-[260px]">
               {([
-                university.founded
+                university.founded && Number(university.founded) > 0
                   ? { icon: <Calendar size={18} />, label: "Established", value: String(university.founded) }
                   : null,
-                university.totalStudents
-                  ? { icon: <Users size={18} />, label: "Students", value: university.totalStudents.toLocaleString() }
+                university.totalStudents && Number(university.totalStudents) > 0
+                  ? { icon: <Users size={18} />, label: "Students", value: Number(university.totalStudents).toLocaleString() }
                   : null,
-                university.internationalStudents
-                  ? { icon: <GraduationCap size={18} />, label: "Intl. Students", value: university.internationalStudents.toLocaleString() }
+                university.internationalStudents && Number(university.internationalStudents) > 0
+                  ? { icon: <GraduationCap size={18} />, label: "Intl. Students", value: Number(university.internationalStudents).toLocaleString() }
                   : null,
                 { icon: <Building2 size={18} />, label: "Programs", value: universityPrograms.length > 0 ? `${universityPrograms.length} offered` : "View All" },
               ] as const).filter(Boolean).map((s) => (
