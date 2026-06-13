@@ -207,6 +207,10 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
   const [modMessage, setModMessage] = useState("");
   const [modSaving, setModSaving] = useState(false);
 
+  const [uploadedAdmissionUrl, setUploadedAdmissionUrl] = useState<string | null>(null);
+  const [uploadedJw202Url, setUploadedJw202Url] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
   const st = STATUS_CONFIG[status] ?? STATUS_CONFIG["submitted"];
   const isSubmitted = status === "submitted";
 
@@ -269,6 +273,39 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
     setRemark("");
     setInternalNote("");
     setVisibleToStudent(true);
+    setUploadedAdmissionUrl(null);
+    setUploadedJw202Url(null);
+  }
+
+  async function handleFileUpload(file: File, docType: "admission_notice" | "jw202") {
+    setUploading(true);
+    try {
+      const presignRes = await fetch("/api/upload/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          applicationId: app.id,
+          documentType: docType,
+          filename: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+        }),
+      });
+      const presignData = await presignRes.json();
+      if (!presignRes.ok) throw new Error(presignData.error ?? "Upload failed");
+      await fetch(presignData.presignedUrl, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+      if (docType === "admission_notice") setUploadedAdmissionUrl(presignData.publicUrl);
+      else setUploadedJw202Url(presignData.publicUrl);
+      showToast("File uploaded");
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Upload failed", false);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleAskModification() {
@@ -305,6 +342,8 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
           remark: remark.trim() || undefined,
           internalNote: internalNote.trim() || undefined,
           visibleToStudent,
+          admissionNoticeUrl: uploadedAdmissionUrl || undefined,
+          jw202Url: uploadedJw202Url || undefined,
         }),
       });
       const data = await res.json();
@@ -328,6 +367,11 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
   )}`;
 
   const hasSelectedUnivs = Array.isArray(app.universities) && app.universities.length > 0;
+
+  const targetNames = new Set(targets.map(t => t.universityName));
+  const pendingUnivs = Array.isArray(app.universities)
+    ? app.universities.filter(u => u.universityName && !targetNames.has(u.universityName))
+    : [];
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6">
@@ -378,6 +422,74 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
                 <input type="checkbox" checked={visibleToStudent} onChange={e => setVisibleToStudent(e.target.checked)} className="w-4 h-4 rounded" />
                 <span className="text-sm font-medium" style={{ color: "#374151" }}>Send email + notification to student</span>
               </label>
+
+              {/* File upload — Admission Notice (pre_admission / interview / admission_notice) */}
+              {["pre_admission", "interview", "admission_notice"].includes(newTargetStatus) && (
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: "#94A3B8" }}>
+                    Admission Letter / Document (optional — attached in email)
+                  </label>
+                  {uploadedAdmissionUrl ? (
+                    <div className="flex items-center gap-2">
+                      <Check size={12} style={{ color: "#059669" }} />
+                      <a href={uploadedAdmissionUrl} target="_blank" rel="noopener noreferrer" className="text-xs underline" style={{ color: "#059669" }}>
+                        File uploaded — view
+                      </a>
+                      <button onClick={() => setUploadedAdmissionUrl(null)} className="p-0.5 rounded hover:bg-gray-100">
+                        <X size={11} style={{ color: "#94A3B8" }} />
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      disabled={uploading}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, "admission_notice"); }}
+                      className="w-full text-xs border rounded-xl px-3 py-2 cursor-pointer"
+                      style={{ borderColor: "#E2E8F0" }}
+                    />
+                  )}
+                  {uploading && !uploadedAdmissionUrl && (
+                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#6B7280" }}>
+                      <Loader2 size={11} className="animate-spin" /> Uploading…
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* File upload — JW202 (final_admission) */}
+              {newTargetStatus === "final_admission" && (
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: "#94A3B8" }}>
+                    JW202 Document (optional — attached in email)
+                  </label>
+                  {uploadedJw202Url ? (
+                    <div className="flex items-center gap-2">
+                      <Check size={12} style={{ color: "#059669" }} />
+                      <a href={uploadedJw202Url} target="_blank" rel="noopener noreferrer" className="text-xs underline" style={{ color: "#059669" }}>
+                        JW202 uploaded — view
+                      </a>
+                      <button onClick={() => setUploadedJw202Url(null)} className="p-0.5 rounded hover:bg-gray-100">
+                        <X size={11} style={{ color: "#94A3B8" }} />
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      disabled={uploading}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, "jw202"); }}
+                      className="w-full text-xs border rounded-xl px-3 py-2 cursor-pointer"
+                      style={{ borderColor: "#E2E8F0" }}
+                    />
+                  )}
+                  {uploading && !uploadedJw202Url && (
+                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#6B7280" }}>
+                      <Loader2 size={11} className="animate-spin" /> Uploading…
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex gap-3 px-6 py-4 border-t" style={{ borderColor: "#E2E8F0" }}>
               <button onClick={() => setStatusModal({ open: false, target: null })}
@@ -536,56 +648,77 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
           </div>
 
           {/* 2. University Targets */}
-          <Section title={`University Targets (${targets.length})`} icon={Building2}>
+          <Section title={`University Targets (${targets.length + pendingUnivs.length})`} icon={Building2}>
             {targets.length > 0 ? (
-              <div className="space-y-3">
-                {targets.map((t, i) => {
-                  const tst = TARGET_STATUS_CONFIG[t.targetStatus] ?? TARGET_STATUS_CONFIG["pending"];
-                  return (
-                    <div key={t.id} className="rounded-xl p-3.5" style={{ backgroundColor: "#F8FAFC", border: "1px solid #F1F5F9" }}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-2.5 min-w-0">
-                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0" style={{ backgroundColor: "#EEF4FF", color: "#1B3A6B" }}>
-                            #{i + 1}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold" style={{ color: "#0A1628" }}>{t.universityName}</p>
-                            {t.programName && <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>{t.programName}</p>}
-                            {t.expectedMajor && <p className="text-[11px] mt-0.5 font-medium" style={{ color: "#29ABE2" }}>Major: {t.expectedMajor}</p>}
-                            {t.intake && <p className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>Intake: {t.intake}</p>}
+              <>
+                <div className="space-y-3">
+                  {targets.map((t, i) => {
+                    const tst = TARGET_STATUS_CONFIG[t.targetStatus] ?? TARGET_STATUS_CONFIG["pending"];
+                    return (
+                      <div key={t.id} className="rounded-xl p-3.5" style={{ backgroundColor: "#F8FAFC", border: "1px solid #F1F5F9" }}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0" style={{ backgroundColor: "#EEF4FF", color: "#1B3A6B" }}>
+                              #{i + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold" style={{ color: "#0A1628" }}>{t.universityName}</p>
+                              {t.programName && <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>{t.programName}</p>}
+                              {t.expectedMajor && <p className="text-[11px] mt-0.5 font-medium" style={{ color: "#29ABE2" }}>Major: {t.expectedMajor}</p>}
+                              {t.intake && <p className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>Intake: {t.intake}</p>}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: tst.bg, color: tst.color }}>
+                              {tst.label}
+                            </span>
+                            <button onClick={() => openStatusModal(t)}
+                              className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg border"
+                              style={{ borderColor: "#E2E8F0", color: "#1B3A6B" }}>
+                              <RefreshCw size={10} />Change
+                            </button>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: tst.bg, color: tst.color }}>
-                            {tst.label}
-                          </span>
-                          <button onClick={() => openStatusModal(t)}
-                            className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg border"
-                            style={{ borderColor: "#E2E8F0", color: "#1B3A6B" }}>
-                            <RefreshCw size={10} />Change
-                          </button>
-                        </div>
+                        {(t.admissionNoticeUrl || t.jw202Url) && (
+                          <div className="flex gap-2 mt-2.5 pt-2.5" style={{ borderTop: "1px solid #F1F5F9" }}>
+                            {t.admissionNoticeUrl && (
+                              <a href={t.admissionNoticeUrl} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#059669" }}>
+                                <ExternalLink size={10} />Admission Notice
+                              </a>
+                            )}
+                            {t.jw202Url && (
+                              <a href={t.jw202Url} target="_blank" rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#1B3A6B" }}>
+                                <ExternalLink size={10} />JW202
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {(t.admissionNoticeUrl || t.jw202Url) && (
-                        <div className="flex gap-2 mt-2.5 pt-2.5" style={{ borderTop: "1px solid #F1F5F9" }}>
-                          {t.admissionNoticeUrl && (
-                            <a href={t.admissionNoticeUrl} target="_blank" rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#059669" }}>
-                              <ExternalLink size={10} />Admission Notice
-                            </a>
-                          )}
-                          {t.jw202Url && (
-                            <a href={t.jw202Url} target="_blank" rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#1B3A6B" }}>
-                              <ExternalLink size={10} />JW202
-                            </a>
-                          )}
+                    );
+                  })}
+                </div>
+                {pendingUnivs.length > 0 && (
+                  <div className="mt-4 pt-4" style={{ borderTop: "1px dashed #FDE68A" }}>
+                    <p className="text-[11px] font-bold mb-2" style={{ color: "#D97706" }}>
+                      Student recently added — not yet in workflow:
+                    </p>
+                    <div className="space-y-2">
+                      {pendingUnivs.map((u, i) => (
+                        <div key={i} className="rounded-xl p-3" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
+                          <p className="text-sm font-semibold" style={{ color: "#0A1628" }}>{u.universityName ?? "—"}</p>
+                          {u.programName && <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>{u.programName}</p>}
+                          {u.expectedMajor && <p className="text-[11px] mt-0.5 font-medium" style={{ color: "#29ABE2" }}>Major: {u.expectedMajor}</p>}
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block" style={{ backgroundColor: "#FDE68A", color: "#92400E" }}>
+                            New — add to workflow manually
+                          </span>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                )}
+              </>
             ) : hasSelectedUnivs ? (
               <div className="space-y-2">
                 <p className="text-[11px] mb-2 font-semibold" style={{ color: "#D97706" }}>

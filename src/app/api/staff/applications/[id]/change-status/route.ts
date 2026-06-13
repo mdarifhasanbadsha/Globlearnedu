@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
   const { id } = await params;
   const body = await req.json();
-  const { targetId, newStatus, remark, internalNote, visibleToStudent = true } = body;
+  const { targetId, newStatus, remark, internalNote, visibleToStudent = true, admissionNoticeUrl, jw202Url } = body;
 
   if (!targetId || !newStatus) {
     return NextResponse.json({ error: "targetId and newStatus are required" }, { status: 400 });
@@ -85,9 +85,13 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   const previousStatus = target.targetStatus;
   const staffName = [session.user.firstName, (session.user as any).lastName].filter(Boolean).join(" ") || "Staff";
 
-  // 1. Update the target row
+  // 1. Update the target row (including optional document URLs)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const targetUpdates: Record<string, any> = { targetStatus: newStatus, updatedAt: new Date() };
+  if (admissionNoticeUrl) targetUpdates.admissionNoticeUrl = admissionNoticeUrl;
+  if (jw202Url) targetUpdates.jw202Url = jw202Url;
   await db.update(applicationUniversities)
-    .set({ targetStatus: newStatus, updatedAt: new Date() })
+    .set(targetUpdates)
     .where(eq(applicationUniversities.id, targetId));
 
   // 2. Write audit history
@@ -139,15 +143,19 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         emailTemplate = preAdmissionEmail({
           studentName, applicationId: app.applicationNumber, target: targetInfo, remark,
         });
+      } else if (newStatus === "interview") {
+        emailTemplate = preAdmissionEmail({
+          studentName, applicationId: app.applicationNumber, target: targetInfo, remark,
+        });
       } else if (newStatus === "admission_notice") {
         emailTemplate = admissionNoticeEmail({
           studentName, applicationId: app.applicationNumber, target: targetInfo,
-          admissionNoticeUrl: target.admissionNoticeUrl ?? undefined, remark,
+          admissionNoticeUrl: admissionNoticeUrl ?? target.admissionNoticeUrl ?? undefined, remark,
         });
       } else if (newStatus === "final_admission") {
         emailTemplate = finalAdmissionEmail({
           studentName, applicationId: app.applicationNumber, target: targetInfo,
-          jw202Url: target.jw202Url ?? undefined, remark,
+          jw202Url: jw202Url ?? target.jw202Url ?? undefined, remark,
         });
       } else if (newStatus === "rejected") {
         emailTemplate = applicationRejectedEmail({
