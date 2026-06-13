@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Search, Clock, AlertCircle, FileText, CheckCircle2, Eye } from "lucide-react";
+import { Search, Clock, AlertCircle, FileText, CheckCircle2, Eye, Edit2, RefreshCw, MessageSquare, FileDown, Archive } from "lucide-react";
 
 type QueueItem = {
   id: string;
@@ -14,6 +14,8 @@ type QueueItem = {
   assignedStaffId: string | null;
   assignedStaffName: string;
   studentName: string;
+  email: string;
+  passportNumber: string;
   passportName: string | null;
   university: string;
   expectedMajors: string;
@@ -66,7 +68,10 @@ export default function StaffQueueClient({
         || item.applicationNumber.toLowerCase().includes(q)
         || item.nationality.toLowerCase().includes(q)
         || item.programLevel.toLowerCase().includes(q)
-        || item.university.toLowerCase().includes(q);
+        || item.university.toLowerCase().includes(q)
+        || item.email.toLowerCase().includes(q)
+        || item.passportNumber.toLowerCase().includes(q)
+        || (item.passportName ?? "").toLowerCase().includes(q);
       const matchStatus = statusFilter === "all" || item.status === statusFilter;
       const matchStaff = staffFilter === "all"
         || (staffFilter === "mine" && item.assignedStaffId === currentUserId)
@@ -122,7 +127,7 @@ export default function StaffQueueClient({
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "#94A3B8" }} />
           <input
             type="text"
-            placeholder="Search name, app ID, nationality, university…"
+            placeholder="Search name, passport no., email, app ID, university…"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full border rounded-xl pl-10 pr-4 py-2.5 text-sm bg-white focus:outline-none"
@@ -171,7 +176,7 @@ export default function StaffQueueClient({
             <table className="w-full text-sm min-w-[1100px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid #F1F5F9", backgroundColor: "#FAFAFA" }}>
-                  {["App ID", "Student", "Program", "University", "Expected Major", "Status", "Assigned To", "Updated", ""].map(h => (
+                  {["App ID", "Student", "Program", "University", "Expected Major", "Status", "Assigned To", "Updated", "Actions"].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
                       {h}
                     </th>
@@ -227,13 +232,42 @@ export default function StaffQueueClient({
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
-                        <Link
-                          href={`/staff/applications/${item.id}`}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white"
-                          style={{ backgroundColor: "#059669" }}
-                        >
-                          <Eye size={12} />Review
-                        </Link>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Link
+                            href={`/staff/applications/${item.id}`}
+                            title="View & Review"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white"
+                            style={{ backgroundColor: "#059669" }}
+                          >
+                            <Eye size={11} />View
+                          </Link>
+                          <Link
+                            href={`/staff/applications/${item.id}/edit`}
+                            title="Edit Application"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border"
+                            style={{ borderColor: "#E2E8F0", color: "#1B3A6B" }}
+                          >
+                            <Edit2 size={11} />Edit
+                          </Link>
+                          <a
+                            href={`/api/staff/applications/${item.id}/pdf`}
+                            title="Download PDF"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border"
+                            style={{ borderColor: "#E2E8F0", color: "#64748B" }}
+                          >
+                            <FileDown size={11} />PDF
+                          </a>
+                          <a
+                            href={`/api/staff/applications/${item.id}/zip`}
+                            title="Download ZIP"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border"
+                            style={{ borderColor: "#E2E8F0", color: "#64748B" }}
+                          >
+                            <Archive size={11} />ZIP
+                          </a>
+                        </div>
                       </td>
                     </tr>
                   );

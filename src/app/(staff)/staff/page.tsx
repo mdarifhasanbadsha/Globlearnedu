@@ -28,6 +28,7 @@ export default async function StaffQueuePage() {
       assignedStaffId: applications.assignedStaffId,
       passportSurname: applications.passportSurname,
       passportGivenName: applications.passportGivenName,
+      passportNumber: applications.passportNumber,
       selectedUniversities: applications.selectedUniversities,
       createdAt: applications.createdAt,
       updatedAt: applications.updatedAt,
@@ -67,6 +68,8 @@ export default async function StaffQueuePage() {
     assignedStaffId: r.assignedStaffId,
     assignedStaffName: r.assignedStaffId ? (staffMap[r.assignedStaffId] ?? "Unassigned") : "Unassigned",
     studentName: [r.studentFirstName, r.studentLastName].filter(Boolean).join(" ") || r.studentEmail || "—",
+    email: r.studentEmail ?? "",
+    passportNumber: r.passportNumber ?? "",
     passportName: [r.passportGivenName, r.passportSurname].filter(Boolean).join(" ") || null,
     university: (() => {
       const univs = r.selectedUniversities as Array<{ universityName?: string }>;
