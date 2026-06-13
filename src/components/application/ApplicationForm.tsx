@@ -40,13 +40,19 @@ const STEP_LABELS = [
 
 const TOTAL = 9;
 
-export default function ApplicationForm() {
+type Props = {
+  initialData?: Partial<FormData>;
+  applicationId?: string;
+};
+
+export default function ApplicationForm({ initialData, applicationId }: Props = {}) {
   const [step, setStep] = useState(1);
-  const [data, setData] = useState<FormData>(INITIAL_FORM);
+  const [data, setData] = useState<FormData>({ ...INITIAL_FORM, ...initialData });
   const [submitted, setSubmitted] = useState(false);
-  const [appId, setAppId] = useState("");
+  const [appId, setAppId] = useState(applicationId ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const isModification = !!applicationId;
 
   function update(updates: Partial<FormData>) {
     setData((prev) => ({ ...prev, ...updates }));
@@ -75,34 +81,97 @@ export default function ApplicationForm() {
       return;
     }
 
-    const payload = {
-      scholarshipType,
-      programLevel,
-      selectedUniversities: data.selectedUniversities.map((u) => ({
-        universityId:   u.id,
-        universityName: u.nameEn,
-        programName:    data.universityMajors[u.id] || programLevel,
-        expectedMajor:  data.universityMajors[u.id] || "",
-      })),
-    };
-
     try {
-      const res = await fetch("/api/applications", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(payload),
-      });
+      if (isModification) {
+        // MODIFICATION MODE — send all form data to resubmit API
+        const payload = {
+          // Step 1
+          scholarshipType,
+          programLevel,
+          selectedUniversities: data.selectedUniversities.map((u) => ({
+            universityId:   u.id,
+            universityName: u.nameEn,
+            programName:    data.universityMajors[u.id] || programLevel,
+            expectedMajor:  data.universityMajors[u.id] || "",
+          })),
+          // Step 2 — send in form format; API normalises
+          surname: data.surname,
+          givenNames: data.givenNames,
+          dobYear: data.dobYear, dobMonth: data.dobMonth, dobDay: data.dobDay,
+          gender: data.gender,
+          nationality: data.nationality,
+          passportNumber: data.passportNumber,
+          passportExpiryYear: data.passportExpiryYear,
+          passportExpiryMonth: data.passportExpiryMonth,
+          passportExpiryDay: data.passportExpiryDay,
+          religion: data.religion,
+          // Step 3
+          whatsapp: data.whatsapp,
+          email: data.email,
+          address: data.address,
+          addressCity: data.addressCity,
+          addressPostcode: data.addressPostcode,
+          residenceCountry: data.residenceCountry,
+          // Step 4
+          fatherName: data.fatherName, fatherOccupation: data.fatherOccupation, fatherPhone: data.fatherPhone,
+          motherName: data.motherName, motherOccupation: data.motherOccupation, motherPhone: data.motherPhone,
+          differentSponsor: data.differentSponsor,
+          sponsorName: data.sponsorName, sponsorRelationship: data.sponsorRelationship,
+          sponsorOccupation: data.sponsorOccupation, sponsorPhone: data.sponsorPhone,
+          sponsorIncome: data.sponsorIncome,
+          // Step 5
+          academicHistory: data.academicHistory,
+          workHistory: data.workHistory,
+          // Step 6
+          englishTestType: data.englishTestType, englishScore: data.englishScore, englishTestDate: data.englishTestDate,
+          hasChineseProficiency: data.hasChineseProficiency,
+          hskLevel: data.hskLevel, hskScore: data.hskScore,
+          hskkLevel: data.hskkLevel, hskkScore: data.hskkScore,
+          // Step 7
+          inChina: data.inChina,
+          chinaVisaType: data.chinaVisaType, chinaVisaEntry: data.chinaVisaEntry, chinaVisaExpiry: data.chinaVisaExpiry,
+          chinaCurrentUniversity: data.chinaCurrentUniversity, chinaCurrentAddress: data.chinaCurrentAddress,
+        };
 
-      const result = await res.json();
+        const res = await fetch(`/api/applications/${applicationId}/resubmit`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify(payload),
+        });
 
-      if (res.ok && result.application?.applicationNumber) {
-        setAppId(result.application.applicationNumber);
-        setSubmitted(true);
+        const result = await res.json();
+        if (res.ok && result.ok) {
+          setAppId(result.applicationNumber ?? applicationId ?? "");
+          setSubmitted(true);
+        } else {
+          setSubmitError(typeof result.error === "string" ? result.error : "Submission failed. Please try again.");
+        }
       } else {
-        const msg = typeof result.error === "string"
-          ? result.error
-          : "Submission failed. Please try again or contact your advisor.";
-        setSubmitError(msg);
+        // NEW APPLICATION MODE — create new
+        const payload = {
+          scholarshipType,
+          programLevel,
+          selectedUniversities: data.selectedUniversities.map((u) => ({
+            universityId:   u.id,
+            universityName: u.nameEn,
+            programName:    data.universityMajors[u.id] || programLevel,
+            expectedMajor:  data.universityMajors[u.id] || "",
+          })),
+        };
+
+        const res = await fetch("/api/applications", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+        if (res.ok && result.application?.applicationNumber) {
+          setAppId(result.application.applicationNumber);
+          setSubmitted(true);
+        } else {
+          setSubmitError(typeof result.error === "string" ? result.error : "Submission failed. Please try again or contact your advisor.");
+        }
       }
     } catch {
       setSubmitError("Network error. Check your connection and try again.");
@@ -163,24 +232,30 @@ export default function ApplicationForm() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
           <div className="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl" style={{ backgroundColor: "#F0FDF4" }}>
-              🎉
+              {isModification ? "✅" : "🎉"}
             </div>
-            <h2 className="text-2xl font-black mb-2" style={{ color: "#1B3A6B" }}>Application submitted!</h2>
+            <h2 className="text-2xl font-black mb-2" style={{ color: "#1B3A6B" }}>
+              {isModification ? "Application Updated!" : "Application submitted!"}
+            </h2>
             <p className="text-sm mb-2" style={{ color: "#64748B" }}>Your Application ID is:</p>
             <p className="text-lg font-mono font-black mb-4" style={{ color: "#C8102E" }}>{appId}</p>
             <p className="text-sm mb-8" style={{ color: "#64748B" }}>
-              Globlearn Education will review your application within 24 hours. You can track progress in your dashboard.
+              {isModification
+                ? "Your updated application has been sent back for review. Globlearn Education will review the changes and notify you shortly."
+                : "Globlearn Education will review your application within 24 hours. You can track progress in your dashboard."}
             </p>
             <div className="flex flex-col gap-3">
               <a
-                href="/dashboard"
+                href="/dashboard/application"
                 className="flex items-center justify-center px-6 py-3 rounded-xl text-sm font-bold text-white"
                 style={{ backgroundColor: "#C8102E" }}
               >
-                Track my application →
+                View my application →
               </a>
               <a
-                href={`https://wa.me/8615655031556?text=${encodeURIComponent(`Hi! I just submitted my application ${appId}. What are the next steps?`)}`}
+                href={`https://wa.me/8615655031556?text=${encodeURIComponent(isModification
+                  ? `Hi! I have updated my application ${appId} as requested. Please review.`
+                  : `Hi! I just submitted my application ${appId}. What are the next steps?`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center px-6 py-3 rounded-xl text-sm font-bold text-white"
