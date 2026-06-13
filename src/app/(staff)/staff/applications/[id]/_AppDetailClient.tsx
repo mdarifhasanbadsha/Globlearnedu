@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Copy, Check, ChevronDown, ChevronRight,
   MessageCircle, Save, Loader2, AlertTriangle, ExternalLink,
-  RefreshCw, X,
+  RefreshCw, X, Edit2, FileDown, Archive, Pencil,
 } from "lucide-react";
 
 type StaffNote = { type: string; content: string; staffName: string; at: string };
@@ -196,6 +196,11 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
   const [visibleToStudent, setVisibleToStudent] = useState(true);
   const [savingStatus, setSavingStatus] = useState(false);
 
+  // Ask Modification modal state (H1)
+  const [modModal, setModModal] = useState(false);
+  const [modMessage, setModMessage] = useState("");
+  const [modSaving, setModSaving] = useState(false);
+
   const st = STATUS_CONFIG[status] ?? STATUS_CONFIG["submitted"];
   const isSubmitted = status === "submitted";
 
@@ -254,6 +259,27 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
     setRemark("");
     setInternalNote("");
     setVisibleToStudent(true);
+  }
+
+  async function handleAskModification() {
+    if (!modMessage.trim()) return;
+    setModSaving(true);
+    try {
+      const res = await fetch(`/api/staff/applications/${app.id}/ask-modification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: modMessage.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed");
+      setModModal(false);
+      setModMessage("");
+      showToast("Modification request sent to student");
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Error", false);
+    } finally {
+      setModSaving(false);
+    }
   }
 
   async function handleChangeTargetStatus() {
@@ -378,6 +404,57 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
               >
                 {savingStatus ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
                 Update Status
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Ask Modification Modal (H1) ── */}
+      {modModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#E2E8F0" }}>
+              <div>
+                <h2 className="text-base font-black" style={{ color: "#0A1628" }}>Ask Student to Modify</h2>
+                <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>Student will be able to edit and resubmit</p>
+              </div>
+              <button onClick={() => setModModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
+                <X size={15} style={{ color: "#94A3B8" }} />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="rounded-xl px-4 py-3 text-xs" style={{ backgroundColor: "#FEF9C3", color: "#854D0E" }}>
+                <strong>What happens:</strong> The student&apos;s application will be unlocked for editing.
+                They will receive an email + portal notification with your message.
+                Once they resubmit, the application returns to review.
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: "#94A3B8" }}>Message to Student</label>
+                <textarea
+                  rows={4}
+                  value={modMessage}
+                  onChange={e => setModMessage(e.target.value)}
+                  placeholder="Describe what needs to be updated or corrected…"
+                  className="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none resize-none"
+                  style={{ borderColor: "#E2E8F0" }}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t" style={{ borderColor: "#E2E8F0" }}>
+              <button
+                onClick={() => setModModal(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border"
+                style={{ borderColor: "#E2E8F0", color: "#64748B" }}
+              >Cancel</button>
+              <button
+                onClick={handleAskModification}
+                disabled={modSaving || !modMessage.trim()}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                style={{ backgroundColor: "#C8102E" }}
+              >
+                {modSaving ? <Loader2 size={13} className="animate-spin" /> : <Pencil size={13} />}
+                Send Request
               </button>
             </div>
           </div>
@@ -769,6 +846,36 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
               style={{ backgroundColor: "#25D366" }}
             >
               <MessageCircle size={14} />WhatsApp Student
+            </a>
+            <Link
+              href={`/staff/applications/${app.id}/edit`}
+              className="flex items-center gap-2 w-full py-2.5 px-4 rounded-xl text-sm font-bold border"
+              style={{ borderColor: "#1B3A6B", color: "#1B3A6B" }}
+            >
+              <Edit2 size={14} />Edit Application
+            </Link>
+            <button
+              onClick={() => setModModal(true)}
+              className="flex items-center gap-2 w-full py-2.5 px-4 rounded-xl text-sm font-bold border"
+              style={{ borderColor: "#C8102E", color: "#C8102E" }}
+            >
+              <Pencil size={14} />Ask Modification
+            </button>
+            <a
+              href={`/api/staff/applications/${app.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 w-full py-2.5 px-4 rounded-xl text-sm font-bold border"
+              style={{ borderColor: "#E2E8F0", color: "#64748B" }}
+            >
+              <FileDown size={14} />Download PDF
+            </a>
+            <a
+              href={`/api/staff/applications/${app.id}/zip`}
+              className="flex items-center gap-2 w-full py-2.5 px-4 rounded-xl text-sm font-bold border"
+              style={{ borderColor: "#E2E8F0", color: "#64748B" }}
+            >
+              <Archive size={14} />Download Documents ZIP
             </a>
             <Link
               href="/staff"
