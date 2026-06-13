@@ -161,6 +161,10 @@ export const applications = pgTable("applications", {
   withdrawnAt: timestamp("withdrawn_at"),
   withdrawnReason: text("withdrawn_reason"),
   completedAt: timestamp("completed_at"),
+  // Edit-permission mode: submitted | editable | resubmitted | locked
+  applicationMode: varchar("application_mode", { length: 20 }).notNull().default("submitted"),
+  lastResubmittedAt: timestamp("last_resubmitted_at"),
+  lockedAt: timestamp("locked_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (t) => ({
@@ -169,18 +173,30 @@ export const applications = pgTable("applications", {
   statusIdx: index("app_status_idx").on(t.status),
 }));
 
-// ── APPLICATION UNIVERSITIES ──────────────────────────────
+// ── APPLICATION UNIVERSITIES (targets) ───────────────────
+// Each row = one university+program a student is targeting.
+// `status` = overall 14-stage workflow mirror (kept for backward compat).
+// `targetStatus` = granular per-target tracking used by staff review workflow.
 export const applicationUniversities = pgTable("application_universities", {
   id: uuid("id").defaultRandom().primaryKey(),
-  applicationId: uuid("application_id").notNull().references(() => applications.id),
-  universityId: uuid("university_id").notNull().references(() => universities.id),
+  applicationId: uuid("application_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  universityId: uuid("university_id").references(() => universities.id),
+  universityName: varchar("university_name", { length: 255 }),
   programName: varchar("program_name", { length: 255 }),
+  expectedMajor: varchar("expected_major", { length: 255 }),
+  intake: varchar("intake", { length: 50 }),
+  // Overall workflow status (mirrors parent application.status for this target)
   status: applicationStatusEnum("status").notNull().default("submitted"),
+  // Granular per-target status for staff review workflow
+  targetStatus: varchar("target_status", { length: 50 }).notNull().default("pending"),
   admissionNoticeUrl: varchar("admission_notice_url", { length: 500 }),
   jw202Url: varchar("jw202_url", { length: 500 }),
   interviewDetails: jsonb("interview_details").default({}),
+  priority: integer("priority").default(1),
   order: integer("order").default(1),
+  addedByStaffId: uuid("added_by_staff_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // ── NOTIFICATIONS ────────────────────────────────────────
@@ -360,3 +376,68 @@ export const verificationTokens = pgTable(
   },
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 );
+
+// ── REVIEW WORKFLOW TABLES ────────────────────────────────
+
+export const applicationStatusHistory = pgTable("application_status_history", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  applicationId: uuid("application_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  targetId: uuid("target_id").references(() => applicationUniversities.id, { onDelete: "cascade" }),
+  previousStatus: varchar("previous_status", { length: 50 }),
+  newStatus: varchar("new_status", { length: 50 }).notNull(),
+  studentVisibleRemark: text("student_visible_remark"),
+  internalNote: text("internal_note"),
+  visibleToStudent: boolean("visible_to_student").notNull().default(true),
+  changedByStaffId: uuid("changed_by_staff_id").references(() => users.id),
+  changedByStaffName: varchar("changed_by_staff_name", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const statusAttachments = pgTable("status_attachments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  statusHistoryId: uuid("status_history_id").notNull().references(() => applicationStatusHistory.id, { onDelete: "cascade" }),
+  applicationId: uuid("application_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileUrl: varchar("file_url", { length: 500 }).notNull(),
+  fileType: varchar("file_type", { length: 100 }),
+  documentCategory: varchar("document_category", { length: 100 }),
+  visibleToStudent: boolean("visible_to_student").notNull().default(true),
+  uploadedByStaffId: uuid("uploaded_by_staff_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const modificationRequests = pgTable("modification_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  applicationId: uuid("application_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  requestedByStaffId: uuid("requested_by_staff_id").references(() => users.id),
+  message: text("message").notNull(),
+  sectionsToModify: jsonb("sections_to_modify"),
+  documentsToReupload: jsonb("documents_to_reupload"),
+  isPaymentIssue: boolean("is_payment_issue").default(false),
+  status: varchar("status", { length: 30 }).notNull().default("pending"),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const applicationEditLogs = pgTable("application_edit_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  applicationId: uuid("application_id").notNull().references(() => applications.id, { onDelete: "cascade" }),
+  editedByStaffId: uuid("edited_by_staff_id").references(() => users.id),
+  editedByStaffName: varchar("edited_by_staff_name", { length: 255 }),
+  fieldChanged: varchar("field_changed", { length: 100 }),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const emailLogs = pgTable("email_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  recipientEmail: varchar("recipient_email", { length: 255 }).notNull(),
+  subject: varchar("subject", { length: 500 }),
+  body: text("body"),
+  templateName: varchar("template_name", { length: 100 }),
+  applicationId: uuid("application_id").references(() => applications.id),
+  status: varchar("status", { length: 30 }).default("sent"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
