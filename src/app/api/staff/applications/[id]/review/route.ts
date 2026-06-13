@@ -47,7 +47,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
   const { id } = await params;
   const body = await req.json();
-  const { status, note, isUrgent, assignedStaffId } = body;
+  const { status, note, isUrgent, assignedStaffId, remark } = body;
 
   const [app] = await db.select().from(applications).where(eq(applications.id, id)).limit(1);
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -107,11 +107,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
     // 2. In-portal notification for student
     const newLabel = STATUS_LABELS[status] ?? status.replace(/_/g, " ");
+    const remarkText = typeof remark === "string" && remark.trim() ? remark.trim() : null;
     await writePortalNotification({
       userId: app.studentId,
       applicationId: id,
       title: `Application Update — ${app.applicationNumber}`,
-      message: `Your application status has been updated to: ${newLabel}.`,
+      message: `Your application status has been updated to: ${newLabel}.${remarkText ? ` Message from advisor: ${remarkText}` : ""}`,
     });
 
     // 3. Email notification to student
@@ -149,13 +150,24 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           applicationId: id,
         }).catch(() => {});
       } else if (statusInfo) {
+        const remarkSuffix = remarkText ? `\n\nAdvisor note: ${remarkText}` : "";
         sendStatusUpdateNotification({
           studentEmail: student.email,
           studentName,
           applicationId: app.applicationNumber,
           newStatus: newLabel,
-          statusDescription: statusInfo.description,
+          statusDescription: statusInfo.description + remarkSuffix,
           nextStep: statusInfo.nextStep,
+        }).catch(() => {});
+      } else if (remarkText) {
+        // Status has no template description but staff left a remark — send generic update anyway
+        sendStatusUpdateNotification({
+          studentEmail: student.email,
+          studentName,
+          applicationId: app.applicationNumber,
+          newStatus: newLabel,
+          statusDescription: remarkText,
+          nextStep: "Please log in to your portal to view the latest updates.",
         }).catch(() => {});
       }
     }

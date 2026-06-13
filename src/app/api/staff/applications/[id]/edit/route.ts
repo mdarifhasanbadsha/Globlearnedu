@@ -8,33 +8,22 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-// Fields staff are allowed to edit
-const EDITABLE_FIELDS = [
+// Scalar fields staff can edit
+const SCALAR_FIELDS = [
   "passportGivenName", "passportSurname", "passportNumber", "passportExpiry",
-  "dateOfBirth", "gender", "nationality",
-  "phone", "email", "addressCity", "addressCountry",
-  "programLevel", "scholarshipType", "isUrgent",
+  "dateOfBirth", "gender", "nationality", "religion",
+  "phone", "email", "addressCity", "addressCountry", "addressDetailed", "addressPostcode",
+  "programLevel", "scholarshipType", "isUrgent", "isCurrentlyInChina",
 ] as const;
 
-type EditableField = typeof EDITABLE_FIELDS[number];
+// JSONB fields staff can replace wholesale
+const JSONB_FIELDS = [
+  "selectedUniversities", "parentInfo", "sponsorInfo",
+  "academicHistory", "workExperience",
+  "englishProficiency", "chineseProficiency", "chinaStatus",
+] as const;
 
-// Map camelCase field names to Drizzle column names
-const FIELD_MAP: Record<EditableField, keyof typeof applications.$inferSelect> = {
-  passportGivenName: "passportGivenName",
-  passportSurname:   "passportSurname",
-  passportNumber:    "passportNumber",
-  passportExpiry:    "passportExpiry",
-  dateOfBirth:       "dateOfBirth",
-  gender:            "gender",
-  nationality:       "nationality",
-  phone:             "phone",
-  email:             "email",
-  addressCity:       "addressCity",
-  addressCountry:    "addressCountry",
-  programLevel:      "programLevel",
-  scholarshipType:   "scholarshipType",
-  isUrgent:          "isUrgent",
-};
+type ScalarField = typeof SCALAR_FIELDS[number];
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const session = await auth();
@@ -45,11 +34,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
   const body = await req.json();
 
-  // Fetch current values for diffing
   const [current] = await db.select().from(applications).where(eq(applications.id, id)).limit(1);
   if (!current) return NextResponse.json({ error: "Application not found" }, { status: 404 });
 
-  const staffName = [session.user.firstName, (session.user as any).lastName].filter(Boolean).join(" ") || "Staff";
+  const staffName = [(session.user as any).firstName, (session.user as any).lastName].filter(Boolean).join(" ") || "Staff";
 
   const updates: Record<string, unknown> = {};
   const logs: Array<{
@@ -61,17 +49,14 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     newValue: string | null;
   }> = [];
 
-  for (const field of EDITABLE_FIELDS) {
+  // Handle scalar fields
+  for (const field of SCALAR_FIELDS) {
     if (!(field in body)) continue;
-
     const newVal = body[field];
-    const oldVal = current[FIELD_MAP[field]];
-
+    const oldVal = (current as unknown as Record<string, unknown>)[field];
     const newStr = newVal === null || newVal === undefined ? "" : String(newVal);
     const oldStr = oldVal === null || oldVal === undefined ? "" : String(oldVal);
-
-    if (newStr === oldStr) continue; // No change
-
+    if (newStr === oldStr) continue;
     updates[field] = newVal;
     logs.push({
       applicationId: id,
@@ -83,16 +68,33 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     });
   }
 
+  // Handle JSONB fields
+  for (const field of JSONB_FIELDS) {
+    if (!(field in body)) continue;
+    const newVal = body[field];
+    const oldVal = (current as unknown as Record<string, unknown>)[field];
+    const newStr = JSON.stringify(newVal ?? null);
+    const oldStr = JSON.stringify(oldVal ?? null);
+    if (newStr === oldStr) continue;
+    updates[field] = newVal;
+    logs.push({
+      applicationId: id,
+      editedByStaffId: session.user.id,
+      editedByStaffName: staffName,
+      fieldChanged: field,
+      oldValue: oldStr.length > 500 ? oldStr.substring(0, 497) + "…" : (oldStr || null),
+      newValue: newStr.length > 500 ? newStr.substring(0, 497) + "…" : (newStr || null),
+    });
+  }
+
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ ok: true, changed: 0, message: "No fields changed" });
   }
 
-  // Apply update
   await db.update(applications)
     .set({ ...updates, updatedAt: new Date() } as Parameters<typeof db.update>[0]["$inferInsert"])
     .where(eq(applications.id, id));
 
-  // Write audit logs (fire-and-forget — don't block response)
   if (logs.length > 0) {
     db.insert(applicationEditLogs).values(logs).catch(() => {});
   }
