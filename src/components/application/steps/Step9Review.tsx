@@ -4,12 +4,23 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, Upload, Loader2 } from "lucide-react";
 import type { FormData } from "../types";
 
+type PaymentConfig = {
+  alipayQrUrl: string;
+  wechatQrUrl: string;
+  bankName: string;
+  bankAccount: string;
+  bankAccountName: string;
+  bankSwift: string;
+  depositAmount: number;
+};
+
 type Props = {
   data: FormData;
   onChange: (u: Partial<FormData>) => void;
   onSubmit: () => void;
   submitting?: boolean;
   submitError?: string;
+  paymentConfig?: PaymentConfig;
 };
 
 function ReviewSection({ title, items, editStep }: { title: string; items: { label: string; value: string }[]; editStep?: number }) {
@@ -55,8 +66,8 @@ const TERMS = [
   "I have read and agree to Globlearn Education's Terms of Service and Privacy Policy.",
 ];
 
-export default function Step9Review({ data, onChange, onSubmit, submitting = false, submitError = "" }: Props) {
-  const [payTab, setPayTab] = useState<"card" | "qr" | "bank">("card");
+export default function Step9Review({ data, onChange, onSubmit, submitting = false, submitError = "", paymentConfig }: Props) {
+  const [payTab, setPayTab] = useState<"qr" | "bank">("qr");
   const [payProof, setPayProof] = useState<string>("");
 
   const uniNames = data.selectedUniversities.map((u) => u.nameEn).join(", ");
@@ -199,7 +210,7 @@ export default function Step9Review({ data, onChange, onSubmit, submitting = fal
         </div>
         {/* Payment tabs */}
         <div className="flex border-b" style={{ borderColor: "#E2E8F0" }}>
-          {(["card", "qr", "bank"] as const).map((tab) => (
+          {(["qr", "bank"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -211,32 +222,33 @@ export default function Step9Review({ data, onChange, onSubmit, submitting = fal
                 backgroundColor: "white",
               }}
             >
-              {tab === "card" ? "💳 Card" : tab === "qr" ? "📱 WeChat / Alipay" : "🏦 Bank Transfer"}
+              {tab === "qr" ? "📱 WeChat / Alipay" : "🏦 Bank Transfer"}
             </button>
           ))}
         </div>
 
         <div className="p-6">
-          {payTab === "card" && (
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-5">Pay securely by credit or debit card.</p>
-              <button
-                type="button"
-                className="px-8 py-3 rounded-xl text-sm font-bold text-white transition-colors"
-                style={{ backgroundColor: "#C8102E" }}
-                onClick={() => alert("Stripe integration coming in Phase 4")}
-              >
-                Pay 500 RMB by card →
-              </button>
-              <p className="text-xs mt-3" style={{ color: "#94A3B8" }}>Secured by Stripe. Card details never stored by Globlearn Education.</p>
-            </div>
-          )}
-
           {payTab === "qr" && (
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-5">Scan with WeChat Pay or Alipay.</p>
-              <div className="w-48 h-48 mx-auto rounded-xl border-2 border-dashed flex items-center justify-center mb-5" style={{ borderColor: "#E2E8F0", backgroundColor: "#F8FAFC" }}>
-                <p className="text-xs text-center px-4" style={{ color: "#CBD5E1" }}>QR code will appear here after your advisor confirms</p>
+              <p className="text-sm mb-5" style={{ color: "#64748B" }}>Scan with WeChat Pay or Alipay.</p>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center mb-5">
+                {paymentConfig?.wechatQrUrl ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <img src={paymentConfig.wechatQrUrl} alt="WeChat Pay QR" className="w-44 h-44 rounded-xl object-contain border" style={{ borderColor: "#E2E8F0" }} />
+                    <span className="text-xs font-bold" style={{ color: "#09B83E" }}>WeChat Pay</span>
+                  </div>
+                ) : null}
+                {paymentConfig?.alipayQrUrl ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <img src={paymentConfig.alipayQrUrl} alt="Alipay QR" className="w-44 h-44 rounded-xl object-contain border" style={{ borderColor: "#E2E8F0" }} />
+                    <span className="text-xs font-bold" style={{ color: "#1677FF" }}>Alipay</span>
+                  </div>
+                ) : null}
+                {!paymentConfig?.wechatQrUrl && !paymentConfig?.alipayQrUrl && (
+                  <div className="w-44 h-44 mx-auto rounded-xl border-2 border-dashed flex items-center justify-center" style={{ borderColor: "#E2E8F0", backgroundColor: "#F8FAFC" }}>
+                    <p className="text-xs text-center px-4" style={{ color: "#CBD5E1" }}>Contact your advisor for payment QR code</p>
+                  </div>
+                )}
               </div>
               <p className="text-xs mb-3" style={{ color: "#64748B" }}>After paying, upload your payment screenshot:</p>
               <label className="inline-flex items-center gap-2 px-5 py-2.5 border rounded-lg cursor-pointer text-sm font-semibold transition-colors" style={{ borderColor: "#E2E8F0", color: "#475569" }}>
@@ -249,16 +261,17 @@ export default function Step9Review({ data, onChange, onSubmit, submitting = fal
 
           {payTab === "bank" && (
             <div>
-              <p className="text-sm text-gray-600 mb-4">Transfer directly to our bank account.</p>
+              <p className="text-sm mb-4" style={{ color: "#64748B" }}>Transfer directly to our bank account.</p>
               <div className="border rounded-xl overflow-hidden mb-5" style={{ borderColor: "#E2E8F0" }}>
                 <table className="w-full text-sm">
                   <tbody>
                     {[
-                      ["Bank", "To be provided by your advisor"],
-                      ["Account name", "Globlearn Education"],
-                      ["Account number", "Contact your advisor for details"],
-                      ["Reference", `Your passport number`],
-                      ["Amount", "500 RMB"],
+                      ["Bank", paymentConfig?.bankName || "Contact your advisor"],
+                      ["Account name", paymentConfig?.bankAccountName || "Globlearn Education"],
+                      ["Account number", paymentConfig?.bankAccount || "Contact your advisor for details"],
+                      ["SWIFT / BIC", paymentConfig?.bankSwift || "—"],
+                      ["Reference", "Your passport number"],
+                      ["Amount", `${paymentConfig?.depositAmount ?? 500} RMB`],
                     ].map(([k, v]) => (
                       <tr key={k} className="border-t" style={{ borderColor: "#F1F5F9" }}>
                         <td className="px-4 py-3 text-xs font-bold" style={{ color: "#64748B", width: "40%" }}>{k}</td>

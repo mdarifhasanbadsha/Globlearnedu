@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Mail, MessageSquare, Info, Check, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
@@ -51,13 +52,14 @@ function iconAndColor(channel: string) {
 }
 
 export default function NoticesClient({ notices }: Props) {
+  const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
   const [readIds, setReadIds] = useState<Set<string>>(
     new Set(notices.filter((n) => n.isRead).map((n) => n.id))
   );
   const [markingAll, setMarkingAll] = useState(false);
 
-  // Auto-mark all as read when page is opened
+  // Auto-mark all as read when page is opened, then refresh layout to clear sidebar badge
   useEffect(() => {
     const hasUnread = notices.some((n) => !n.isRead);
     if (!hasUnread) return;
@@ -66,7 +68,7 @@ export default function NoticesClient({ notices }: Props) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ markAll: true }),
-    }).catch(() => {});
+    }).then(() => router.refresh()).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

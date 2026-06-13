@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { applications } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { Suspense } from "react";
 import ApplicationForm from "~/components/application/ApplicationForm";
 import type { FormData } from "~/components/application/types";
+import { getPaymentConfig } from "@/lib/payments/manual";
 
 const SCHOLARSHIP_REVERSE: Record<string, string> = {
   csc: "csc", university: "university", provincial: "provincial", self_sponsored: "self",
@@ -51,10 +51,13 @@ export default async function EditApplicationPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in");
 
-  const app = await db.query.applications.findFirst({
-    where: eq(applications.studentId, session.user.id),
-    orderBy: [desc(applications.createdAt)],
-  });
+  const [app, paymentConfig] = await Promise.all([
+    db.query.applications.findFirst({
+      where: eq(applications.studentId, session.user.id),
+      orderBy: [desc(applications.createdAt)],
+    }),
+    getPaymentConfig(),
+  ]);
 
   if (!app) redirect("/dashboard/apply");
   if (app.applicationMode !== "editable") redirect("/dashboard/application");
@@ -203,9 +206,7 @@ export default async function EditApplicationPage() {
           All your existing information has been pre-filled.
         </p>
       </div>
-      <Suspense fallback={<div className="animate-pulse h-96 rounded-2xl bg-gray-100" />}>
-        <ApplicationForm initialData={initialData} applicationId={app.id} />
-      </Suspense>
+      <ApplicationForm initialData={initialData} applicationId={app.id} paymentConfig={paymentConfig} />
     </div>
   );
 }

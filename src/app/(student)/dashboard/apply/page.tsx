@@ -1,13 +1,17 @@
-import { Suspense } from "react";
+export const dynamic = "force-dynamic";
+
 import type { Metadata } from "next";
 import ApplicationForm from "~/components/application/ApplicationForm";
+import { getPaymentConfig } from "@/lib/payments/manual";
 
 export const metadata: Metadata = {
   title: "Apply — Globlearn Education",
   description: "Submit your application to study in China through Globlearn Education.",
 };
 
-export default function ApplyPage() {
+export default async function ApplyPage() {
+  const paymentConfig = await getPaymentConfig();
+
   return (
     <div>
       <div className="mb-8">
@@ -21,9 +25,7 @@ export default function ApplyPage() {
           Complete all 9 steps. You can save and return at any time — we'll hold your progress.
         </p>
       </div>
-      <Suspense fallback={<div className="animate-pulse h-96 rounded-2xl bg-gray-100" />}>
-        <ApplicationForm />
-      </Suspense>
+      <ApplicationForm paymentConfig={paymentConfig} />
     </div>
   );
 }

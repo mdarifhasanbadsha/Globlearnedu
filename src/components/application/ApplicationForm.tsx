@@ -40,12 +40,23 @@ const STEP_LABELS = [
 
 const TOTAL = 9;
 
+type PaymentConfig = {
+  alipayQrUrl: string;
+  wechatQrUrl: string;
+  bankName: string;
+  bankAccount: string;
+  bankAccountName: string;
+  bankSwift: string;
+  depositAmount: number;
+};
+
 type Props = {
   initialData?: Partial<FormData>;
   applicationId?: string;
+  paymentConfig?: PaymentConfig;
 };
 
-export default function ApplicationForm({ initialData, applicationId }: Props = {}) {
+export default function ApplicationForm({ initialData, applicationId, paymentConfig }: Props = {}) {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<FormData>({ ...INITIAL_FORM, ...initialData });
   const [submitted, setSubmitted] = useState(false);
@@ -201,6 +212,7 @@ export default function ApplicationForm({ initialData, applicationId }: Props = 
             onSubmit={handleSubmit}
             submitting={submitting}
             submitError={submitError}
+            paymentConfig={paymentConfig}
           />
         )}
 
