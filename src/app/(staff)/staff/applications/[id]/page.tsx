@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { applications, users, partners } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { applications, users, partners, applicationUniversities } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import AppDetailClient from "./_AppDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +71,24 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
 
   const r = rows[0];
 
+  // Fetch per-target rows from applicationUniversities
+  const targetRows = await db
+    .select({
+      id: applicationUniversities.id,
+      universityName: applicationUniversities.universityName,
+      programName: applicationUniversities.programName,
+      expectedMajor: applicationUniversities.expectedMajor,
+      intake: applicationUniversities.intake,
+      targetStatus: applicationUniversities.targetStatus,
+      admissionNoticeUrl: applicationUniversities.admissionNoticeUrl,
+      jw202Url: applicationUniversities.jw202Url,
+      priority: applicationUniversities.priority,
+      updatedAt: applicationUniversities.updatedAt,
+    })
+    .from(applicationUniversities)
+    .where(eq(applicationUniversities.applicationId, id))
+    .orderBy(applicationUniversities.priority);
+
   // Resolve partner name
   let partnerName = "Direct";
   if (r.partnerId) {
@@ -135,5 +153,18 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
     updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
   };
 
-  return <AppDetailClient app={app} />;
+  const targets = targetRows.map(t => ({
+    id: t.id,
+    universityName: t.universityName ?? "—",
+    programName: t.programName ?? null,
+    expectedMajor: t.expectedMajor ?? null,
+    intake: t.intake ?? null,
+    targetStatus: t.targetStatus ?? "pending",
+    admissionNoticeUrl: t.admissionNoticeUrl ?? null,
+    jw202Url: t.jw202Url ?? null,
+    priority: t.priority ?? 1,
+    updatedAt: t.updatedAt instanceof Date ? t.updatedAt.toISOString() : String(t.updatedAt),
+  }));
+
+  return <AppDetailClient app={app} targets={targets} />;
 }

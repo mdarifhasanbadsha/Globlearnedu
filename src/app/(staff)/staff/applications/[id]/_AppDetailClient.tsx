@@ -5,9 +5,35 @@ import Link from "next/link";
 import {
   ArrowLeft, Copy, Check, ChevronDown, ChevronRight,
   MessageCircle, Save, Loader2, AlertTriangle, ExternalLink,
+  RefreshCw, X,
 } from "lucide-react";
 
 type StaffNote = { type: string; content: string; staffName: string; at: string };
+
+type Target = {
+  id: string;
+  universityName: string;
+  programName: string | null;
+  expectedMajor: string | null;
+  intake: string | null;
+  targetStatus: string;
+  admissionNoticeUrl: string | null;
+  jw202Url: string | null;
+  priority: number;
+  updatedAt: string;
+};
+
+const TARGET_STATUS_CONFIG: Record<string, { bg: string; color: string; label: string }> = {
+  pending:          { bg: "#F1F5F9", color: "#475569",  label: "Pending" },
+  applied:          { bg: "#DBEAFE", color: "#1E40AF",  label: "Applied" },
+  pre_admission:    { bg: "#FEF3C7", color: "#92400E",  label: "Pre-Admission" },
+  interview:        { bg: "#FCE7F3", color: "#9D174D",  label: "Interview" },
+  admission_notice: { bg: "#D1FAE5", color: "#065F46",  label: "Admission Notice" },
+  final_admission:  { bg: "#DCFCE7", color: "#166534",  label: "Final Admission" },
+  rejected:         { bg: "#FEE2E2", color: "#991B1B",  label: "Rejected" },
+  deferred:         { bg: "#FFEDD5", color: "#9A3412",  label: "Deferred" },
+  withdrawn:        { bg: "#F8FAFC", color: "#94A3B8",  label: "Withdrawn" },
+};
 
 type App = {
   id: string;
@@ -151,13 +177,24 @@ function fmt(iso: string) {
   catch { return iso; }
 }
 
-export default function AppDetailClient({ app }: { app: App }) {
+export default function AppDetailClient({ app, targets: initialTargets }: { app: App; targets: Target[] }) {
   const [status,    setStatus]    = useState(app.status);
   const [note,      setNote]      = useState("");
   const [notes,     setNotes]     = useState(app.staffNotes);
   const [saving,    setSaving]    = useState(false);
   const [toast,     setToast]     = useState<{ msg: string; ok: boolean } | null>(null);
   const [appNumCopied, setAppNumCopied] = useState(false);
+
+  // Target status state
+  const [targets, setTargets] = useState<Target[]>(initialTargets);
+
+  // Change Status modal state
+  const [statusModal, setStatusModal] = useState<{ open: boolean; target: Target | null }>({ open: false, target: null });
+  const [newTargetStatus, setNewTargetStatus] = useState("");
+  const [remark, setRemark] = useState("");
+  const [internalNote, setInternalNote] = useState("");
+  const [visibleToStudent, setVisibleToStudent] = useState(true);
+  const [savingStatus, setSavingStatus] = useState(false);
 
   const st = STATUS_CONFIG[status] ?? STATUS_CONFIG["submitted"];
   const isSubmitted = status === "submitted";
@@ -211,6 +248,47 @@ export default function AppDetailClient({ app }: { app: App }) {
     });
   }
 
+  function openStatusModal(target: Target) {
+    setStatusModal({ open: true, target });
+    setNewTargetStatus(target.targetStatus);
+    setRemark("");
+    setInternalNote("");
+    setVisibleToStudent(true);
+  }
+
+  async function handleChangeTargetStatus() {
+    if (!statusModal.target || !newTargetStatus) return;
+    setSavingStatus(true);
+    try {
+      const res = await fetch(`/api/staff/applications/${app.id}/change-status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetId: statusModal.target.id,
+          newStatus: newTargetStatus,
+          remark: remark.trim() || undefined,
+          internalNote: internalNote.trim() || undefined,
+          visibleToStudent,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed");
+
+      // Optimistic update
+      setTargets(prev => prev.map(t =>
+        t.id === statusModal.target!.id
+          ? { ...t, targetStatus: newTargetStatus, updatedAt: new Date().toISOString() }
+          : t
+      ));
+      setStatusModal({ open: false, target: null });
+      showToast("Target status updated");
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Error", false);
+    } finally {
+      setSavingStatus(false);
+    }
+  }
+
   const waLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
     `Hi ${app.studentName.split(" ")[0]}, this is Globlearn Education regarding your application ${app.applicationNumber}. `
   )}`;
@@ -224,6 +302,85 @@ export default function AppDetailClient({ app }: { app: App }) {
           style={{ backgroundColor: toast.ok ? "#166534" : "#C8102E" }}
         >
           {toast.msg}
+        </div>
+      )}
+
+      {/* ── Change Status Modal (E2) ── */}
+      {statusModal.open && statusModal.target && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "#E2E8F0" }}>
+              <div>
+                <h2 className="text-base font-black" style={{ color: "#0A1628" }}>Change Target Status</h2>
+                <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>{statusModal.target.universityName}</p>
+              </div>
+              <button onClick={() => setStatusModal({ open: false, target: null })} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
+                <X size={15} style={{ color: "#94A3B8" }} />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: "#94A3B8" }}>New Status</label>
+                <select
+                  value={newTargetStatus}
+                  onChange={e => setNewTargetStatus(e.target.value)}
+                  className="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+                  style={{ borderColor: "#E2E8F0", color: "#0A1628" }}
+                >
+                  {Object.entries(TARGET_STATUS_CONFIG).map(([k, v]) => (
+                    <option key={k} value={k}>{v.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: "#94A3B8" }}>Student-Visible Remark</label>
+                <textarea
+                  rows={2}
+                  value={remark}
+                  onChange={e => setRemark(e.target.value)}
+                  placeholder="Message shown to the student (optional)"
+                  className="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none resize-none"
+                  style={{ borderColor: "#E2E8F0" }}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: "#94A3B8" }}>Internal Note (staff only)</label>
+                <textarea
+                  rows={2}
+                  value={internalNote}
+                  onChange={e => setInternalNote(e.target.value)}
+                  placeholder="Internal note — not shown to student"
+                  className="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none resize-none"
+                  style={{ borderColor: "#E2E8F0" }}
+                />
+              </div>
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={visibleToStudent}
+                  onChange={e => setVisibleToStudent(e.target.checked)}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm font-medium" style={{ color: "#374151" }}>Show this update in student&apos;s timeline</span>
+              </label>
+            </div>
+            <div className="flex gap-3 px-6 py-4 border-t" style={{ borderColor: "#E2E8F0" }}>
+              <button
+                onClick={() => setStatusModal({ open: false, target: null })}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border"
+                style={{ borderColor: "#E2E8F0", color: "#64748B" }}
+              >Cancel</button>
+              <button
+                onClick={handleChangeTargetStatus}
+                disabled={savingStatus || newTargetStatus === statusModal.target.targetStatus}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                style={{ backgroundColor: "#1B3A6B" }}
+              >
+                {savingStatus ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                Update Status
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -314,31 +471,65 @@ export default function AppDetailClient({ app }: { app: App }) {
             )}
           </div>
 
-          {/* 2. Universities */}
-          <Section title="Universities Applied">
-            {Array.isArray(app.universities) && app.universities.length > 0 ? (
+          {/* 2. University Targets (E1) */}
+          <Section title={`University Targets (${targets.length})`}>
+            {targets.length > 0 ? (
               <div className="space-y-3">
-                {app.universities.map((u, i) => (
-                  <div key={i} className="rounded-xl p-3" style={{ backgroundColor: "#F8FAFC", border: "1px solid #F1F5F9" }}>
-                    <div className="flex items-start gap-2.5">
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0" style={{ backgroundColor: "#EEF4FF", color: "#1B3A6B" }}>
-                        #{i + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold" style={{ color: "#0A1628" }}>{u.universityName ?? "—"}</p>
-                        {u.programName && <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>{u.programName}</p>}
-                        {u.expectedMajor && (
-                          <p className="text-[11px] mt-1 font-medium" style={{ color: "#29ABE2" }}>
-                            Expected Major: {u.expectedMajor}
-                          </p>
-                        )}
+                {targets.map((t, i) => {
+                  const tst = TARGET_STATUS_CONFIG[t.targetStatus] ?? TARGET_STATUS_CONFIG["pending"];
+                  return (
+                    <div key={t.id} className="rounded-xl p-3.5" style={{ backgroundColor: "#F8FAFC", border: "1px solid #F1F5F9" }}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0" style={{ backgroundColor: "#EEF4FF", color: "#1B3A6B" }}>
+                            #{i + 1}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold" style={{ color: "#0A1628" }}>{t.universityName}</p>
+                            {t.programName && <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>{t.programName}</p>}
+                            {t.expectedMajor && (
+                              <p className="text-[11px] mt-0.5 font-medium" style={{ color: "#29ABE2" }}>Major: {t.expectedMajor}</p>
+                            )}
+                            {t.intake && (
+                              <p className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>Intake: {t.intake}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: tst.bg, color: tst.color }}>
+                            {tst.label}
+                          </span>
+                          <button
+                            onClick={() => openStatusModal(t)}
+                            className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg border"
+                            style={{ borderColor: "#E2E8F0", color: "#1B3A6B" }}
+                          >
+                            <RefreshCw size={10} />Change
+                          </button>
+                        </div>
                       </div>
+                      {(t.admissionNoticeUrl || t.jw202Url) && (
+                        <div className="flex gap-2 mt-2.5 pt-2.5" style={{ borderTop: "1px solid #F1F5F9" }}>
+                          {t.admissionNoticeUrl && (
+                            <a href={t.admissionNoticeUrl} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#059669" }}>
+                              <ExternalLink size={10} />Admission Notice
+                            </a>
+                          )}
+                          {t.jw202Url && (
+                            <a href={t.jw202Url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#1B3A6B" }}>
+                              <ExternalLink size={10} />JW202
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
-              <p className="text-sm" style={{ color: "#94A3B8" }}>No universities selected yet.</p>
+              <p className="text-sm" style={{ color: "#94A3B8" }}>No university targets yet. Targets are created when student completes the application form.</p>
             )}
           </Section>
 
