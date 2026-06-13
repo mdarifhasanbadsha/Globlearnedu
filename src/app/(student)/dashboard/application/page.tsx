@@ -170,19 +170,21 @@ export default async function ApplicationPage() {
 
   const unis = (app.selectedUniversities as { universityId: string; universityName: string; programName: string }[]) ?? [];
 
-  // Merge workflow rows with JSONB fallback
-  const univDisplayList = targetRows.length > 0
-    ? targetRows
-    : unis.map((u, i) => ({
-        id: String(i),
-        universityName: u.universityName,
-        programName: u.programName,
-        targetStatus: "pending",
-        preAdmissionUrl: null,
-        admissionNoticeUrl: null,
-        jw202Url: null,
-        priority: i + 1,
-      }));
+  // Always merge: start from JSONB unis (all of them), enrich with workflow row where available
+  const targetByName = new Map(targetRows.map((r) => [r.universityName, r]));
+  const univDisplayList = unis.map((u, i) => {
+    const row = targetByName.get(u.universityName);
+    return {
+      id: row?.id ?? String(i),
+      universityName: u.universityName,
+      programName: u.programName,
+      targetStatus: row?.targetStatus ?? "pending",
+      preAdmissionUrl: row?.preAdmissionUrl ?? null,
+      admissionNoticeUrl: row?.admissionNoticeUrl ?? null,
+      jw202Url: row?.jw202Url ?? null,
+      priority: row?.priority ?? i + 1,
+    };
+  });
   const parentInfo = (app.parentInfo as Record<string, string>) ?? {};
   const sponsorInfo = (app.sponsorInfo as Record<string, string | boolean>) ?? {};
   const academics = (app.academicHistory as Record<string, string | number>[]) ?? [];

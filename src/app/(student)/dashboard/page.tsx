@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { applications, notifications as notifTable, payments, users } from "@/lib/db/schema";
+import { applications, applicationUniversities, notifications as notifTable, payments, users } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import {
-  Clock, FileText, Bell, Download,
+  Clock, FileText, Bell, Download, CheckCircle2,
   MapPin, MessageCircle, Check,
 } from "lucide-react";
 import VerificationBanner from "./_VerificationBanner";
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
 
   const isEmailVerified = !!userRecord?.emailVerified;
 
-  const [recentNotices, recentPayments] = await Promise.all([
+  const [recentNotices, recentPayments, targetRows] = await Promise.all([
     userId
       ? db.select().from(notifTable)
           .where(eq(notifTable.userId, userId))
@@ -159,12 +159,55 @@ export default async function DashboardPage() {
     app
       ? db.select().from(payments).where(eq(payments.applicationId, app.id)).limit(5)
       : Promise.resolve([]),
+    app
+      ? db
+          .select({
+            id: applicationUniversities.id,
+            universityName: applicationUniversities.universityName,
+            programName: applicationUniversities.programName,
+            targetStatus: applicationUniversities.targetStatus,
+            preAdmissionUrl: applicationUniversities.preAdmissionUrl,
+            admissionNoticeUrl: applicationUniversities.admissionNoticeUrl,
+            jw202Url: applicationUniversities.jw202Url,
+            priority: applicationUniversities.priority,
+          })
+          .from(applicationUniversities)
+          .where(eq(applicationUniversities.applicationId, app.id))
+          .orderBy(applicationUniversities.priority)
+      : Promise.resolve([]),
   ]);
 
   const currentStage = app ? (STATUS_TO_STAGE[app.status] ?? 0) : 0;
   const appNumber = app?.applicationNumber ?? "—";
 
   const selectedUnivs = (app?.selectedUniversities as Array<{ universityName: string; universityId: string; programName: string }> | null) ?? [];
+
+  const TARGET_STATUS_CONF: Record<string, { bg: string; color: string; label: string }> = {
+    pending:          { bg: "#F1F5F9", color: "#475569",  label: "Pending" },
+    applied:          { bg: "#DBEAFE", color: "#1E40AF",  label: "Applied" },
+    pre_admission:    { bg: "#FEF3C7", color: "#92400E",  label: "Pre-Admission Offer" },
+    interview:        { bg: "#FCE7F3", color: "#9D174D",  label: "Interview Scheduled" },
+    admission_notice: { bg: "#D1FAE5", color: "#065F46",  label: "Admission Confirmed" },
+    final_admission:  { bg: "#DCFCE7", color: "#166534",  label: "Final Admission" },
+    rejected:         { bg: "#FEE2E2", color: "#991B1B",  label: "Not Accepted" },
+    deferred:         { bg: "#FFEDD5", color: "#9A3412",  label: "Deferred" },
+    withdrawn:        { bg: "#F8FAFC", color: "#94A3B8",  label: "Withdrawn" },
+  };
+
+  const targetByName = new Map(targetRows.map((r) => [r.universityName, r]));
+  const univDisplayList = selectedUnivs.map((u, i) => {
+    const row = targetByName.get(u.universityName);
+    return {
+      id: row?.id ?? String(i),
+      universityName: u.universityName,
+      programName: u.programName,
+      targetStatus: row?.targetStatus ?? "pending",
+      preAdmissionUrl: row?.preAdmissionUrl ?? null,
+      admissionNoticeUrl: row?.admissionNoticeUrl ?? null,
+      jw202Url: row?.jw202Url ?? null,
+      choice: i === 0 ? "Primary" : `Choice ${i + 1}`,
+    };
+  });
 
   const waHref = `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "8615655031556"}?text=${encodeURIComponent(
     `Hi! I want to check on my application ${appNumber}.`
@@ -229,26 +272,63 @@ export default async function DashboardPage() {
           )}
 
           {/* Universities */}
-          {selectedUnivs.length > 0 && (
-            <div className="bg-white rounded-2xl border p-5" style={{ borderColor: "#E2E8F0" }}>
-              <p className="text-sm font-bold mb-4" style={{ color: "#1B3A6B" }}>Your Universities</p>
-              <div className="space-y-3">
-                {selectedUnivs.map((u, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 p-3 rounded-xl border" style={{ borderColor: "#F1F5F9", backgroundColor: "#FAFAFA" }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-black flex-shrink-0" style={{ backgroundColor: "#1B3A6B" }}>
-                        {u.universityName?.[0] ?? "U"}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold leading-tight" style={{ color: "#1B3A6B" }}>{u.universityName}</p>
-                        <p className="text-xs" style={{ color: "#94A3B8" }}>{u.programName}</p>
+          {univDisplayList.length > 0 && (
+            <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: "#E2E8F0" }}>
+              <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "#F1F5F9" }}>
+                <p className="text-sm font-bold" style={{ color: "#1B3A6B" }}>Your Universities</p>
+                <Link href="/dashboard/application" className="text-xs font-semibold" style={{ color: "#C8102E" }}>
+                  View details →
+                </Link>
+              </div>
+              <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
+                {univDisplayList.map((u) => {
+                  const stConf = TARGET_STATUS_CONF[u.targetStatus ?? "pending"] ?? TARGET_STATUS_CONF["pending"];
+                  const docBtns = [
+                    { label: "Pre-Admission", url: u.preAdmissionUrl, color: "#D97706", bg: "#FFFBEB" },
+                    { label: "Admission Notice", url: u.admissionNoticeUrl, color: "#059669", bg: "#F0FDF4" },
+                    { label: "JW202 / DQ", url: u.jw202Url, color: "#1B3A6B", bg: "#EEF4FF" },
+                  ];
+                  return (
+                    <div key={u.id} className="px-5 py-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black flex-shrink-0" style={{ backgroundColor: "#1B3A6B" }}>
+                          {u.universityName?.[0] ?? "U"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold leading-tight truncate" style={{ color: "#1B3A6B" }}>{u.universityName}</p>
+                              <p className="text-xs mt-0.5" style={{ color: "#94A3B8" }}>{u.programName}</p>
+                              <p className="text-[10px] mt-0.5" style={{ color: "#CBD5E1" }}>{u.choice}</p>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
+                              style={{ backgroundColor: stConf.bg, color: stConf.color }}>
+                              {stConf.label}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {docBtns.map((doc) =>
+                              doc.url ? (
+                                <a key={doc.label} href={doc.url} target="_blank" rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg"
+                                  style={{ backgroundColor: doc.bg, color: doc.color }}>
+                                  <Download size={9} />{doc.label}
+                                  <CheckCircle2 size={9} />
+                                </a>
+                              ) : (
+                                <span key={doc.label}
+                                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg"
+                                  style={{ backgroundColor: "#F8FAFC", color: "#CBD5E1" }}>
+                                  <Download size={9} />{doc.label}
+                                </span>
+                              )
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0" style={{ backgroundColor: "#29ABE220", color: "#29ABE2" }}>
-                      {i === 0 ? "Primary" : `Choice ${i + 1}`}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
