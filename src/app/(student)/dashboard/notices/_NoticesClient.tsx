@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, CheckCircle2, Info, Check } from "lucide-react";
+import { Bell, Mail, MessageSquare, Info, Check, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 type Notice = {
   id: string;
@@ -9,6 +10,7 @@ type Notice = {
   message: string;
   channel: string;
   isRead: boolean | null;
+  applicationId?: string | null;
   createdAt: Date | string;
 };
 
@@ -29,11 +31,22 @@ function timeAgo(date: Date | string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function dateGroup(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  if (diff === 0) return "Today";
+  if (diff <= 7) return "This Week";
+  if (diff <= 30) return "This Month";
+  return "Earlier";
+}
+
 function iconAndColor(channel: string) {
   switch (channel) {
-    case "email":     return { icon: Bell,          color: "#1B3A6B", bg: "#EEF4FF" };
-    case "whatsapp":  return { icon: CheckCircle2,   color: "#166534", bg: "#F0FDF4" };
-    default:          return { icon: Info,            color: "#1B3A6B", bg: "#EEF4FF" };
+    case "email":     return { icon: Mail,         color: "#1E40AF", bg: "#DBEAFE" };
+    case "whatsapp":  return { icon: MessageSquare, color: "#166534", bg: "#F0FDF4" };
+    case "in_portal": return { icon: Bell,          color: "#1B3A6B", bg: "#EEF4FF" };
+    default:          return { icon: Info,           color: "#1B3A6B", bg: "#EEF4FF" };
   }
 }
 
@@ -141,44 +154,65 @@ export default function NoticesClient({ notices }: Props) {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {displayed.map((notice) => {
-            const isRead = readIds.has(notice.id);
-            const { icon: Icon, color, bg } = iconAndColor(notice.channel);
+        <div className="space-y-6">
+          {(["Today", "This Week", "This Month", "Earlier"] as const).map(group => {
+            const groupItems = displayed.filter(n => dateGroup(n.createdAt) === group);
+            if (groupItems.length === 0) return null;
             return (
-              <div
-                key={notice.id}
-                className="bg-white rounded-2xl border p-5 transition-all"
-                style={{ borderColor: isRead ? "#E2E8F0" : "#1B3A6B20", backgroundColor: isRead ? "white" : "#F8FAFF" }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: bg }}>
-                    <Icon size={18} style={{ color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-bold leading-snug" style={{ color: "#1B3A6B" }}>
-                        {!isRead && (
-                          <span className="inline-block w-2 h-2 rounded-full mr-2 align-middle" style={{ backgroundColor: "#C8102E" }} />
-                        )}
-                        {notice.title}
-                      </p>
-                      <span className="text-[11px] flex-shrink-0" style={{ color: "#94A3B8" }}>
-                        {timeAgo(notice.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-sm mt-1.5 leading-relaxed" style={{ color: "#475569" }}>{notice.message}</p>
-                    {!isRead && (
-                      <button
-                        onClick={() => markRead(notice.id)}
-                        className="flex items-center gap-1 mt-2 text-xs font-semibold"
-                        style={{ color: "#64748B" }}
+              <div key={group}>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-3 px-1" style={{ color: "#94A3B8" }}>{group}</p>
+                <div className="space-y-2.5">
+                  {groupItems.map((notice) => {
+                    const isRead = readIds.has(notice.id);
+                    const { icon: Icon, color, bg } = iconAndColor(notice.channel);
+                    return (
+                      <div
+                        key={notice.id}
+                        className="bg-white rounded-2xl border p-5 transition-all"
+                        style={{ borderColor: isRead ? "#E2E8F0" : "#1B3A6B30", backgroundColor: isRead ? "white" : "#F8FAFF" }}
                       >
-                        <Check size={11} />
-                        Mark as read
-                      </button>
-                    )}
-                  </div>
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: bg }}>
+                            <Icon size={18} style={{ color }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="text-sm font-bold leading-snug" style={{ color: "#1B3A6B" }}>
+                                {!isRead && (
+                                  <span className="inline-block w-2 h-2 rounded-full mr-2 align-middle" style={{ backgroundColor: "#C8102E" }} />
+                                )}
+                                {notice.title}
+                              </p>
+                              <span className="text-[11px] flex-shrink-0" style={{ color: "#94A3B8" }}>
+                                {timeAgo(notice.createdAt)}
+                              </span>
+                            </div>
+                            <p className="text-sm mt-1.5 leading-relaxed" style={{ color: "#475569" }}>{notice.message}</p>
+                            <div className="flex items-center gap-3 mt-2 flex-wrap">
+                              {notice.applicationId && (
+                                <Link
+                                  href="/dashboard/application"
+                                  className="flex items-center gap-1 text-xs font-semibold"
+                                  style={{ color: "#1B3A6B" }}
+                                >
+                                  <ExternalLink size={10} />View application
+                                </Link>
+                              )}
+                              {!isRead && (
+                                <button
+                                  onClick={() => markRead(notice.id)}
+                                  className="flex items-center gap-1 text-xs font-semibold"
+                                  style={{ color: "#64748B" }}
+                                >
+                                  <Check size={11} />Mark as read
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
