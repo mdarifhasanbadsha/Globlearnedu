@@ -51,10 +51,29 @@ async function importUniversities() {
       }
       if (uni.programs && Array.isArray(uni.programs)) {
         for (const prog of uni.programs) {
+          const levelMap: Record<string, string> = {
+            "bachelors-degree": "bachelor",
+            "bachelor": "bachelor",
+            "masters-degree": "master",
+            "master": "master",
+            "phd-program": "phd",
+            "phd": "phd",
+            "mbbs-medicine": "mbbs",
+            "mbbs": "mbbs",
+            "chinese-language": "language",
+            "language": "language",
+            "diploma-vocational": "diploma",
+            "diploma": "diploma",
+            "foundation-pre-university": "foundation",
+            "foundation": "foundation",
+            "short-course-exchange": "short_course",
+            "short_course": "short_course",
+          };
+          const mappedLevel = levelMap[prog.level] || "bachelor";
           await db.insert(programs).values({
             universityId,
             name: prog.name,
-            level: (prog.level || "bachelor") as any,
+            level: mappedLevel as any,
             duration: prog.durationYears ? `${prog.durationYears} years` : null,
             teachingLanguage: prog.teachingLanguage || "English",
             tuitionFee: prog.tuitionPerYear?.toString() || null,
