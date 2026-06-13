@@ -184,4 +184,24 @@ export const STATUS_DESCRIPTIONS: Record<string, { description: string; nextStep
     description: "Your admission is fully complete. Congratulations!",
     nextStep: "Check your pre-departure guide and prepare for your China journey.",
   },
+  university_deposit: {
+    description: "A university deposit payment is required to secure your place.",
+    nextStep: "Please pay the university deposit and upload your payment slip through your dashboard.",
+  },
+  student_accepts: {
+    description: "Your acceptance has been recorded. Final processing is underway.",
+    nextStep: "Globlearn Education is finalising your admission — you will receive your official letter soon.",
+  },
+  jw202_issued: {
+    description: "Your JW202 (Visa Notification Letter) has been issued by the university.",
+    nextStep: "Download your JW202 from your dashboard and begin your X1 student visa application.",
+  },
+  withdrawn: {
+    description: "Your application has been marked as withdrawn.",
+    nextStep: "If this is an error or you wish to reapply, please contact Globlearn Education via WhatsApp.",
+  },
+  cancelled: {
+    description: "Your application has been cancelled.",
+    nextStep: "If you have questions or wish to start a new application, please contact Globlearn Education.",
+  },
 };
