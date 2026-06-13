@@ -6,6 +6,8 @@ import PartnerTopBar from "~/components/partner/PartnerTopBar";
 export default async function PartnerLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user) redirect("/sign-in");
+  const role = (session.user as any)?.role;
+  if (role !== "partner" && role !== "admin") redirect("/dashboard");
 
   const firstName = (session.user as any).firstName ?? "";
   const lastName = (session.user as any).lastName ?? "";

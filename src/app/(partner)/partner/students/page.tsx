@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { Search, UserPlus, Filter, RefreshCw } from "lucide-react";
+import { Search, UserPlus, Filter, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
 
 const STATUS_STYLES: Record<string, { color: string; bg: string; label: string }> = {
   submitted:              { color: "#475569", bg: "#F1F5F9",  label: "Submitted" },
@@ -23,6 +23,13 @@ const STATUS_STYLES: Record<string, { color: string; bg: string; label: string }
   cancelled:              { color: "#991B1B", bg: "#FEE2E2",  label: "Cancelled" },
 };
 
+interface TargetRow {
+  universityName: string | null;
+  programName: string | null;
+  targetStatus: string;
+  priority: number | null;
+}
+
 interface StudentRow {
   id: string;
   applicationNumber: string;
@@ -37,7 +44,20 @@ interface StudentRow {
   studentFirstName: string | null;
   studentLastName: string | null;
   studentCountry: string | null;
+  targets?: TargetRow[];
 }
+
+const TARGET_STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+  pending:          { label: "Pending", bg: "#F1F5F9", color: "#475569" },
+  applied:          { label: "Applied", bg: "#DBEAFE", color: "#1E40AF" },
+  pre_admission:    { label: "Pre-Admission", bg: "#FEF3C7", color: "#92400E" },
+  interview:        { label: "Interview", bg: "#FCE7F3", color: "#9D174D" },
+  admission_notice: { label: "Admission Notice", bg: "#D1FAE5", color: "#065F46" },
+  final_admission:  { label: "Final Admission", bg: "#DCFCE7", color: "#166534" },
+  rejected:         { label: "Not Accepted", bg: "#FEE2E2", color: "#991B1B" },
+  deferred:         { label: "Deferred", bg: "#FFEDD5", color: "#9A3412" },
+  withdrawn:        { label: "Withdrawn", bg: "#F8FAFC", color: "#94A3B8" },
+};
 
 function displayName(row: StudentRow) {
   if (row.passportGivenName && row.passportSurname) return `${row.passportGivenName} ${row.passportSurname}`;
@@ -55,6 +75,7 @@ export default function StudentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   async function fetchStudents() {
     setLoading(true);
@@ -182,33 +203,79 @@ export default function StudentsPage() {
               <tbody>
                 {filtered.map((row) => {
                   const style = STATUS_STYLES[row.status] ?? { color: "#64748B", bg: "#F8FAFC", label: row.status };
+                  const isExpanded = expanded.has(row.id);
+                  const hasTargets = (row.targets ?? []).length > 0;
                   return (
-                    <tr key={row.id} className="transition-colors hover:bg-gray-50" style={{ borderBottom: "1px solid #F8FAFC" }}>
-                      <td className="px-5 py-3.5">
-                        <p className="text-sm font-semibold whitespace-nowrap" style={{ color: "#1B3A6B" }}>{displayName(row)}</p>
-                        {row.studentEmail && <p className="text-[11px]" style={{ color: "#94A3B8" }}>{row.studentEmail}</p>}
-                      </td>
-                      <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: "#64748B" }}>
-                        {row.nationality ?? row.studentCountry ?? "—"}
-                      </td>
-                      <td className="px-5 py-3.5 text-sm capitalize" style={{ color: "#64748B" }}>
-                        {row.programLevel?.replace(/_/g, " ") ?? "—"}
-                      </td>
-                      <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: "#64748B" }}>
-                        {primaryUniversity(row)}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: style.bg, color: style.color }}>
-                          {style.label}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5 text-xs whitespace-nowrap" style={{ color: "#94A3B8" }}>
-                        {new Date(row.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}
-                      </td>
-                      <td className="px-5 py-3.5 text-xs font-mono whitespace-nowrap" style={{ color: "#94A3B8" }}>
-                        {row.applicationNumber}
-                      </td>
-                    </tr>
+                    <>
+                      <tr
+                        key={row.id}
+                        className="transition-colors hover:bg-gray-50 cursor-pointer"
+                        onClick={() => hasTargets && setExpanded(prev => {
+                          const next = new Set(prev);
+                          if (next.has(row.id)) next.delete(row.id); else next.add(row.id);
+                          return next;
+                        })}
+                        style={{ borderBottom: isExpanded ? "none" : "1px solid #F8FAFC" }}
+                      >
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-1.5">
+                            {hasTargets && (
+                              isExpanded
+                                ? <ChevronDown size={12} style={{ color: "#94A3B8", flexShrink: 0 }} />
+                                : <ChevronRight size={12} style={{ color: "#94A3B8", flexShrink: 0 }} />
+                            )}
+                            <div>
+                              <p className="text-sm font-semibold whitespace-nowrap" style={{ color: "#1B3A6B" }}>{displayName(row)}</p>
+                              {row.studentEmail && <p className="text-[11px]" style={{ color: "#94A3B8" }}>{row.studentEmail}</p>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: "#64748B" }}>
+                          {row.nationality ?? row.studentCountry ?? "—"}
+                        </td>
+                        <td className="px-5 py-3.5 text-sm capitalize" style={{ color: "#64748B" }}>
+                          {row.programLevel?.replace(/_/g, " ") ?? "—"}
+                        </td>
+                        <td className="px-5 py-3.5 text-sm whitespace-nowrap" style={{ color: "#64748B" }}>
+                          {primaryUniversity(row)}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: style.bg, color: style.color }}>
+                            {style.label}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-xs whitespace-nowrap" style={{ color: "#94A3B8" }}>
+                          {new Date(row.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}
+                        </td>
+                        <td className="px-5 py-3.5 text-xs font-mono whitespace-nowrap" style={{ color: "#94A3B8" }}>
+                          {row.applicationNumber}
+                        </td>
+                      </tr>
+                      {isExpanded && hasTargets && (
+                        <tr key={`${row.id}-targets`} style={{ borderBottom: "1px solid #F8FAFC", backgroundColor: "#F8FAFC" }}>
+                          <td colSpan={7} className="px-5 py-3">
+                            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#94A3B8" }}>University Targets</p>
+                            <div className="flex flex-wrap gap-2">
+                              {(row.targets ?? []).map((t, i) => {
+                                const tst = TARGET_STATUS_CONFIG[t.targetStatus] ?? TARGET_STATUS_CONFIG["pending"];
+                                return (
+                                  <div key={i} className="flex items-center gap-2 rounded-lg px-3 py-2 border" style={{ borderColor: "#E2E8F0", backgroundColor: "white" }}>
+                                    <span className="text-[10px] font-black px-1 py-0.5 rounded" style={{ backgroundColor: "#EEF4FF", color: "#1B3A6B" }}>#{t.priority ?? i + 1}</span>
+                                    <div>
+                                      <p className="text-xs font-semibold" style={{ color: "#0A1628" }}>{t.universityName ?? "—"}</p>
+                                      {t.programName && <p className="text-[10px]" style={{ color: "#64748B" }}>{t.programName}</p>}
+                                    </div>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full ml-1" style={{ backgroundColor: tst.bg, color: tst.color }}>
+                                      {tst.label}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   );
                 })}
               </tbody>

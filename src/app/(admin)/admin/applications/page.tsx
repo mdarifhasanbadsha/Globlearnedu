@@ -371,9 +371,9 @@ export default function AdminApplicationsPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Link
-                            href={`/staff/applications/${row.id}`}
+                            href={`/admin/applications/${row.id}`}
                             className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-gray-100"
-                            title="View"
+                            title="View audit detail"
                           >
                             <Eye size={13} style={{ color: "#64748B" }} />
                           </Link>

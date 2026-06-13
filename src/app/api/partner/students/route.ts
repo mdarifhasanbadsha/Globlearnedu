@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { applications, users, partners } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { applications, users, partners, applicationUniversities } from "@/lib/db/schema";
+import { eq, desc, inArray } from "drizzle-orm";
 
 export async function GET() {
   const session = await auth();
@@ -41,5 +41,33 @@ export async function GET() {
     .where(eq(applications.partnerId, partner.id))
     .orderBy(desc(applications.createdAt));
 
-  return NextResponse.json({ students: rows, partnerId: partner.id });
+  // Fetch per-university target rows for all applications
+  const appIds = rows.map(r => r.id);
+  const targets = appIds.length > 0
+    ? await db
+        .select({
+          applicationId: applicationUniversities.applicationId,
+          universityName: applicationUniversities.universityName,
+          programName: applicationUniversities.programName,
+          targetStatus: applicationUniversities.targetStatus,
+          priority: applicationUniversities.priority,
+        })
+        .from(applicationUniversities)
+        .where(inArray(applicationUniversities.applicationId, appIds))
+        .orderBy(applicationUniversities.priority)
+    : [];
+
+  // Group targets by applicationId
+  const targetsByApp: Record<string, typeof targets> = {};
+  for (const t of targets) {
+    if (!targetsByApp[t.applicationId]) targetsByApp[t.applicationId] = [];
+    targetsByApp[t.applicationId].push(t);
+  }
+
+  const students = rows.map(r => ({
+    ...r,
+    targets: targetsByApp[r.id] ?? [],
+  }));
+
+  return NextResponse.json({ students, partnerId: partner.id });
 }

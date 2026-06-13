@@ -12,7 +12,6 @@ const publicPaths = [
   "/scholarships",
   "/compare",
   "/track",
-  "/partner",
   "/refer-and-earn",
   "/sign-in",
   "/sign-up",
@@ -53,7 +52,7 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  if (pathname.startsWith("/partner/dashboard") && !["partner", "admin"].includes(role)) {
+  if (pathname.startsWith("/partner/") && !["partner", "admin"].includes(role)) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
