@@ -10,8 +10,8 @@ import {
   Receipt, FileText, Trophy, Check, LogIn, ArrowLeft,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { applications } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { applications, applicationUniversities, applicationStatusHistory } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -105,6 +105,37 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ id
   const submittedDate = new Date(app.createdAt).toLocaleDateString("en-GB", {
     day: "numeric", month: "long", year: "numeric",
   });
+
+  // Fetch per-university targets and their student-visible history
+  const targetRows = await db
+    .select({
+      id: applicationUniversities.id,
+      universityName: applicationUniversities.universityName,
+      programName: applicationUniversities.programName,
+      targetStatus: applicationUniversities.targetStatus,
+      priority: applicationUniversities.priority,
+    })
+    .from(applicationUniversities)
+    .where(eq(applicationUniversities.applicationId, app.id))
+    .orderBy(applicationUniversities.priority);
+
+  // Fetch student-visible history events for each target
+  const historyRows = await db
+    .select({
+      targetId: applicationStatusHistory.targetId,
+      newStatus: applicationStatusHistory.newStatus,
+      studentVisibleRemark: applicationStatusHistory.studentVisibleRemark,
+      createdAt: applicationStatusHistory.createdAt,
+    })
+    .from(applicationStatusHistory)
+    .where(
+      and(
+        eq(applicationStatusHistory.applicationId, app.id),
+        eq(applicationStatusHistory.visibleToStudent, true)
+      )
+    )
+    .orderBy(desc(applicationStatusHistory.createdAt))
+    .limit(50);
 
   return (
     <>
@@ -233,6 +264,71 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ id
               );
             })}
           </div>
+
+          {/* University Targets (J1) */}
+          {targetRows.length > 0 && (
+            <div className="mt-12">
+              <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#29ABE2" }}>University Applications</p>
+              <h2 className="text-xl font-black mb-6" style={{ color: "#1B3A6B" }}>Your University Targets</h2>
+              <div className="space-y-4">
+                {targetRows.map(target => {
+                  const history = historyRows.filter(h => h.targetId === target.id);
+                  const statusLabels: Record<string, { label: string; bg: string; color: string }> = {
+                    pending:          { label: "Pending Submission", bg: "#F1F5F9", color: "#475569" },
+                    applied:          { label: "Submitted to University", bg: "#DBEAFE", color: "#1E40AF" },
+                    pre_admission:    { label: "Pre-Admission Offer", bg: "#FEF3C7", color: "#92400E" },
+                    interview:        { label: "Interview Scheduled", bg: "#FCE7F3", color: "#9D174D" },
+                    admission_notice: { label: "Admission Notice Received", bg: "#D1FAE5", color: "#065F46" },
+                    final_admission:  { label: "Final Admission", bg: "#DCFCE7", color: "#166534" },
+                    rejected:         { label: "Not Accepted", bg: "#FEE2E2", color: "#991B1B" },
+                    deferred:         { label: "Deferred", bg: "#FFEDD5", color: "#9A3412" },
+                    withdrawn:        { label: "Withdrawn", bg: "#F8FAFC", color: "#94A3B8" },
+                  };
+                  const st = statusLabels[target.targetStatus] ?? statusLabels["pending"];
+                  return (
+                    <div key={target.id} className="rounded-xl border overflow-hidden" style={{ borderColor: "#E2E8F0" }}>
+                      <div className="flex items-center justify-between px-4 py-3" style={{ backgroundColor: "#FAFAFA", borderBottom: "1px solid #F1F5F9" }}>
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded" style={{ backgroundColor: "#EEF4FF", color: "#1B3A6B" }}>
+                            #{target.priority}
+                          </span>
+                          <div>
+                            <p className="text-sm font-bold" style={{ color: "#0A1628" }}>{target.universityName ?? "—"}</p>
+                            {target.programName && (
+                              <p className="text-[11px]" style={{ color: "#64748B" }}>{target.programName}</p>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: st.bg, color: st.color }}>
+                          {st.label}
+                        </span>
+                      </div>
+                      {history.length > 0 && (
+                        <div className="px-4 py-3 space-y-2">
+                          {history.slice(0, 3).map((h, i) => (
+                            <div key={i} className="flex items-start gap-2.5">
+                              <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: "#29ABE2" }} />
+                              <div>
+                                <p className="text-xs font-semibold" style={{ color: "#1B3A6B" }}>
+                                  {(statusLabels[h.newStatus] ?? { label: h.newStatus }).label}
+                                </p>
+                                {h.studentVisibleRemark && (
+                                  <p className="text-[11px] mt-0.5" style={{ color: "#64748B" }}>{h.studentVisibleRemark}</p>
+                                )}
+                                <p className="text-[10px] mt-0.5" style={{ color: "#94A3B8" }}>
+                                  {new Date(h.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Dashboard CTA */}
           <div className="mt-10 rounded-2xl p-6 text-center border" style={{ backgroundColor: "#F9FAFB", borderColor: "#E5E7EB" }}>
