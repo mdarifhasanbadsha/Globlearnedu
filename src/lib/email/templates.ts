@@ -379,3 +379,293 @@ export function visaGuidancePackEmail(data: {
     `),
   };
 }
+
+// ── REVIEW WORKFLOW TEMPLATES ─────────────────────────────
+
+interface TargetInfo {
+  universityName: string;
+  programName?: string;
+  expectedMajor?: string;
+}
+
+export function applicationApprovedEmail(data: {
+  studentName: string;
+  applicationId: string;
+  remark?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Application approved — ${data.applicationId} | Globlearn Education`,
+    html: baseTemplate(`
+      <h2 style="color:#166534;font-size:22px;margin:0 0 8px;">Application approved!</h2>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        Great news — your application <strong>${data.applicationId}</strong> has been reviewed and approved by Globlearn Education.
+        We are now preparing your submissions to the universities you selected.
+      </p>
+      ${data.remark ? infoBox(`<strong>Note from your advisor:</strong><br>${data.remark}`) : ""}
+      <div style="text-align:center;margin:24px 0;">
+        ${ctaButton("Track my application", `${BASE_URL}/dashboard/application`)}
+        ${whatsappButton(`Hi! My application ${data.applicationId} was approved. What are the next steps?`)}
+      </div>
+    `),
+  };
+}
+
+export function appliedToUniversityEmail(data: {
+  studentName: string;
+  applicationId: string;
+  target: TargetInfo;
+  remark?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Applied to ${data.target.universityName} — ${data.applicationId}`,
+    html: baseTemplate(`
+      <h2 style="color:#1B3A6B;font-size:22px;margin:0 0 8px;">Applied to university</h2>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        Your application has been formally submitted to <strong>${data.target.universityName}</strong>.
+        The university admissions office will now review your file — this typically takes 2–8 weeks.
+      </p>
+      ${infoBox(`
+        <strong>University:</strong> ${data.target.universityName}<br>
+        ${data.target.programName ? `<strong>Program:</strong> ${data.target.programName}<br>` : ""}
+        ${data.target.expectedMajor ? `<strong>Major:</strong> ${data.target.expectedMajor}<br>` : ""}
+        <strong>Application ID:</strong> ${data.applicationId}
+      `)}
+      ${data.remark ? infoBox(`<strong>Advisor note:</strong> ${data.remark}`) : ""}
+      <div style="text-align:center;margin:24px 0;">
+        ${ctaButton("View application status", `${BASE_URL}/dashboard/application`)}
+      </div>
+    `),
+  };
+}
+
+export function preAdmissionEmail(data: {
+  studentName: string;
+  applicationId: string;
+  target: TargetInfo;
+  remark?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Pre-admission offer — ${data.target.universityName} | ${data.applicationId}`,
+    html: baseTemplate(`
+      <h2 style="color:#1B3A6B;font-size:22px;margin:0 0 8px;">Pre-admission offer received</h2>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        <strong>${data.target.universityName}</strong> has provisionally accepted your application.
+        Please log in to confirm your acceptance and review the next steps.
+      </p>
+      ${infoBox(`
+        <strong>University:</strong> ${data.target.universityName}<br>
+        ${data.target.programName ? `<strong>Program:</strong> ${data.target.programName}<br>` : ""}
+        <strong>Status:</strong> Pre-Admission
+      `)}
+      ${data.remark ? infoBox(`<strong>Advisor note:</strong> ${data.remark}`) : ""}
+      <div style="text-align:center;margin:24px 0;">
+        ${ctaButton("Confirm my acceptance", `${BASE_URL}/dashboard/application`)}
+        ${whatsappButton(`Hi! I received a pre-admission offer from ${data.target.universityName}. What should I do next?`)}
+      </div>
+    `),
+  };
+}
+
+export function admissionNoticeEmail(data: {
+  studentName: string;
+  applicationId: string;
+  target: TargetInfo;
+  admissionNoticeUrl?: string;
+  remark?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Admission notice received — ${data.target.universityName} | ${data.applicationId}`,
+    html: baseTemplate(`
+      <div style="text-align:center;padding:16px 0;">
+        <h2 style="color:#1B3A6B;font-size:24px;margin:0 0 6px;">Congratulations!</h2>
+        <p style="color:#6B7280;font-size:14px;margin:0;">Admission notice received</p>
+      </div>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        You have received an official admission notice from <strong>${data.target.universityName}</strong>.
+        Globlearn Education will now guide you through the visa and pre-departure process.
+      </p>
+      ${infoBox(`
+        <strong>University:</strong> ${data.target.universityName}<br>
+        ${data.target.programName ? `<strong>Program:</strong> ${data.target.programName}<br>` : ""}
+        ${data.target.expectedMajor ? `<strong>Major:</strong> ${data.target.expectedMajor}<br>` : ""}
+        <strong>Application ID:</strong> ${data.applicationId}
+      `, "#166534")}
+      ${data.remark ? infoBox(`<strong>Advisor note:</strong> ${data.remark}`) : ""}
+      <div style="text-align:center;margin:24px 0;">
+        ${data.admissionNoticeUrl ? ctaButton("Download admission notice", data.admissionNoticeUrl) : ""}
+        ${ctaButton("View my dashboard", `${BASE_URL}/dashboard/application`)}
+        ${whatsappButton(`Hi! I received my admission notice from ${data.target.universityName}. I need visa guidance.`)}
+      </div>
+    `),
+  };
+}
+
+export function finalAdmissionEmail(data: {
+  studentName: string;
+  applicationId: string;
+  target: TargetInfo;
+  jw202Url?: string;
+  remark?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Final admission letter & JW202 ready — ${data.applicationId}`,
+    html: baseTemplate(`
+      <div style="text-align:center;padding:16px 0;">
+        <h2 style="color:#1B3A6B;font-size:24px;margin:0 0 6px;">Your final admission documents are ready!</h2>
+      </div>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        Your final admission letter and JW202 form from <strong>${data.target.universityName}</strong> are ready.
+        Begin your X1 student visa application now — Globlearn Education will guide you every step.
+      </p>
+      ${infoBox(`
+        <strong>University:</strong> ${data.target.universityName}<br>
+        ${data.target.programName ? `<strong>Program:</strong> ${data.target.programName}<br>` : ""}
+        <strong>Next step:</strong> Apply for X1 student visa at your nearest Chinese Embassy
+      `, "#166534")}
+      ${data.remark ? infoBox(`<strong>Advisor note:</strong> ${data.remark}`) : ""}
+      <p style="font-size:12px;color:#9CA3AF;font-style:italic;">Visa approval is at the sole discretion of the Chinese Embassy. Globlearn Education provides guidance — we do not guarantee visa issuance.</p>
+      <div style="text-align:center;margin:24px 0;">
+        ${data.jw202Url ? ctaButton("Download JW202 form", data.jw202Url) : ""}
+        ${whatsappButton(`Hi! I have my final admission letter for ${data.target.universityName}. I need visa guidance.`)}
+      </div>
+    `),
+  };
+}
+
+export function applicationRejectedEmail(data: {
+  studentName: string;
+  applicationId: string;
+  target: TargetInfo;
+  remark?: string;
+  otherTargetsCount?: number;
+}): { subject: string; html: string } {
+  return {
+    subject: `Update on your application to ${data.target.universityName} — ${data.applicationId}`,
+    html: baseTemplate(`
+      <h2 style="color:#1B3A6B;font-size:22px;margin:0 0 8px;">Application update</h2>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        We have received a decision from <strong>${data.target.universityName}</strong> regarding your application.
+        Unfortunately, your application was not accepted by this university at this time.
+      </p>
+      ${data.remark ? infoBox(`<strong>Advisor note:</strong> ${data.remark}`, "#C8102E") : ""}
+      ${(data.otherTargetsCount ?? 0) > 0 ? infoBox(`
+        <strong>Don't be discouraged</strong> — your application is still active at ${data.otherTargetsCount} other ${data.otherTargetsCount === 1 ? "university" : "universities"}.
+        Our team is working hard on your other university targets.
+      `) : infoBox(`
+        <strong>What's next?</strong> Our advisors can discuss alternative universities or programs for you.
+        Many students find excellent options after their first choice. Please get in touch.
+      `)}
+      <div style="text-align:center;margin:24px 0;">
+        ${ctaButton("View my application", `${BASE_URL}/dashboard/application`)}
+        ${whatsappButton(`Hi! I received a rejection from ${data.target.universityName} for application ${data.applicationId}. What are my options?`)}
+      </div>
+    `),
+  };
+}
+
+export function applicationDeferredEmail(data: {
+  studentName: string;
+  applicationId: string;
+  target: TargetInfo;
+  remark?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Application deferred — ${data.target.universityName} | ${data.applicationId}`,
+    html: baseTemplate(`
+      <h2 style="color:#1B3A6B;font-size:22px;margin:0 0 8px;">Application deferred</h2>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        <strong>${data.target.universityName}</strong> has deferred your application to the next intake.
+        This is not a rejection — the university wants to consider you again for the upcoming intake.
+      </p>
+      ${infoBox(`
+        <strong>University:</strong> ${data.target.universityName}<br>
+        ${data.target.programName ? `<strong>Program:</strong> ${data.target.programName}<br>` : ""}
+        <strong>Status:</strong> Deferred to next intake
+      `)}
+      ${data.remark ? infoBox(`<strong>Advisor note:</strong> ${data.remark}`) : ""}
+      <div style="text-align:center;margin:24px 0;">
+        ${ctaButton("View my application", `${BASE_URL}/dashboard/application`)}
+        ${whatsappButton(`Hi! My application to ${data.target.universityName} was deferred. What happens next?`)}
+      </div>
+    `),
+  };
+}
+
+export function askModificationEmail(data: {
+  studentName: string;
+  applicationId: string;
+  message: string;
+  sectionsToModify?: string[];
+  documentsToReupload?: string[];
+}): { subject: string; html: string } {
+  const sections = data.sectionsToModify?.length
+    ? `<br><strong>Sections to update:</strong> ${data.sectionsToModify.join(", ")}`
+    : "";
+  const docs = data.documentsToReupload?.length
+    ? `<br><strong>Documents to re-upload:</strong> ${data.documentsToReupload.join(", ")}`
+    : "";
+  return {
+    subject: `Action required — please update your application ${data.applicationId}`,
+    html: baseTemplate(`
+      <h2 style="color:#C8102E;font-size:22px;margin:0 0 8px;">Update required on your application</h2>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        Your Globlearn Education advisor has reviewed your application <strong>${data.applicationId}</strong> and requires some updates before we can proceed.
+      </p>
+      ${infoBox(`<strong>Advisor message:</strong><br>${data.message}${sections}${docs}`, "#C8102E")}
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        Your application has been unlocked. Please log in, make the requested updates, and click <strong>Resubmit</strong> when done.
+      </p>
+      <div style="text-align:center;margin:24px 0;">
+        ${ctaButton("Update my application now", `${BASE_URL}/dashboard/application`)}
+        ${whatsappButton(`Hi! I need help updating my application ${data.applicationId}. My advisor requested changes.`)}
+      </div>
+    `),
+  };
+}
+
+export function depositRequestEmail(data: {
+  studentName: string;
+  applicationId: string;
+  depositAmount: string;
+  isPaymentIssue?: boolean;
+  remark?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `${data.isPaymentIssue ? "Payment slip issue" : "Deposit required"} — ${data.applicationId}`,
+    html: baseTemplate(`
+      <h2 style="color:#92610A;font-size:22px;margin:0 0 8px;">
+        ${data.isPaymentIssue ? "Payment slip needs to be re-uploaded" : "Deposit payment required"}
+      </h2>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      ${data.isPaymentIssue
+        ? `<p style="font-size:14px;color:#374151;line-height:1.7;">
+            There is an issue with the payment slip you uploaded for application <strong>${data.applicationId}</strong>.
+            Please re-upload a clear photo or scan of your payment receipt.
+           </p>`
+        : `<p style="font-size:14px;color:#374151;line-height:1.7;">
+            To proceed with your application <strong>${data.applicationId}</strong>, please pay the Globlearn Education deposit of <strong>${data.depositAmount}</strong>.
+           </p>`
+      }
+      ${data.remark ? infoBox(`<strong>Note:</strong> ${data.remark}`, "#92610A") : ""}
+      ${infoBox(`
+        <strong>Payment methods accepted:</strong><br>
+        • Alipay QR code<br>
+        • WeChat Pay QR code<br>
+        • Bank transfer<br>
+        After payment, upload your receipt in the dashboard.
+      `, "#92610A")}
+      <div style="text-align:center;margin:24px 0;">
+        ${ctaButton("Pay now", `${BASE_URL}/dashboard/payments`)}
+        ${whatsappButton(`Hi! I need help with payment for application ${data.applicationId}.`)}
+      </div>
+    `),
+  };
+}
