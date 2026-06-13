@@ -128,6 +128,7 @@ export const applications = pgTable("applications", {
   gender: varchar("gender", { length: 20 }),
   nationality: varchar("nationality", { length: 100 }),
   passportNumber: varchar("passport_number", { length: 50 }),
+  passportIssueDate: varchar("passport_issue_date", { length: 20 }),
   passportExpiry: varchar("passport_expiry", { length: 20 }),
   religion: varchar("religion", { length: 50 }),
   // Contact

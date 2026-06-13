@@ -34,6 +34,7 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
       gender: applications.gender,
       nationality: applications.nationality,
       passportNumber: applications.passportNumber,
+      passportIssueDate: applications.passportIssueDate,
       passportExpiry: applications.passportExpiry,
       // Contact
       phone: applications.phone,
@@ -189,6 +190,7 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
     gender: r.gender ?? "—",
     religion: r.religion ?? "—",
     passportNumber: r.passportNumber ?? "—",
+    passportIssueDate: r.passportIssueDate ?? "—",
     passportExpiry: r.passportExpiry ?? "—",
     email: r.email ?? r.studentEmail ?? "—",
     phone: r.phone ?? r.studentPhone ?? "—",

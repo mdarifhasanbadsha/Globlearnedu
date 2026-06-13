@@ -82,6 +82,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
   // ── Step 2: Personal ──────────────────────────────────────
   const dateOfBirth = body.dateOfBirth ?? buildDate(body.dobYear, body.dobMonth, body.dobDay);
+  const passportIssueDate = body.passportIssueDate ?? buildDate(body.passportIssueYear, body.passportIssueMonth, body.passportIssueDay);
   const passportExpiry = body.passportExpiry ?? buildDate(body.passportExpiryYear, body.passportExpiryMonth, body.passportExpiryDay);
   const gender = (GENDER_MAP[body.gender ?? ""] ?? "prefer_not_to_say") as "male" | "female" | "prefer_not_to_say";
 
@@ -167,6 +168,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     gender,
     nationality: body.nationality ?? null,
     passportNumber: body.passportNumber ?? null,
+    passportIssueDate: passportIssueDate || null,
     passportExpiry: passportExpiry || null,
     religion: body.religion ?? null,
     phone,

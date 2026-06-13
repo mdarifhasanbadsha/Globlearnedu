@@ -51,6 +51,7 @@ type App = {
   gender: string;
   religion: string;
   passportNumber: string;
+  passportIssueDate: string;
   passportExpiry: string;
   email: string;
   phone: string;
@@ -1102,7 +1103,8 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
             <Field label="Gender" value={app.gender} />
             <Field label="Religion" value={app.religion} />
             <CopyField label="Passport Number" value={app.passportNumber} />
-            <Field label="Passport Expiry" value={app.passportExpiry} />
+            <Field label="Passport Issue Date" value={app.passportIssueDate} />
+            <Field label="Passport Expiry Date" value={app.passportExpiry} />
           </div>
 
           {/* Contact */}

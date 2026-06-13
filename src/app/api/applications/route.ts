@@ -29,6 +29,9 @@ const createSchema = z.object({
   gender: z.string().optional(),
   nationality: z.string().optional(),
   passportNumber: z.string().optional(),
+  passportIssueYear: z.string().optional(),
+  passportIssueMonth: z.string().optional(),
+  passportIssueDay: z.string().optional(),
   passportExpiryYear: z.string().optional(),
   passportExpiryMonth: z.string().optional(),
   passportExpiryDay: z.string().optional(),
@@ -151,6 +154,7 @@ export async function POST(request: NextRequest) {
 
   // Build optional step 2-8 fields
   const dateOfBirth = buildDate(d.dobYear, d.dobMonth, d.dobDay);
+  const passportIssueDate = buildDate(d.passportIssueYear, d.passportIssueMonth, d.passportIssueDay);
   const passportExpiry = buildDate(d.passportExpiryYear, d.passportExpiryMonth, d.passportExpiryDay);
   const gender = d.gender ? (GENDER_MAP[d.gender] ?? "prefer_not_to_say") : null;
 
@@ -238,6 +242,7 @@ export async function POST(request: NextRequest) {
     gender: gender ?? null,
     nationality: d.nationality ?? null,
     passportNumber: d.passportNumber ?? null,
+    passportIssueDate: passportIssueDate ?? null,
     passportExpiry: passportExpiry ?? null,
     religion: d.religion ?? null,
     phone: phone ?? null,

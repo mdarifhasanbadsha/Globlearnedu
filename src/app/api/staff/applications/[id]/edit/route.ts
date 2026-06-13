@@ -10,7 +10,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 // Scalar fields staff can edit
 const SCALAR_FIELDS = [
-  "passportGivenName", "passportSurname", "passportNumber", "passportExpiry",
+  "passportGivenName", "passportSurname", "passportNumber", "passportIssueDate", "passportExpiry",
   "dateOfBirth", "gender", "nationality", "religion",
   "phone", "email", "addressCity", "addressCountry", "addressDetailed", "addressPostcode",
   "programLevel", "scholarshipType", "isUrgent", "isCurrentlyInChina",
