@@ -41,8 +41,17 @@ export async function sendEmail(options: EmailOptions) {
       html: options.html,
       reply_to: options.replyTo || FROM_EMAIL,
     });
+    // Resend SDK v1 may return an error object inside result instead of throwing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyResult = result as any;
+    if (anyResult?.error) {
+      const msg = typeof anyResult.error === "string" ? anyResult.error : JSON.stringify(anyResult.error);
+      console.error("[email] Resend API error:", msg);
+      errorMsg = msg;
+      return { success: false, error: anyResult.error };
+    }
     sendSuccess = true;
-    return { success: true, id: (result as any)?.id ?? (result as any)?.data?.id };
+    return { success: true, id: anyResult?.id ?? anyResult?.data?.id };
   } catch (error) {
     console.error("[email] send error:", error);
     errorMsg = error instanceof Error ? error.message : String(error);

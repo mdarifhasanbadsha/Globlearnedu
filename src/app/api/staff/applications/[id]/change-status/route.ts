@@ -168,7 +168,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       }
 
       if (emailTemplate) {
-        sendEmail({
+        await sendEmail({
           to: studentUser.email,
           subject: emailTemplate.subject,
           html: emailTemplate.html,

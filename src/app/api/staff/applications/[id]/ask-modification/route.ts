@@ -52,17 +52,17 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
   // 3. Portal notification to student
   if (app.studentId) {
-    db.insert(notifications).values({
+    await db.insert(notifications).values({
       userId: app.studentId,
       applicationId: id,
       title: "Your application needs to be updated",
-      message: `Please log in to update your application ${app.applicationNumber}. Message: ${message.trim().substring(0, 100)}`,
+      message: `Your advisor has requested changes to application ${app.applicationNumber}. Click to view and edit your application.`,
       channel: "in_portal",
       isRead: false,
     }).catch(() => {});
   }
 
-  // 4. Email to student (fire-and-forget)
+  // 4. Email to student — awaited so Cloudflare Workers doesn't kill it
   if (app.studentId) {
     const [student] = await db
       .select({ email: users.email, firstName: users.firstName })
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         applicationId: app.applicationNumber,
         message: message.trim(),
       });
-      sendEmail({
+      await sendEmail({
         to: student.email,
         subject: emailData.subject,
         html: emailData.html,

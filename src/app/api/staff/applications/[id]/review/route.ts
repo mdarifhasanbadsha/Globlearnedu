@@ -127,7 +127,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           studentName,
           applicationId: app.applicationNumber,
         });
-        sendEmail({
+        await sendEmail({
           to: student.email,
           subject: approvedEmail.subject,
           html: approvedEmail.html,
@@ -142,7 +142,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           depositAmount: "¥500 RMB",
           isPaymentIssue: false,
         });
-        sendEmail({
+        await sendEmail({
           to: student.email,
           subject: depositEmail.subject,
           html: depositEmail.html,
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         }).catch(() => {});
       } else if (statusInfo) {
         const remarkSuffix = remarkText ? `\n\nAdvisor note: ${remarkText}` : "";
-        sendStatusUpdateNotification({
+        await sendStatusUpdateNotification({
           studentEmail: student.email,
           studentName,
           applicationId: app.applicationNumber,
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         }).catch(() => {});
       } else if (remarkText) {
         // Status has no template description but staff left a remark — send generic update anyway
-        sendStatusUpdateNotification({
+        await sendStatusUpdateNotification({
           studentEmail: student.email,
           studentName,
           applicationId: app.applicationNumber,
@@ -189,9 +189,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
             title: `Student Update — ${app.applicationNumber}`,
             message: `Application ${app.applicationNumber} status changed to: ${newLabel}.`,
           });
-          // Email (fire-and-forget, same status update template)
+          // Email to partner
           if (partnerUser.email && statusInfo) {
-            sendStatusUpdateNotification({
+            await sendStatusUpdateNotification({
               studentEmail: partnerUser.email,
               studentName: `${partnerUser.firstName ?? ""} ${partnerUser.lastName ?? ""}`.trim() || partnerUser.email,
               applicationId: app.applicationNumber,
