@@ -7,6 +7,7 @@ import { applications } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import { ArrowRight, Clock, MessageSquare, Plus } from "lucide-react";
+import ResubmitBanner from "./_ResubmitBanner";
 
 const TOTAL_STAGES = 14;
 
@@ -159,6 +160,11 @@ export default async function ApplicationPage() {
           Application — {app.applicationNumber}
         </p>
       </div>
+
+      {/* Modification required banner (H2) */}
+      {app.applicationMode === "editable" && (
+        <ResubmitBanner applicationId={app.id} />
+      )}
 
       {/* Status banner */}
       <div
