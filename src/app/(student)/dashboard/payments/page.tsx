@@ -143,6 +143,26 @@ export default async function PaymentsPage() {
         </div>
       )}
 
+      {/* Deposit required CTA (I2) */}
+      {app && app.status === "documents_approved" && !app.depositPaid && (
+        <div className="rounded-2xl p-5 border-2" style={{ backgroundColor: "#FFFBEB", borderColor: "#FCD34D" }}>
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#FDE68A" }}>
+              <AlertCircle size={16} style={{ color: "#92400E" }} />
+            </div>
+            <div>
+              <p className="text-sm font-black mb-1" style={{ color: "#92400E" }}>
+                Deposit required — ¥500 RMB
+              </p>
+              <p className="text-xs" style={{ color: "#A16207" }}>
+                Your application has been approved! Please pay the Globlearn Education deposit to begin your university submissions.
+                Pay using Alipay, WeChat, or bank transfer below, then upload your receipt.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* How to pay */}
       <div className="bg-white rounded-2xl border p-5" style={{ borderColor: "#E2E8F0" }}>
         <PaymentSection paymentConfig={paymentConfig} />

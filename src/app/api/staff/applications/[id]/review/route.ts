@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { applications, users, partners, activityLog } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { sendStatusUpdateNotification, STATUS_DESCRIPTIONS, writePortalNotification } from "@/lib/email/notifications";
+import { sendEmail } from "@/lib/email/resend";
+import { applicationApprovedEmail, depositRequestEmail } from "@/lib/email/templates";
 
 export const dynamic = "force-dynamic";
 
@@ -115,15 +117,47 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     // 3. Email notification to student
     const statusInfo = STATUS_DESCRIPTIONS[status];
     const student = await db.query.users.findFirst({ where: eq(users.id, app.studentId) });
-    if (student?.email && statusInfo) {
-      sendStatusUpdateNotification({
-        studentEmail: student.email,
-        studentName: `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim() || student.email,
-        applicationId: app.applicationNumber,
-        newStatus: newLabel,
-        statusDescription: statusInfo.description,
-        nextStep: statusInfo.nextStep,
-      }).catch(() => {});
+    if (student?.email) {
+      const studentName = `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim() || student.email;
+
+      if (status === "documents_approved") {
+        // Send celebratory "Application Approved" email with deposit request
+        const approvedEmail = applicationApprovedEmail({
+          studentName,
+          applicationId: app.applicationNumber,
+        });
+        sendEmail({
+          to: student.email,
+          subject: approvedEmail.subject,
+          html: approvedEmail.html,
+          templateName: "application_approved",
+          applicationId: id,
+        }).catch(() => {});
+
+        // Also send deposit request email
+        const depositEmail = depositRequestEmail({
+          studentName,
+          applicationId: app.applicationNumber,
+          depositAmount: "¥500 RMB",
+          isPaymentIssue: false,
+        });
+        sendEmail({
+          to: student.email,
+          subject: depositEmail.subject,
+          html: depositEmail.html,
+          templateName: "deposit_request",
+          applicationId: id,
+        }).catch(() => {});
+      } else if (statusInfo) {
+        sendStatusUpdateNotification({
+          studentEmail: student.email,
+          studentName,
+          applicationId: app.applicationNumber,
+          newStatus: newLabel,
+          statusDescription: statusInfo.description,
+          nextStep: statusInfo.nextStep,
+        }).catch(() => {});
+      }
     }
 
     // 4. Partner portal notification + email (if application came via partner)
