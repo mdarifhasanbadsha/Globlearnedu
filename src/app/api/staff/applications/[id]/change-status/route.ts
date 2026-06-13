@@ -10,6 +10,7 @@ import { sendEmail } from "@/lib/email/resend";
 import {
   appliedToUniversityEmail,
   preAdmissionEmail,
+  interviewEmail,
   admissionNoticeEmail,
   finalAdmissionEmail,
   applicationRejectedEmail,
@@ -144,8 +145,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           studentName, applicationId: app.applicationNumber, target: targetInfo, remark,
         });
       } else if (newStatus === "interview") {
-        emailTemplate = preAdmissionEmail({
-          studentName, applicationId: app.applicationNumber, target: targetInfo, remark,
+        emailTemplate = interviewEmail({
+          studentName, applicationId: app.applicationNumber, target: targetInfo,
+          admissionNoticeUrl: admissionNoticeUrl ?? target.admissionNoticeUrl ?? undefined, remark,
         });
       } else if (newStatus === "admission_notice") {
         emailTemplate = admissionNoticeEmail({

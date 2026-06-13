@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { applications, modificationRequests, notifications } from "@/lib/db/schema";
+import { applications, applicationUniversities, modificationRequests, notifications } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -188,6 +188,38 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     updatedAt: new Date(),
   } as Parameters<typeof db.update>[0]["$inferInsert"])
     .where(and(eq(applications.id, id), eq(applications.studentId, session.user.id)));
+
+  // Auto-sync: insert newly added universities into applicationUniversities workflow table
+  if (selectedUniversities.length > 0) {
+    const existingTargets = await db
+      .select({ universityName: applicationUniversities.universityName, universityId: applicationUniversities.universityId })
+      .from(applicationUniversities)
+      .where(eq(applicationUniversities.applicationId, id));
+
+    const existingNames = new Set(existingTargets.map((t) => t.universityName?.toLowerCase()));
+    const existingIds = new Set(existingTargets.map((t) => t.universityId).filter(Boolean));
+
+    const toInsert = selectedUniversities.filter((u: { universityId?: string; universityName?: string; programName?: string; expectedMajor?: string }) => {
+      if (u.universityId && existingIds.has(u.universityId)) return false;
+      if (u.universityName && existingNames.has(u.universityName.toLowerCase())) return false;
+      return true;
+    });
+
+    if (toInsert.length > 0) {
+      await db.insert(applicationUniversities).values(
+        toInsert.map((u: { universityId?: string; universityName?: string; programName?: string; expectedMajor?: string }, i: number) => ({
+          applicationId: id,
+          universityId: u.universityId || null,
+          universityName: u.universityName ?? "Unknown University",
+          programName: u.programName ?? null,
+          expectedMajor: u.expectedMajor ?? u.programName ?? null,
+          targetStatus: "pending",
+          priority: existingTargets.length + i + 1,
+          order: existingTargets.length + i + 1,
+        }))
+      ).catch(() => {});
+    }
+  }
 
   // Mark pending modification requests as resolved
   await db.update(modificationRequests)

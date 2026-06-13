@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { applications } from "@/lib/db/schema";
+import { applications, applicationUniversities } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import {
   step1Schema, step2Schema, step3Schema,
@@ -101,6 +101,44 @@ export async function PATCH(request: NextRequest, ctx: RouteContext) {
     .set(stepUpdates as any)
     .where(eq(applications.id, id))
     .returning();
+
+  // Auto-sync: insert any newly added universities into applicationUniversities workflow table
+  if (step === 1) {
+    const newUnivs = (stepUpdates.selectedUniversities as Array<{
+      universityId?: string; universityName?: string; programName?: string; expectedMajor?: string;
+    }>) ?? [];
+
+    if (newUnivs.length > 0) {
+      const existingTargets = await db
+        .select({ universityName: applicationUniversities.universityName, universityId: applicationUniversities.universityId })
+        .from(applicationUniversities)
+        .where(eq(applicationUniversities.applicationId, id));
+
+      const existingNames = new Set(existingTargets.map((t) => t.universityName?.toLowerCase()));
+      const existingIds = new Set(existingTargets.map((t) => t.universityId).filter(Boolean));
+
+      const toInsert = newUnivs.filter((u) => {
+        if (u.universityId && existingIds.has(u.universityId)) return false;
+        if (u.universityName && existingNames.has(u.universityName.toLowerCase())) return false;
+        return true;
+      });
+
+      if (toInsert.length > 0) {
+        await db.insert(applicationUniversities).values(
+          toInsert.map((u, i) => ({
+            applicationId: id,
+            universityId: u.universityId || null,
+            universityName: u.universityName ?? "Unknown University",
+            programName: u.programName ?? null,
+            expectedMajor: u.expectedMajor ?? u.programName ?? null,
+            targetStatus: "pending",
+            priority: i + 1,
+            order: i + 1,
+          }))
+        ).catch(() => {});
+      }
+    }
+  }
 
   return NextResponse.json({ application: updated });
 }

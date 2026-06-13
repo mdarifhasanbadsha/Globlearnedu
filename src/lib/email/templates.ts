@@ -469,6 +469,39 @@ export function preAdmissionEmail(data: {
   };
 }
 
+export function interviewEmail(data: {
+  studentName: string;
+  applicationId: string;
+  target: TargetInfo;
+  admissionNoticeUrl?: string;
+  remark?: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Interview invitation — ${data.target.universityName} | ${data.applicationId}`,
+    html: baseTemplate(`
+      <h2 style="color:#1B3A6B;font-size:22px;margin:0 0 8px;">Interview invitation received</h2>
+      <p style="font-size:15px;color:#374151;">Dear <strong>${data.studentName}</strong>,</p>
+      <p style="font-size:14px;color:#374151;line-height:1.7;">
+        <strong>${data.target.universityName}</strong> has invited you for an interview as part of the admissions process.
+        Please review the interview details below and prepare well.
+        Globlearn Education can help you prepare — contact us on WhatsApp.
+      </p>
+      ${infoBox(`
+        <strong>University:</strong> ${data.target.universityName}<br>
+        ${data.target.programName ? `<strong>Program:</strong> ${data.target.programName}<br>` : ""}
+        ${data.target.expectedMajor ? `<strong>Major:</strong> ${data.target.expectedMajor}<br>` : ""}
+        <strong>Status:</strong> Interview Scheduled
+      `)}
+      ${data.remark ? infoBox(`<strong>Advisor note:</strong> ${data.remark}`) : ""}
+      <div style="text-align:center;margin:24px 0;">
+        ${data.admissionNoticeUrl ? ctaButton("View interview details / letter", data.admissionNoticeUrl) : ""}
+        ${ctaButton("View my application", `${BASE_URL}/dashboard/application`)}
+        ${whatsappButton(`Hi! I have an interview invitation from ${data.target.universityName}. Can you help me prepare?`)}
+      </div>
+    `),
+  };
+}
+
 export function admissionNoticeEmail(data: {
   studentName: string;
   applicationId: string;

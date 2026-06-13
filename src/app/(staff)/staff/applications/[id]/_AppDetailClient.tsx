@@ -280,26 +280,15 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
   async function handleFileUpload(file: File, docType: "admission_notice" | "jw202") {
     setUploading(true);
     try {
-      const presignRes = await fetch("/api/upload/presign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          applicationId: app.id,
-          documentType: docType,
-          filename: file.name,
-          contentType: file.type,
-          fileSize: file.size,
-        }),
-      });
-      const presignData = await presignRes.json();
-      if (!presignRes.ok) throw new Error(presignData.error ?? "Upload failed");
-      await fetch(presignData.presignedUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-      if (docType === "admission_notice") setUploadedAdmissionUrl(presignData.publicUrl);
-      else setUploadedJw202Url(presignData.publicUrl);
+      const form = new FormData();
+      form.append("file", file);
+      form.append("applicationId", app.id);
+      form.append("docType", docType);
+      const res = await fetch("/api/upload/admission-doc", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      if (docType === "admission_notice") setUploadedAdmissionUrl(data.url);
+      else setUploadedJw202Url(data.url);
       showToast("File uploaded");
     } catch (e: unknown) {
       showToast(e instanceof Error ? e.message : "Upload failed", false);
