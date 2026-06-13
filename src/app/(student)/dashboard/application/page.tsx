@@ -3,10 +3,10 @@ export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth/config";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { applications } from "@/lib/db/schema";
+import { applications, applicationUniversities } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
-import { ArrowRight, Clock, MessageSquare, Plus } from "lucide-react";
+import { ArrowRight, Clock, MessageSquare, Plus, Download, CheckCircle2 } from "lucide-react";
 import ResubmitBanner from "./_ResubmitBanner";
 
 const TOTAL_STAGES = 14;
@@ -26,6 +26,18 @@ const STATUS_NAMES: Record<string, string> = {
   university_deposit: "University Deposit", final_admission: "Final Admission Notice",
   student_accepts: "Student Accepts Offer", service_charge_payment: "Service Charge Payment",
   jw202_issued: "JW202 Issued", complete: "Complete", withdrawn: "Withdrawn", cancelled: "Cancelled",
+};
+
+const TARGET_STATUS_CONFIG: Record<string, { bg: string; color: string; label: string }> = {
+  pending:          { bg: "#F1F5F9", color: "#475569",  label: "Pending" },
+  applied:          { bg: "#DBEAFE", color: "#1E40AF",  label: "Applied" },
+  pre_admission:    { bg: "#FEF3C7", color: "#92400E",  label: "Pre-Admission Offer" },
+  interview:        { bg: "#FCE7F3", color: "#9D174D",  label: "Interview Scheduled" },
+  admission_notice: { bg: "#D1FAE5", color: "#065F46",  label: "Admission Confirmed" },
+  final_admission:  { bg: "#DCFCE7", color: "#166534",  label: "Final Admission" },
+  rejected:         { bg: "#FEE2E2", color: "#991B1B",  label: "Not Accepted" },
+  deferred:         { bg: "#FFEDD5", color: "#9A3412",  label: "Deferred" },
+  withdrawn:        { bg: "#F8FAFC", color: "#94A3B8",  label: "Withdrawn" },
 };
 
 const SCHOLARSHIP_LABELS: Record<string, string> = {
@@ -103,6 +115,23 @@ export default async function ApplicationPage() {
     orderBy: [desc(applications.createdAt)],
   });
 
+  const targetRows = app
+    ? await db
+        .select({
+          id: applicationUniversities.id,
+          universityName: applicationUniversities.universityName,
+          programName: applicationUniversities.programName,
+          targetStatus: applicationUniversities.targetStatus,
+          preAdmissionUrl: applicationUniversities.preAdmissionUrl,
+          admissionNoticeUrl: applicationUniversities.admissionNoticeUrl,
+          jw202Url: applicationUniversities.jw202Url,
+          priority: applicationUniversities.priority,
+        })
+        .from(applicationUniversities)
+        .where(eq(applicationUniversities.applicationId, app.id))
+        .orderBy(applicationUniversities.priority)
+    : [];
+
   if (!app) {
     return (
       <div className="max-w-3xl mx-auto">
@@ -140,6 +169,20 @@ export default async function ApplicationPage() {
   });
 
   const unis = (app.selectedUniversities as { universityId: string; universityName: string; programName: string }[]) ?? [];
+
+  // Merge workflow rows with JSONB fallback
+  const univDisplayList = targetRows.length > 0
+    ? targetRows
+    : unis.map((u, i) => ({
+        id: String(i),
+        universityName: u.universityName,
+        programName: u.programName,
+        targetStatus: "pending",
+        preAdmissionUrl: null,
+        admissionNoticeUrl: null,
+        jw202Url: null,
+        priority: i + 1,
+      }));
   const parentInfo = (app.parentInfo as Record<string, string>) ?? {};
   const sponsorInfo = (app.sponsorInfo as Record<string, string | boolean>) ?? {};
   const academics = (app.academicHistory as Record<string, string | number>[]) ?? [];
@@ -215,18 +258,77 @@ export default async function ApplicationPage() {
 
       {/* Data sections */}
       <div className="space-y-4">
+        {/* Program info */}
         <Section
-          title="Program & Universities"
-          waMessage={`Hi! I'd like to request a change to my program or university selection. My application ID is ${app.applicationNumber}.`}
+          title="Program Details"
+          waMessage={`Hi! I'd like to request a change to my program selection. My application ID is ${app.applicationNumber}.`}
           items={[
             { label: "Funding type", value: SCHOLARSHIP_LABELS[app.scholarshipType] ?? app.scholarshipType ?? "" },
             { label: "Degree level", value: PROGRAM_LABELS[app.programLevel ?? ""] ?? app.programLevel ?? "" },
-            ...unis.map((u, i) => ({
-              label: `${["1st", "2nd", "3rd", "4th", "5th"][i] ?? `${i + 1}th`} choice`,
-              value: `${u.universityName} — ${u.programName}`,
-            })),
           ]}
         />
+
+        {/* Your Universities — per-university status + document downloads */}
+        {univDisplayList.length > 0 && (
+          <div className="bg-white border rounded-2xl overflow-hidden" style={{ borderColor: "#E2E8F0" }}>
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "#F1F5F9", backgroundColor: "#FAFAFA" }}>
+              <p className="text-sm font-black" style={{ color: "#1B3A6B" }}>Your Universities</p>
+              <a
+                href={`https://wa.me/8615655031556?text=${encodeURIComponent(`Hi! I'd like to request a change to my university selection. My application ID is ${app.applicationNumber}.`)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+                style={{ color: "#C8102E", backgroundColor: "#FEF2F2" }}>
+                <MessageSquare size={12} />Request change
+              </a>
+            </div>
+            <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
+              {univDisplayList.map((u, i) => {
+                const stConf = TARGET_STATUS_CONFIG[u.targetStatus ?? "pending"] ?? TARGET_STATUS_CONFIG["pending"];
+                const initials = (u.universityName ?? "?").slice(0, 1).toUpperCase();
+                const docs = [
+                  { label: "Pre-Admission", url: u.preAdmissionUrl, color: "#D97706", bg: "#FFFBEB" },
+                  { label: "Admission Notice", url: u.admissionNoticeUrl, color: "#059669", bg: "#F0FDF4" },
+                  { label: "JW202 / DQ", url: u.jw202Url, color: "#1B3A6B", bg: "#EEF4FF" },
+                ].filter(d => d.url);
+                return (
+                  <div key={u.id} className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white flex-shrink-0"
+                        style={{ backgroundColor: "#1B3A6B" }}>
+                        {initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold leading-tight" style={{ color: "#1B3A6B" }}>{u.universityName}</p>
+                        {u.programName && <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>{u.programName}</p>}
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
+                          style={{ backgroundColor: stConf.bg, color: stConf.color }}>
+                          {stConf.label}
+                        </span>
+                        <span className="text-[10px]" style={{ color: "#CBD5E1" }}>
+                          Choice {["Primary", "2", "3", "4", "5"][i] ?? String(i + 1)}
+                        </span>
+                      </div>
+                    </div>
+                    {docs.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {docs.map(doc => (
+                          <a key={doc.label} href={doc.url!} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+                            style={{ backgroundColor: doc.bg, color: doc.color }}>
+                            <Download size={11} />{doc.label}
+                            <CheckCircle2 size={11} />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <Section
           title="Personal Information"

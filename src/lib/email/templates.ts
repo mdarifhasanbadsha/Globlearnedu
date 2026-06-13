@@ -444,6 +444,7 @@ export function preAdmissionEmail(data: {
   studentName: string;
   applicationId: string;
   target: TargetInfo;
+  admissionNoticeUrl?: string;
   remark?: string;
 }): { subject: string; html: string } {
   return {
@@ -462,6 +463,7 @@ export function preAdmissionEmail(data: {
       `)}
       ${data.remark ? infoBox(`<strong>Advisor note:</strong> ${data.remark}`) : ""}
       <div style="text-align:center;margin:24px 0;">
+        ${data.admissionNoticeUrl ? ctaButton("Download pre-admission letter", data.admissionNoticeUrl) : ""}
         ${ctaButton("Confirm my acceptance", `${BASE_URL}/dashboard/application`)}
         ${whatsappButton(`Hi! I received a pre-admission offer from ${data.target.universityName}. What should I do next?`)}
       </div>

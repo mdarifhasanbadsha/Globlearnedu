@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
   const { id } = await params;
   const body = await req.json();
-  const { targetId, newStatus, remark, internalNote, visibleToStudent = true, admissionNoticeUrl, jw202Url } = body;
+  const { targetId, newStatus, remark, internalNote, visibleToStudent = true, preAdmissionUrl, admissionNoticeUrl, jw202Url } = body;
 
   if (!targetId || !newStatus) {
     return NextResponse.json({ error: "targetId and newStatus are required" }, { status: 400 });
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     programName: applicationUniversities.programName,
     expectedMajor: applicationUniversities.expectedMajor,
     targetStatus: applicationUniversities.targetStatus,
+    preAdmissionUrl: applicationUniversities.preAdmissionUrl,
     admissionNoticeUrl: applicationUniversities.admissionNoticeUrl,
     jw202Url: applicationUniversities.jw202Url,
   }).from(applicationUniversities)
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   // 1. Update the target row (including optional document URLs)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const targetUpdates: Record<string, any> = { targetStatus: newStatus, updatedAt: new Date() };
+  if (preAdmissionUrl) targetUpdates.preAdmissionUrl = preAdmissionUrl;
   if (admissionNoticeUrl) targetUpdates.admissionNoticeUrl = admissionNoticeUrl;
   if (jw202Url) targetUpdates.jw202Url = jw202Url;
   await db.update(applicationUniversities)
@@ -142,7 +144,8 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         });
       } else if (newStatus === "pre_admission") {
         emailTemplate = preAdmissionEmail({
-          studentName, applicationId: app.applicationNumber, target: targetInfo, remark,
+          studentName, applicationId: app.applicationNumber, target: targetInfo,
+          admissionNoticeUrl: preAdmissionUrl ?? target.preAdmissionUrl ?? undefined, remark,
         });
       } else if (newStatus === "interview") {
         emailTemplate = interviewEmail({

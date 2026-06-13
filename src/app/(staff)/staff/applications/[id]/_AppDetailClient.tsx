@@ -18,6 +18,7 @@ type Target = {
   expectedMajor: string | null;
   intake: string | null;
   targetStatus: string;
+  preAdmissionUrl: string | null;
   admissionNoticeUrl: string | null;
   jw202Url: string | null;
   priority: number;
@@ -207,9 +208,14 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
   const [modMessage, setModMessage] = useState("");
   const [modSaving, setModSaving] = useState(false);
 
+  // Status-change modal upload state
+  const [uploadedPreAdmissionUrl, setUploadedPreAdmissionUrl] = useState<string | null>(null);
   const [uploadedAdmissionUrl, setUploadedAdmissionUrl] = useState<string | null>(null);
   const [uploadedJw202Url, setUploadedJw202Url] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  // Per-target inline doc upload state: key = `${targetId}_${docType}`
+  const [inlineUploading, setInlineUploading] = useState<Set<string>>(new Set());
 
   const st = STATUS_CONFIG[status] ?? STATUS_CONFIG["submitted"];
   const isSubmitted = status === "submitted";
@@ -273,11 +279,12 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
     setRemark("");
     setInternalNote("");
     setVisibleToStudent(true);
+    setUploadedPreAdmissionUrl(null);
     setUploadedAdmissionUrl(null);
     setUploadedJw202Url(null);
   }
 
-  async function handleFileUpload(file: File, docType: "admission_notice" | "jw202") {
+  async function handleFileUpload(file: File, docType: "pre_admission" | "admission_notice" | "jw202") {
     setUploading(true);
     try {
       const form = new FormData();
@@ -287,13 +294,73 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
       const res = await fetch("/api/upload/admission-doc", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      if (docType === "admission_notice") setUploadedAdmissionUrl(data.url);
+      if (docType === "pre_admission") setUploadedPreAdmissionUrl(data.url);
+      else if (docType === "admission_notice") setUploadedAdmissionUrl(data.url);
       else setUploadedJw202Url(data.url);
       showToast("File uploaded");
     } catch (e: unknown) {
       showToast(e instanceof Error ? e.message : "Upload failed", false);
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleInlineDocUpload(targetId: string, docType: string, file: File) {
+    const key = `${targetId}_${docType}`;
+    setInlineUploading(prev => new Set(prev).add(key));
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("applicationId", app.id);
+      form.append("docType", docType);
+      const uploadRes = await fetch("/api/upload/admission-doc", { method: "POST", body: form });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.error ?? "Upload failed");
+
+      const saveRes = await fetch(`/api/staff/applications/${app.id}/targets/${targetId}/docs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ docType, url: uploadData.url }),
+      });
+      if (!saveRes.ok) throw new Error("Failed to save URL");
+
+      const fieldMap: Record<string, keyof Target> = {
+        pre_admission: "preAdmissionUrl",
+        admission_notice: "admissionNoticeUrl",
+        jw202: "jw202Url",
+      };
+      const field = fieldMap[docType];
+      if (field) {
+        setTargets(prev => prev.map(t => t.id === targetId ? { ...t, [field]: uploadData.url } : t));
+      }
+      showToast("Document uploaded");
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : "Upload failed", false);
+    } finally {
+      setInlineUploading(prev => { const s = new Set(prev); s.delete(key); return s; });
+    }
+  }
+
+  async function handleInlineDocRemove(targetId: string, docType: string) {
+    try {
+      const res = await fetch(`/api/staff/applications/${app.id}/targets/${targetId}/docs`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ docType }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const fieldMap: Record<string, keyof Target> = {
+        pre_admission: "preAdmissionUrl",
+        admission_notice: "admissionNoticeUrl",
+        jw202: "jw202Url",
+      };
+      const field = fieldMap[docType];
+      if (field) {
+        setTargets(prev => prev.map(t => t.id === targetId ? { ...t, [field]: null } : t));
+      }
+      showToast("Document removed");
+    } catch {
+      showToast("Remove failed", false);
     }
   }
 
@@ -331,6 +398,7 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
           remark: remark.trim() || undefined,
           internalNote: internalNote.trim() || undefined,
           visibleToStudent,
+          preAdmissionUrl: uploadedPreAdmissionUrl || undefined,
           admissionNoticeUrl: uploadedAdmissionUrl || undefined,
           jw202Url: uploadedJw202Url || undefined,
         }),
@@ -339,7 +407,14 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
       if (!res.ok) throw new Error(data.error ?? "Failed");
       setTargets(prev => prev.map(t =>
         t.id === statusModal.target!.id
-          ? { ...t, targetStatus: newTargetStatus, updatedAt: new Date().toISOString() }
+          ? {
+              ...t,
+              targetStatus: newTargetStatus,
+              preAdmissionUrl: uploadedPreAdmissionUrl ?? t.preAdmissionUrl,
+              admissionNoticeUrl: uploadedAdmissionUrl ?? t.admissionNoticeUrl,
+              jw202Url: uploadedJw202Url ?? t.jw202Url,
+              updatedAt: new Date().toISOString(),
+            }
           : t
       ));
       setStatusModal({ open: false, target: null });
@@ -412,11 +487,38 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
                 <span className="text-sm font-medium" style={{ color: "#374151" }}>Send email + notification to student</span>
               </label>
 
-              {/* File upload — Admission Notice (pre_admission / interview / admission_notice) */}
-              {["pre_admission", "interview", "admission_notice"].includes(newTargetStatus) && (
+              {/* Pre-Admission document upload */}
+              {newTargetStatus === "pre_admission" && (
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: "#94A3B8" }}>
-                    Admission Letter / Document (optional — attached in email)
+                    Pre-Admission Letter (optional — attached in email)
+                  </label>
+                  {uploadedPreAdmissionUrl ? (
+                    <div className="flex items-center gap-2">
+                      <Check size={12} style={{ color: "#059669" }} />
+                      <a href={uploadedPreAdmissionUrl} target="_blank" rel="noopener noreferrer" className="text-xs underline" style={{ color: "#059669" }}>
+                        File uploaded — view
+                      </a>
+                      <button onClick={() => setUploadedPreAdmissionUrl(null)} className="p-0.5 rounded hover:bg-gray-100">
+                        <X size={11} style={{ color: "#94A3B8" }} />
+                      </button>
+                    </div>
+                  ) : (
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" disabled={uploading}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, "pre_admission"); }}
+                      className="w-full text-xs border rounded-xl px-3 py-2 cursor-pointer" style={{ borderColor: "#E2E8F0" }} />
+                  )}
+                  {uploading && !uploadedPreAdmissionUrl && (
+                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#6B7280" }}><Loader2 size={11} className="animate-spin" /> Uploading…</p>
+                  )}
+                </div>
+              )}
+
+              {/* Interview / Admission Notice document upload */}
+              {["interview", "admission_notice"].includes(newTargetStatus) && (
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: "#94A3B8" }}>
+                    {newTargetStatus === "interview" ? "Interview Letter" : "Admission Notice"} (optional — attached in email)
                   </label>
                   {uploadedAdmissionUrl ? (
                     <div className="flex items-center gap-2">
@@ -429,19 +531,12 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
                       </button>
                     </div>
                   ) : (
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.webp"
-                      disabled={uploading}
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" disabled={uploading}
                       onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, "admission_notice"); }}
-                      className="w-full text-xs border rounded-xl px-3 py-2 cursor-pointer"
-                      style={{ borderColor: "#E2E8F0" }}
-                    />
+                      className="w-full text-xs border rounded-xl px-3 py-2 cursor-pointer" style={{ borderColor: "#E2E8F0" }} />
                   )}
                   {uploading && !uploadedAdmissionUrl && (
-                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#6B7280" }}>
-                      <Loader2 size={11} className="animate-spin" /> Uploading…
-                    </p>
+                    <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "#6B7280" }}><Loader2 size={11} className="animate-spin" /> Uploading…</p>
                   )}
                 </div>
               )}
@@ -643,6 +738,11 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
                 <div className="space-y-3">
                   {targets.map((t, i) => {
                     const tst = TARGET_STATUS_CONFIG[t.targetStatus] ?? TARGET_STATUS_CONFIG["pending"];
+                    const docSlots: Array<{ key: string; docType: string; label: string; url: string | null; color: string }> = [
+                      { key: "pre_admission", docType: "pre_admission", label: "Pre-Admission", url: t.preAdmissionUrl, color: "#D97706" },
+                      { key: "admission_notice", docType: "admission_notice", label: "Admission Notice", url: t.admissionNoticeUrl, color: "#059669" },
+                      { key: "jw202", docType: "jw202", label: "JW202 / DQ", url: t.jw202Url, color: "#1B3A6B" },
+                    ];
                     return (
                       <div key={t.id} className="rounded-xl p-3.5" style={{ backgroundColor: "#F8FAFC", border: "1px solid #F1F5F9" }}>
                         <div className="flex items-start justify-between gap-3">
@@ -668,22 +768,44 @@ export default function AppDetailClient({ app, targets: initialTargets }: { app:
                             </button>
                           </div>
                         </div>
-                        {(t.admissionNoticeUrl || t.jw202Url) && (
-                          <div className="flex gap-2 mt-2.5 pt-2.5" style={{ borderTop: "1px solid #F1F5F9" }}>
-                            {t.admissionNoticeUrl && (
-                              <a href={t.admissionNoticeUrl} target="_blank" rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#059669" }}>
-                                <ExternalLink size={10} />Admission Notice
-                              </a>
-                            )}
-                            {t.jw202Url && (
-                              <a href={t.jw202Url} target="_blank" rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#1B3A6B" }}>
-                                <ExternalLink size={10} />JW202
-                              </a>
-                            )}
-                          </div>
-                        )}
+
+                        {/* Per-target document management */}
+                        <div className="mt-3 pt-3 grid grid-cols-3 gap-2" style={{ borderTop: "1px solid #F1F5F9" }}>
+                          {docSlots.map(slot => {
+                            const uploadKey = `${t.id}_${slot.docType}`;
+                            const isUp = inlineUploading.has(uploadKey);
+                            return (
+                              <div key={slot.key} className="rounded-lg p-2" style={{ backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+                                <p className="text-[9px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "#94A3B8" }}>{slot.label}</p>
+                                {slot.url ? (
+                                  <div className="space-y-1">
+                                    <a href={slot.url} target="_blank" rel="noopener noreferrer"
+                                      className="flex items-center gap-1 text-[10px] font-bold"
+                                      style={{ color: slot.color }}>
+                                      <FileDown size={10} />View / Download
+                                    </a>
+                                    <button
+                                      onClick={() => handleInlineDocRemove(t.id, slot.docType)}
+                                      className="flex items-center gap-1 text-[10px] font-semibold"
+                                      style={{ color: "#EF4444" }}>
+                                      <X size={9} />Remove
+                                    </button>
+                                  </div>
+                                ) : isUp ? (
+                                  <p className="text-[10px] flex items-center gap-1" style={{ color: "#6B7280" }}>
+                                    <Loader2 size={10} className="animate-spin" />Uploading…
+                                  </p>
+                                ) : (
+                                  <label className="flex items-center gap-1 text-[10px] font-semibold cursor-pointer" style={{ color: "#1B3A6B" }}>
+                                    <Archive size={10} />Upload
+                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden"
+                                      onChange={e => { const f = e.target.files?.[0]; if (f) handleInlineDocUpload(t.id, slot.docType, f); }} />
+                                  </label>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}

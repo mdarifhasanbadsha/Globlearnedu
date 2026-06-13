@@ -189,6 +189,7 @@ export const applicationUniversities = pgTable("application_universities", {
   status: applicationStatusEnum("status").notNull().default("submitted"),
   // Granular per-target status for staff review workflow
   targetStatus: varchar("target_status", { length: 50 }).notNull().default("pending"),
+  preAdmissionUrl: varchar("pre_admission_url", { length: 500 }),
   admissionNoticeUrl: varchar("admission_notice_url", { length: 500 }),
   jw202Url: varchar("jw202_url", { length: 500 }),
   interviewDetails: jsonb("interview_details").default({}),
