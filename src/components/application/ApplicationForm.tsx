@@ -168,6 +168,45 @@ export default function ApplicationForm({ initialData, applicationId, paymentCon
             programName:    data.universityMajors[u.id] || programLevel,
             expectedMajor:  data.universityMajors[u.id] || "",
           })),
+          // Step 2 — Personal
+          surname: data.surname,
+          givenNames: data.givenNames,
+          dobYear: data.dobYear, dobMonth: data.dobMonth, dobDay: data.dobDay,
+          gender: data.gender,
+          nationality: data.nationality,
+          passportNumber: data.passportNumber,
+          passportExpiryYear: data.passportExpiryYear,
+          passportExpiryMonth: data.passportExpiryMonth,
+          passportExpiryDay: data.passportExpiryDay,
+          religion: data.religion,
+          // Step 3 — Contact
+          whatsapp: data.whatsapp,
+          email: data.email,
+          address: data.address,
+          addressCity: data.addressCity,
+          addressPostcode: data.addressPostcode,
+          residenceCountry: data.residenceCountry,
+          // Step 4 — Family
+          fatherName: data.fatherName, fatherOccupation: data.fatherOccupation, fatherPhone: data.fatherPhone,
+          motherName: data.motherName, motherOccupation: data.motherOccupation, motherPhone: data.motherPhone,
+          differentSponsor: data.differentSponsor,
+          sponsorName: data.sponsorName, sponsorRelationship: data.sponsorRelationship,
+          sponsorOccupation: data.sponsorOccupation, sponsorPhone: data.sponsorPhone,
+          sponsorIncome: data.sponsorIncome,
+          // Step 5 — Academic
+          academicHistory: data.academicHistory,
+          workHistory: data.workHistory,
+          // Step 6 — Language
+          englishTestType: data.englishTestType, englishScore: data.englishScore, englishTestDate: data.englishTestDate,
+          hasChineseProficiency: data.hasChineseProficiency,
+          hskLevel: data.hskLevel, hskScore: data.hskScore,
+          hskkLevel: data.hskkLevel, hskkScore: data.hskkScore,
+          // Step 7 — China Status
+          inChina: data.inChina,
+          chinaVisaType: data.chinaVisaType, chinaVisaEntry: data.chinaVisaEntry, chinaVisaExpiry: data.chinaVisaExpiry,
+          chinaCurrentUniversity: data.chinaCurrentUniversity, chinaCurrentAddress: data.chinaCurrentAddress,
+          // Step 8 — Documents (URLs from R2 uploads)
+          documents: data.documents,
         };
 
         const res = await fetch("/api/applications", {
@@ -205,7 +244,7 @@ export default function ApplicationForm({ initialData, applicationId, paymentCon
         {step === 5 && <Step5Academic {...stepProps} />}
         {step === 6 && <Step6Language {...stepProps} />}
         {step === 7 && <Step7ChinaStatus {...stepProps} />}
-        {step === 8 && <Step8Documents {...stepProps} />}
+        {step === 8 && <Step8Documents {...stepProps} applicationId={appId || applicationId} />}
         {step === 9 && (
           <Step9Review
             {...stepProps}

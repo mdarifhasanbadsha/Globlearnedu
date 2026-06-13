@@ -12,8 +12,19 @@ import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
 import {
   ArrowLeft, User, BookOpen, Building2, History,
-  Edit3, Mail, AlertCircle, ChevronRight,
+  Edit3, Mail, AlertCircle, ChevronRight, Download, ExternalLink,
 } from "lucide-react";
+
+const DOC_LABELS: Record<string, string> = {
+  passport: "Passport Copy", photo: "Passport Photo",
+  certificate: "Highest Certificate", transcript: "Academic Transcript",
+  police: "Police Clearance", medical: "Medical Examination",
+  bank: "Bank Statement", english_cert: "English Certificate",
+  hsk_cert: "HSK Certificate", rec1: "Recommendation Letter 1",
+  rec2: "Recommendation Letter 2", intro_video: "Self-Intro Video",
+  equivalency: "Equivalency Report", visa_copy: "Visa Copy",
+  enrollment: "Enrollment Letter",
+};
 
 const TARGET_STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
   pending:          { label: "Pending",         bg: "#F1F5F9", color: "#475569" },
@@ -68,11 +79,8 @@ export default async function AdminAppDetailPage({ params }: { params: Promise<{
   });
   if (!app) notFound();
 
-  const [student, targets, history, editLogs, emails, modReqs] = await Promise.all([
+  const [student, history, editLogs, emails, modReqs] = await Promise.all([
     db.query.users.findFirst({ where: eq(users.id, app.studentId) }),
-    db.select().from(applicationUniversities)
-      .where(eq(applicationUniversities.applicationId, id))
-      .orderBy(applicationUniversities.priority),
     db.select().from(applicationStatusHistory)
       .where(eq(applicationStatusHistory.applicationId, id))
       .orderBy(desc(applicationStatusHistory.createdAt)),
@@ -86,6 +94,41 @@ export default async function AdminAppDetailPage({ params }: { params: Promise<{
       .where(eq(modificationRequests.applicationId, id))
       .orderBy(desc(modificationRequests.createdAt)),
   ]);
+
+  // Fetch workflow rows; auto-sync any JSONB unis not yet present
+  let targets = await db.select().from(applicationUniversities)
+    .where(eq(applicationUniversities.applicationId, id))
+    .orderBy(applicationUniversities.priority);
+
+  {
+    const jsonbUnivs = (app.selectedUniversities as Array<{
+      universityId?: string; universityName?: string; programName?: string; expectedMajor?: string;
+    }> | null) ?? [];
+    const tgtNames = new Set(targets.map(t => t.universityName?.toLowerCase()));
+    const tgtIds   = new Set(targets.map(t => t.universityId).filter(Boolean));
+    const toSync   = jsonbUnivs.filter(u => {
+      if (u.universityId && tgtIds.has(u.universityId)) return false;
+      if (u.universityName && tgtNames.has(u.universityName.toLowerCase())) return false;
+      return true;
+    });
+    if (toSync.length > 0) {
+      await db.insert(applicationUniversities).values(
+        toSync.map((u, i) => ({
+          applicationId: id,
+          universityId: u.universityId || null,
+          universityName: u.universityName ?? "Unknown University",
+          programName: u.programName ?? null,
+          expectedMajor: u.expectedMajor ?? u.programName ?? null,
+          targetStatus: "pending" as const,
+          priority: targets.length + i + 1,
+          order: targets.length + i + 1,
+        }))
+      ).catch(() => {});
+      targets = await db.select().from(applicationUniversities)
+        .where(eq(applicationUniversities.applicationId, id))
+        .orderBy(applicationUniversities.priority);
+    }
+  }
 
   const appStatus = APP_STATUS_CONFIG[app.status] ?? { label: app.status, bg: "#F1F5F9", color: "#475569" };
   const studentName = student
@@ -413,6 +456,142 @@ export default async function AdminAppDetailPage({ params }: { params: Promise<{
             )}
           </div>
         </div>
+      </div>
+
+      {/* ── Full student data ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Academic History */}
+        {(() => {
+          const academics = (app.academicHistory as Array<Record<string, unknown>>) ?? [];
+          return academics.length > 0 ? (
+            <div className="bg-white rounded-2xl border p-5" style={{ borderColor: "#E2E8F0" }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#1B3A6B" }}>Academic History</p>
+              <div className="space-y-3">
+                {academics.map((h, i) => (
+                  <div key={i} className="rounded-xl p-3 border" style={{ borderColor: "#F1F5F9", backgroundColor: "#F8FAFC" }}>
+                    <p className="text-sm font-semibold mb-1" style={{ color: "#0A1628" }}>{String(h.institution ?? "—")}</p>
+                    <div className="grid grid-cols-2 gap-1.5 text-xs">
+                      {[["Qualification", h.qualification], ["Field", h.fieldOfStudy], ["Grade", h.grade], ["Country", h.country], ["Years", `${h.startYear ?? "?"}–${h.endYear ?? "?"}`]].filter(([, v]) => v).map(([k, v]) => (
+                        <div key={String(k)}><span style={{ color: "#94A3B8" }}>{String(k)}: </span><span style={{ color: "#475569" }}>{String(v)}</span></div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null;
+        })()}
+
+        {/* Language Proficiency */}
+        {(() => {
+          const eng = (app.englishProficiency as Record<string, unknown>) ?? {};
+          const chn = (app.chineseProficiency as Record<string, unknown>) ?? {};
+          return Object.keys(eng).length > 0 || Object.keys(chn).length > 0 ? (
+            <div className="bg-white rounded-2xl border p-5" style={{ borderColor: "#E2E8F0" }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#1B3A6B" }}>Language Proficiency</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[11px] font-bold mb-2" style={{ color: "#29ABE2" }}>English</p>
+                  {[["Test", eng.testType], ["Score", eng.score], ["Date", eng.testDate]].filter(([, v]) => v).map(([k, v]) => (
+                    <div key={String(k)} className="text-xs mb-1"><span style={{ color: "#94A3B8" }}>{String(k)}: </span><span style={{ color: "#475569" }}>{String(v)}</span></div>
+                  ))}
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold mb-2" style={{ color: "#29ABE2" }}>Chinese (HSK)</p>
+                  {[["Has HSK", chn.hasHSK ? "Yes" : "No"], ["Level", chn.hskLevel], ["Score", chn.hskScore]].filter(([, v]) => v && v !== "No").map(([k, v]) => (
+                    <div key={String(k)} className="text-xs mb-1"><span style={{ color: "#94A3B8" }}>{String(k)}: </span><span style={{ color: "#475569" }}>{String(v)}</span></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null;
+        })()}
+
+        {/* Parent & Sponsor */}
+        {(() => {
+          const parent = (app.parentInfo as Record<string, unknown>) ?? {};
+          const sponsor = (app.sponsorInfo as Record<string, unknown>) ?? {};
+          return Object.keys(parent).length > 0 ? (
+            <div className="bg-white rounded-2xl border p-5" style={{ borderColor: "#E2E8F0" }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#1B3A6B" }}>Parent & Sponsor</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[11px] font-bold mb-2" style={{ color: "#94A3B8" }}>Father</p>
+                  {[["Name", parent.fatherName], ["Occupation", parent.fatherOccupation], ["Phone", parent.fatherPhone]].filter(([, v]) => v).map(([k, v]) => (
+                    <div key={String(k)} className="text-xs mb-1"><span style={{ color: "#94A3B8" }}>{String(k)}: </span><span style={{ color: "#475569" }}>{String(v)}</span></div>
+                  ))}
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold mb-2" style={{ color: "#94A3B8" }}>Mother</p>
+                  {[["Name", parent.motherName], ["Occupation", parent.motherOccupation], ["Phone", parent.motherPhone]].filter(([, v]) => v).map(([k, v]) => (
+                    <div key={String(k)} className="text-xs mb-1"><span style={{ color: "#94A3B8" }}>{String(k)}: </span><span style={{ color: "#475569" }}>{String(v)}</span></div>
+                  ))}
+                </div>
+                {!sponsor.isSameAsParent && Boolean(sponsor.sponsorName) && (
+                  <div className="col-span-2 pt-3 border-t" style={{ borderColor: "#F1F5F9" }}>
+                    <p className="text-[11px] font-bold mb-2" style={{ color: "#94A3B8" }}>Sponsor</p>
+                    {[["Name", sponsor.sponsorName], ["Relationship", sponsor.sponsorRelationship], ["Occupation", sponsor.sponsorOccupation], ["Annual Income", sponsor.annualIncomeRange]].filter(([, v]) => v).map(([k, v]) => (
+                      <div key={String(k)} className="text-xs mb-1"><span style={{ color: "#94A3B8" }}>{String(k)}: </span><span style={{ color: "#475569" }}>{String(v)}</span></div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null;
+        })()}
+
+        {/* Documents */}
+        {(() => {
+          const docs = (app.documents as Record<string, string> | null) ?? {};
+          const docEntries = Object.entries(docs).filter(([, url]) => url);
+          return (
+            <div className="bg-white rounded-2xl border p-5" style={{ borderColor: "#E2E8F0" }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#1B3A6B" }}>
+                Documents ({docEntries.length} uploaded)
+              </p>
+              {docEntries.length > 0 ? (
+                <div className="space-y-2">
+                  {docEntries.map(([key, url]) => {
+                    const isUrl = url.startsWith("http");
+                    return (
+                      <div key={key} className="flex items-center justify-between rounded-xl px-3 py-2.5 border"
+                        style={{ borderColor: "#BBF7D0", backgroundColor: "#F0FDF4" }}>
+                        <span className="text-xs font-semibold" style={{ color: "#065F46" }}>
+                          {DOC_LABELS[key] ?? key.replace(/_/g, " ")}
+                        </span>
+                        {isUrl ? (
+                          <div className="flex items-center gap-2">
+                            <a href={url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#059669" }}>
+                              <ExternalLink size={10} />View
+                            </a>
+                            <a href={url} download
+                              className="flex items-center gap-1 text-[11px] font-bold" style={{ color: "#1B3A6B" }}>
+                              <Download size={10} />Download
+                            </a>
+                          </div>
+                        ) : (
+                          <span className="text-[11px]" style={{ color: "#94A3B8" }}>{url}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {Object.keys(DOC_LABELS).filter(k => !docs[k]).map(key => (
+                    <div key={key} className="flex items-center gap-2 rounded-xl px-3 py-2.5 border"
+                      style={{ borderColor: "#FECACA", backgroundColor: "#FEF2F2" }}>
+                      <span className="text-xs font-semibold" style={{ color: "#991B1B" }}>
+                        {DOC_LABELS[key]} — missing
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm" style={{ color: "#94A3B8" }}>No documents uploaded yet.</p>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

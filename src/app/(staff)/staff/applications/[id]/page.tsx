@@ -82,7 +82,7 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
   const r = rows[0];
 
   // Fetch per-target rows from applicationUniversities
-  const targetRows = await db
+  let targetRows = await db
     .select({
       id: applicationUniversities.id,
       universityName: applicationUniversities.universityName,
@@ -99,6 +99,52 @@ export default async function StaffApplicationDetailPage({ params }: Props) {
     .from(applicationUniversities)
     .where(eq(applicationUniversities.applicationId, id))
     .orderBy(applicationUniversities.priority);
+
+  // Auto-sync: any JSONB university not yet in applicationUniversities → insert as pending
+  {
+    const jsonbUnivs = (r.selectedUniversities as Array<{
+      universityId?: string; universityName?: string; programName?: string; expectedMajor?: string;
+    }> | null) ?? [];
+    const tgtNames = new Set(targetRows.map(t => t.universityName?.toLowerCase()));
+    const tgtIds   = new Set(targetRows.map(t => (t as any).universityId).filter(Boolean));
+    const toSync   = jsonbUnivs.filter(u => {
+      if (u.universityId && tgtIds.has(u.universityId)) return false;
+      if (u.universityName && tgtNames.has(u.universityName.toLowerCase())) return false;
+      return true;
+    });
+    if (toSync.length > 0) {
+      await db.insert(applicationUniversities).values(
+        toSync.map((u, i) => ({
+          applicationId: id,
+          universityId: u.universityId || null,
+          universityName: u.universityName ?? "Unknown University",
+          programName: u.programName ?? null,
+          expectedMajor: u.expectedMajor ?? u.programName ?? null,
+          targetStatus: "pending" as const,
+          priority: targetRows.length + i + 1,
+          order: targetRows.length + i + 1,
+        }))
+      ).catch(() => {});
+      // Re-fetch to include newly synced rows
+      targetRows = await db
+        .select({
+          id: applicationUniversities.id,
+          universityName: applicationUniversities.universityName,
+          programName: applicationUniversities.programName,
+          expectedMajor: applicationUniversities.expectedMajor,
+          intake: applicationUniversities.intake,
+          targetStatus: applicationUniversities.targetStatus,
+          preAdmissionUrl: applicationUniversities.preAdmissionUrl,
+          admissionNoticeUrl: applicationUniversities.admissionNoticeUrl,
+          jw202Url: applicationUniversities.jw202Url,
+          priority: applicationUniversities.priority,
+          updatedAt: applicationUniversities.updatedAt,
+        })
+        .from(applicationUniversities)
+        .where(eq(applicationUniversities.applicationId, id))
+        .orderBy(applicationUniversities.priority);
+    }
+  }
 
   // Resolve partner name
   let partnerName = "Direct";

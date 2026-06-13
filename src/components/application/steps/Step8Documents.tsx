@@ -1,48 +1,68 @@
-import { Upload, CheckCircle2, FileText } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { Upload, CheckCircle2, FileText, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import type { FormData } from "../types";
 
-type Props = { data: FormData; onChange: (u: Partial<FormData>) => void };
+type Props = {
+  data: FormData;
+  onChange: (u: Partial<FormData>) => void;
+  applicationId?: string;
+};
 
 type DocDef = {
   id: string;
   name: string;
   desc: string;
   required: boolean;
-  condition?: "china" | "engtest" | "hsk" | "master_phd" | "language_hide";
+  condition?: "china";
 };
 
 const DOCUMENTS: DocDef[] = [
-  { id: "passport", name: "Passport data page", desc: "Scan of the photo/data page only — not the full passport.", required: true },
-  { id: "photo", name: "Passport-size photo", desc: "Recent, white background, formal dress. JPG only.", required: true },
-  { id: "certificate", name: "Highest academic certificate", desc: "Degree certificate or high school diploma.", required: true },
-  { id: "transcript", name: "Academic transcript", desc: "Official transcript showing all grades.", required: true },
-  { id: "police", name: "Police clearance certificate", desc: "From your home country, issued within 6 months.", required: true },
-  { id: "medical", name: "Physical examination report", desc: "From a recognised medical centre. Globlearn Education can provide the form.", required: true },
-  { id: "bank", name: "Bank statement", desc: "Showing minimum $5,000 USD equivalent. Issued within 3 months.", required: true },
-  { id: "english_cert", name: "English proficiency certificate", desc: "IELTS / TOEFL / Duolingo etc. — required if you selected a test in Step 6.", required: false },
-  { id: "hsk_cert", name: "Chinese proficiency certificate (HSK)", desc: "HSK certificate — if applicable.", required: false },
-  { id: "rec1", name: "Recommendation letter 1", desc: "Required for Master's and PhD. Must be from a Professor or academic supervisor.", required: false },
-  { id: "rec2", name: "Recommendation letter 2", desc: "Required for Master's and PhD. Second academic reference.", required: false },
-  { id: "intro_video", name: "Self-introduction video link", desc: "2–3 minute video introducing yourself. YouTube or Google Drive link. Optional but recommended.", required: false },
-  { id: "equivalency", name: "Equivalency / ECA report", desc: "Required for some countries. Globlearn Education will advise if needed.", required: false },
-  { id: "visa_copy", name: "Current visa / residence permit copy", desc: "Required if you are currently in China (Step 7).", required: false, condition: "china" },
-  { id: "enrollment", name: "Current enrollment letter", desc: "Required if currently a student in China.", required: false, condition: "china" },
+  { id: "passport",      name: "Passport data page",               desc: "Scan of the photo/data page only — not the full passport.",                          required: true },
+  { id: "photo",         name: "Passport-size photo",              desc: "Recent, white background, formal dress. JPG only.",                                   required: true },
+  { id: "certificate",   name: "Highest academic certificate",     desc: "Degree certificate or high school diploma.",                                           required: true },
+  { id: "transcript",    name: "Academic transcript",              desc: "Official transcript showing all grades.",                                              required: true },
+  { id: "police",        name: "Police clearance certificate",     desc: "From your home country, issued within 6 months.",                                      required: true },
+  { id: "medical",       name: "Physical examination report",      desc: "From a recognised medical centre. Globlearn Education can provide the form.",          required: true },
+  { id: "bank",          name: "Bank statement",                   desc: "Showing minimum $5,000 USD equivalent. Issued within 3 months.",                       required: true },
+  { id: "english_cert",  name: "English proficiency certificate",  desc: "IELTS / TOEFL / Duolingo etc. — required if you selected a test in Step 6.",          required: false },
+  { id: "hsk_cert",      name: "Chinese proficiency certificate",  desc: "HSK certificate — if applicable.",                                                    required: false },
+  { id: "rec1",          name: "Recommendation letter 1",          desc: "Required for Master's and PhD. Must be from a Professor or academic supervisor.",       required: false },
+  { id: "rec2",          name: "Recommendation letter 2",          desc: "Required for Master's and PhD. Second academic reference.",                             required: false },
+  { id: "intro_video",   name: "Self-introduction video link",     desc: "2–3 minute video. YouTube or Google Drive link. Optional but recommended.",             required: false },
+  { id: "equivalency",   name: "Equivalency / ECA report",         desc: "Required for some countries. Globlearn Education will advise if needed.",               required: false },
+  { id: "visa_copy",     name: "Current visa / residence permit",  desc: "Required if you are currently in China (Step 7).",                                     required: false, condition: "china" },
+  { id: "enrollment",    name: "Current enrollment letter",        desc: "Required if currently a student in China.",                                             required: false, condition: "china" },
 ];
 
-export default function Step8Documents({ data, onChange }: Props) {
-  function handleFile(docId: string, file: File | null) {
+export default function Step8Documents({ data, onChange, applicationId }: Props) {
+  const [uploadState, setUploadState] = useState<Record<string, "idle" | "uploading" | "error">>({});
+
+  async function handleFile(docId: string, file: File | null) {
     if (!file) return;
-    onChange({ documents: { ...data.documents, [docId]: file.name } });
+    setUploadState(s => ({ ...s, [docId]: "uploading" }));
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      if (applicationId) form.append("applicationId", applicationId);
+      form.append("docType", docId);
+
+      const res = await fetch("/api/upload/student-doc", { method: "POST", body: form });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error ?? "Upload failed");
+
+      onChange({ documents: { ...data.documents, [docId]: result.url } });
+      setUploadState(s => ({ ...s, [docId]: "idle" }));
+    } catch {
+      setUploadState(s => ({ ...s, [docId]: "error" }));
+    }
   }
 
-  const visibleDocs = DOCUMENTS.filter((doc) => {
-    if (doc.condition === "china" && !data.inChina) return false;
-    return true;
-  });
-
-  const uploaded = Object.keys(data.documents).length;
-  const requiredDocs = visibleDocs.filter((d) => d.required);
-  const uploadedRequired = requiredDocs.filter((d) => data.documents[d.id]).length;
+  const visibleDocs = DOCUMENTS.filter(doc => !(doc.condition === "china" && !data.inChina));
+  const requiredDocs = visibleDocs.filter(d => d.required);
+  const uploadedCount = Object.values(data.documents).filter(v => v?.startsWith("http")).length;
+  const uploadedRequired = requiredDocs.filter(d => data.documents[d.id]?.startsWith("http")).length;
 
   return (
     <div>
@@ -57,11 +77,11 @@ export default function Step8Documents({ data, onChange }: Props) {
           className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0"
           style={{ backgroundColor: uploadedRequired === requiredDocs.length && requiredDocs.length > 0 ? "#16A34A" : "#1B3A6B" }}
         >
-          {uploaded}
+          {uploadedCount}
         </div>
         <div>
           <p className="text-sm font-bold" style={{ color: "#1B3A6B" }}>
-            {uploaded} document{uploaded !== 1 ? "s" : ""} uploaded
+            {uploadedCount} document{uploadedCount !== 1 ? "s" : ""} uploaded
           </p>
           <p className="text-xs" style={{ color: "#94A3B8" }}>
             {uploadedRequired} of {requiredDocs.length} required documents uploaded
@@ -72,20 +92,27 @@ export default function Step8Documents({ data, onChange }: Props) {
       {/* Document list */}
       <div className="space-y-3">
         {visibleDocs.map((doc) => {
-          const uploaded = !!data.documents[doc.id];
+          const url = data.documents[doc.id];
+          const isUploaded = !!url?.startsWith("http");
+          const state = uploadState[doc.id] ?? "idle";
+
           return (
             <div
               key={doc.id}
               className="flex items-start gap-4 p-4 rounded-xl border transition-colors"
               style={{
-                borderColor: uploaded ? "#BBF7D0" : "#E2E8F0",
-                backgroundColor: uploaded ? "#F0FDF4" : "white",
+                borderColor: isUploaded ? "#BBF7D0" : state === "error" ? "#FECACA" : "#E2E8F0",
+                backgroundColor: isUploaded ? "#F0FDF4" : state === "error" ? "#FEF2F2" : "white",
               }}
             >
               {/* Icon */}
               <div className="flex-shrink-0 mt-0.5">
-                {uploaded ? (
+                {state === "uploading" ? (
+                  <Loader2 size={20} className="animate-spin" style={{ color: "#1B3A6B" }} />
+                ) : isUploaded ? (
                   <CheckCircle2 size={20} style={{ color: "#16A34A" }} />
+                ) : state === "error" ? (
+                  <AlertCircle size={20} style={{ color: "#C8102E" }} />
                 ) : (
                   <FileText size={20} style={{ color: "#94A3B8" }} />
                 )}
@@ -113,10 +140,25 @@ export default function Step8Documents({ data, onChange }: Props) {
                   )}
                 </div>
                 <p className="text-xs" style={{ color: "#64748B" }}>{doc.desc}</p>
-                {uploaded && (
-                  <p className="text-xs mt-1 font-medium" style={{ color: "#16A34A" }}>
-                    ✓ {data.documents[doc.id]}
+                {isUploaded && (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs mt-1 font-medium"
+                    style={{ color: "#16A34A" }}
+                  >
+                    <ExternalLink size={11} />
+                    View uploaded file
+                  </a>
+                )}
+                {state === "error" && (
+                  <p className="text-xs mt-1 font-medium" style={{ color: "#C8102E" }}>
+                    Upload failed — please try again
                   </p>
+                )}
+                {state === "uploading" && (
+                  <p className="text-xs mt-1" style={{ color: "#64748B" }}>Uploading…</p>
                 )}
               </div>
 
@@ -126,18 +168,21 @@ export default function Step8Documents({ data, onChange }: Props) {
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   className="sr-only"
+                  disabled={state === "uploading"}
                   onChange={(e) => handleFile(doc.id, e.target.files?.[0] ?? null)}
                 />
                 <span
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors"
                   style={{
-                    borderColor: uploaded ? "#BBF7D0" : "#E2E8F0",
-                    backgroundColor: uploaded ? "#DCFCE7" : "white",
-                    color: uploaded ? "#166534" : "#475569",
+                    borderColor: isUploaded ? "#BBF7D0" : "#E2E8F0",
+                    backgroundColor: isUploaded ? "#DCFCE7" : "white",
+                    color: isUploaded ? "#166534" : "#475569",
+                    opacity: state === "uploading" ? 0.5 : 1,
+                    cursor: state === "uploading" ? "not-allowed" : "pointer",
                   }}
                 >
                   <Upload size={12} />
-                  {uploaded ? "Replace" : "Upload"}
+                  {isUploaded ? "Replace" : "Upload"}
                 </span>
               </label>
             </div>
@@ -148,7 +193,7 @@ export default function Step8Documents({ data, onChange }: Props) {
       {/* Info callout */}
       <div className="rounded-xl p-4 mt-6 border" style={{ backgroundColor: "#FFFBEB", borderColor: "#FFD70040" }}>
         <p className="text-xs font-semibold" style={{ color: "#92610A" }}>
-          💡 Can't upload a document right now? You can save your progress and return later. Your application will not be submitted until you click &lsquo;Submit&rsquo; in Step 9.
+          💡 Can&apos;t upload a document right now? You can save your progress and return later. Your application will not be submitted until you click &lsquo;Submit&rsquo; in Step 9.
         </p>
       </div>
     </div>
