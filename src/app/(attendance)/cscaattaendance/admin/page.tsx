@@ -1,5 +1,5 @@
 "use client";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 export default function AdminAttendance(){
  const [password,setPassword]=useState(""),[date,setDate]=useState(new Date().toISOString().slice(0,10)),[busy,setBusy]=useState(false),[error,setError]=useState(""),[students,setStudents]=useState<any[]>([]),[loadingStudents,setLoadingStudents]=useState(false),[live,setLive]=useState<any>(null),[liveBusy,setLiveBusy]=useState(false);
  async function loadStudents(){
@@ -22,6 +22,7 @@ export default function AdminAttendance(){
   try{const r=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"deleteStudent",studentId:student.id,password})});const x=await r.json();if(!r.ok||!x.ok)throw new Error(x.message||"Could not delete student.");setStudents(v=>v.filter(s=>s.id!==student.id))}
   catch(e:any){setError(e.message||"Could not delete student.")}finally{setBusy(false)}
  }
+ useEffect(()=>{if(!live||!password)return;const t=setInterval(()=>{loadLive()},5000);return()=>clearInterval(t)},[live?.date,password]);
  async function loadLive(){
   if(!password)return;
   setLiveBusy(true);
