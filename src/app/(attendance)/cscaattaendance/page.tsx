@@ -9,7 +9,7 @@ function localDateKey(d=new Date()){return new Intl.DateTimeFormat("en-CA",{time
 function addDaysToKey(key:string,days:number){const [y,m,d]=key.split("-").map(Number);const x=new Date(Date.UTC(y,m-1,d+days));return x.toISOString().slice(0,10)}
 function fmtTime(iso:string){return new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Dhaka",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(iso))}
 function classOpenNow(){const parts=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Dhaka",hour:"2-digit",hour12:false}).formatToParts(new Date());const h=Number(parts.find(p=>p.type==="hour")?.value||0);return h>=22&&h<23}
-function fmtDate(d:Date){return new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Dhaka",day:"2-digit",month:"short"}).format(d)}
+function fmtDateKey(key:string){const [y,m,d]=key.split("-").map(Number);return new Intl.DateTimeFormat("en-GB",{day:"2-digit",month:"short",timeZone:"UTC"}).format(new Date(Date.UTC(y,m-1,d,12)))}
 
 export default function AttendancePage(){
  const [students,setStudents]=useState<Student[]>([]),[records,setRecords]=useState<Record[]>([]);
@@ -47,7 +47,7 @@ export default function AttendancePage(){
     <div className="overflow-x-auto"><table className="min-w-max border-collapse text-sm">
      <thead className="sticky top-0 z-10 bg-slate-100"><tr>
       <th className="sticky left-0 z-20 bg-slate-100 px-3 py-3 text-left">#</th><th className="sticky left-10 z-20 bg-slate-100 px-3 py-3 text-left min-w-48">Student</th><th className="sticky left-[13rem] z-20 bg-slate-100 px-3 py-3 text-left">Phone</th>
-      {dates.map((d,i)=><th key={d} className="px-3 py-3 text-center min-w-24">{i===0?"Today":d.slice(8,10)+" "+new Date(d+"T12:00:00Z").toLocaleString("en-GB",{month:"short",timeZone:"UTC"})}</th>)}
+      {dates.map(d=>{const today=d===localDateKey();return <th key={d} className="px-3 py-3 text-center min-w-24">{today?"Today":fmtDateKey(d)}</th>})}
      </tr></thead>
      <tbody>
       {loading?<tr><td colSpan={93} className="p-8 text-center">Loading...</td></tr>:filtered.map(s=><tr key={s.id} className="border-t hover:bg-slate-50">
