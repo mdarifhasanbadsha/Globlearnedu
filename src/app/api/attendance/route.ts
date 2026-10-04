@@ -3,7 +3,6 @@ import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cscAttendanceRecords, cscAttendanceStudents } from "@/lib/db/schema";
 
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 const ADMIN_PASSWORD = process.env.ATTENDANCE_ADMIN_PASSWORD || "112233";
