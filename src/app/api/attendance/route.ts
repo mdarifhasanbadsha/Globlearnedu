@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHash } from "crypto";
 import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cscAttendanceRecords, cscAttendanceStudents } from "@/lib/db/schema";
@@ -13,7 +12,6 @@ async function ensureAttendanceSchema() {
   if (!attendanceSchemaReady) {
     attendanceSchemaReady = (async () => {
       await db.execute(sql`CREATE TABLE IF NOT EXISTS csc_attendance_students (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name varchar(120) NOT NULL, phone varchar(30) NOT NULL UNIQUE, phone_last4 varchar(4) NOT NULL, is_active boolean NOT NULL DEFAULT true, created_at timestamp NOT NULL DEFAULT now(), updated_at timestamp NOT NULL DEFAULT now())`);
-      await db.execute(sql`ALTER TABLE csc_attendance_students ADD COLUMN IF NOT EXISTS attendance_pin_hash varchar(64)`);
       await db.execute(sql`CREATE INDEX IF NOT EXISTS csc_attendance_student_name_idx ON csc_attendance_students(name)`);
       await db.execute(sql`CREATE TABLE IF NOT EXISTS csc_attendance_records (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), student_id uuid NOT NULL REFERENCES csc_attendance_students(id) ON DELETE CASCADE, attendance_at timestamp NOT NULL DEFAULT now(), attendance_day varchar(10) NOT NULL, created_at timestamp NOT NULL DEFAULT now(), CONSTRAINT csc_attendance_student_day_uq UNIQUE(student_id, attendance_day))`);
       await db.execute(sql`CREATE INDEX IF NOT EXISTS csc_attendance_at_idx ON csc_attendance_records(attendance_at)`);
@@ -27,7 +25,6 @@ function normalizePhone(value: string) {
   return value.replace(/[^0-9+]/g, "").replace(/^00/, "+");
 }
 function digits(value: string) { return value.replace(/\D/g, ""); }
-function pinHash(pin: string) { return createHash("sha256").update(pin).digest("hex"); }
 function dayKey(d = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
 }
@@ -157,35 +154,26 @@ export async function POST(req: NextRequest) {
       const name = String(body?.name || "").trim().replace(/\s+/g, " ");
       const phone = normalizePhone(String(body?.phone || ""));
       const phoneDigits = digits(phone);
-      const pin = digits(String(body?.pin || ""));
       if (name.length < 2 || name.length > 120) return error("Please enter a valid name.");
       if (phoneDigits.length < 7 || phoneDigits.length > 20) return error("Please enter a valid phone number.");
-      if (pin.length !== 6) return error("Please create a 6-digit private attendance PIN.");
       const existing = await db.select().from(cscAttendanceStudents).where(eq(cscAttendanceStudents.phone, phone)).limit(1);
-      if (existing[0]) {
-        if (existing[0].attendancePinHash) {
-          return NextResponse.json({ok:true,student:{id:existing[0].id,name:existing[0].name},existing:true,secured:true});
-        }
-        const updated = await db.update(cscAttendanceStudents)
-          .set({attendancePinHash:pinHash(pin), updatedAt:new Date()})
-          .where(eq(cscAttendanceStudents.id, existing[0].id)).returning();
-        return NextResponse.json({ok:true,student:{id:updated[0].id,name:updated[0].name},existing:true,secured:true,pinActivated:true});
-      }
+      if (existing[0]) return NextResponse.json({ok:true,student:{id:existing[0].id,name:existing[0].name},existing:true});
       const inserted = await db.insert(cscAttendanceStudents).values({
-        name, phone, phoneLast4:phoneDigits.slice(-4), attendancePinHash:pinHash(pin)
+        name, phone, phoneLast4:phoneDigits.slice(-4)
       }).returning();
       const s=inserted[0];
-      return NextResponse.json({ok:true,student:{id:s.id,name:s.name},existing:false,secured:true});
+      return NextResponse.json({ok:true,student:{id:s.id,name:s.name},existing:false});
     }
 
     if (action === "attend") {
       const studentId = String(body?.studentId || "");
-      const pin = digits(String(body?.pin || ""));
-      if (!studentId || pin.length !== 6) return error("Enter your 6-digit private attendance PIN.");
+      const last4 = digits(String(body?.last4 || ""));
+      if (!studentId || last4.length !== 4) return error("Enter the last 4 digits of your registered phone number.");
       const student = await db.select().from(cscAttendanceStudents)
         .where(and(eq(cscAttendanceStudents.id,studentId),eq(cscAttendanceStudents.isActive,true))).limit(1);
       const s=student[0];
-      if(!s || !s.attendancePinHash || s.attendancePinHash !== pinHash(pin)) return error("Incorrect attendance PIN.");
+      if(!s) return error("Student not found.",404);
+      if(s.phoneLast4 !== last4) return error("Incorrect last 4 digits. Please try again.",401);
       const now=new Date();
       const last=await db.select().from(cscAttendanceRecords)
         .where(eq(cscAttendanceRecords.studentId,s.id))
