@@ -47,6 +47,7 @@ function error(message: string, status = 400) {
 export async function GET(req: NextRequest) {
   const action = req.nextUrl.searchParams.get("action") || "students";
   try {
+    await ensureAttendanceSchema();
     if (action === "students") {
       const students = await db.select().from(cscAttendanceStudents)
         .where(eq(cscAttendanceStudents.isActive, true))
@@ -145,6 +146,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureAttendanceSchema();
     const body = await req.json();
     const action = String(body?.action || "");
     if (action === "register") {
