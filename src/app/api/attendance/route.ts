@@ -6,7 +6,8 @@ import { cscAttendanceRecords, cscAttendanceStudents } from "@/lib/db/schema";
 export const dynamic = "force-dynamic";
 
 const ADMIN_PASSWORD = process.env.ATTENDANCE_ADMIN_PASSWORD || "112233";
-const TZ = process.env.ATTENDANCE_TIMEZONE || "Asia/Dhaka";\nlet attendanceSchemaReady: Promise<void> | null = null;
+const TZ = process.env.ATTENDANCE_TIMEZONE || "Asia/Dhaka";
+let attendanceSchemaReady: Promise<void> | null = null;
 async function ensureAttendanceSchema() {
   if (!attendanceSchemaReady) {
     attendanceSchemaReady = (async () => {
