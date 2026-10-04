@@ -35,6 +35,7 @@ function formatDateTime(d: Date) {
     hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
   }).format(d);
 }
+function isClassAttendanceWindow(d = new Date()) { const hour = Number(new Intl.DateTimeFormat("en-US",{timeZone:TZ,hour:"2-digit",hour12:false}).format(d)); return hour >= 22 && hour < 23; }
 function csvCell(value: unknown) {
   const s = String(value ?? "");
   return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
@@ -73,6 +74,18 @@ export async function GET(req: NextRequest) {
         })),
         timezone: TZ,
       });
+    }
+
+    if (action === "live") {
+      const password = req.nextUrl.searchParams.get("password") || "";
+      if (password !== ADMIN_PASSWORD) return error("Invalid admin password.", 401);
+      const today = dayKey();
+      const students = await db.select().from(cscAttendanceStudents).orderBy(asc(cscAttendanceStudents.name));
+      const records = await db.select({studentId:cscAttendanceRecords.studentId,attendanceAt:cscAttendanceRecords.attendanceAt})
+        .from(cscAttendanceRecords).where(eq(cscAttendanceRecords.attendanceDay,today)).orderBy(asc(cscAttendanceRecords.attendanceAt));
+      return NextResponse.json({ok:true,date:today,classOpen:isClassAttendanceWindow(),timezone:TZ,
+        students:students.map((s,i)=>({serial:i+1,id:s.id,name:s.name,phoneMasked:maskPhone(s.phone),active:s.isActive})),
+        records:records.map(r=>({studentId:r.studentId,attendanceAt:r.attendanceAt.toISOString()}))});
     }
 
     if (action === "report") {
@@ -189,31 +202,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ok:true,message:"Student and all attendance history permanently deleted."});
     }
 
-    if (action === "attend") {
+    if (action === "attend" || action === "manualAttend") {
       const studentId = String(body?.studentId || "");
       const last4 = digits(String(body?.last4 || ""));
-      if (!studentId || last4.length !== 4) return error("Enter the last 4 digits of your registered phone number.");
+      const isManual = action === "manualAttend";
+      if (isManual) {
+        if (String(body?.password || "") !== ADMIN_PASSWORD) return error("Invalid admin password.",401);
+      } else {
+        if (!isClassAttendanceWindow()) return error("Please wait for the class to start at 10 PM Bangladesh time.",403);
+        if (last4.length !== 4) return error("Enter the last 4 digits of your registered phone number.");
+      }
+      if (!studentId) return error("Student ID is required.");
       const student = await db.select().from(cscAttendanceStudents)
         .where(and(eq(cscAttendanceStudents.id,studentId),eq(cscAttendanceStudents.isActive,true))).limit(1);
       const s=student[0];
       if(!s) return error("Student not found.",404);
-      if(s.phoneLast4 !== last4) return error("Incorrect last 4 digits. Please try again.",401);
-      const now=new Date();
-      const last=await db.select().from(cscAttendanceRecords)
-        .where(eq(cscAttendanceRecords.studentId,s.id))
+      if (!isManual && s.phoneLast4 !== last4) return error("Incorrect last 4 digits. Please try again.",401);
+      const now=new Date(), day=dayKey(now);
+      const existingToday=await db.select().from(cscAttendanceRecords)
+        .where(and(eq(cscAttendanceRecords.studentId,s.id),eq(cscAttendanceRecords.attendanceDay,day))).limit(1);
+      if(existingToday[0]) return NextResponse.json({ok:false,message:"Attendance already recorded for today.",attendanceAt:existingToday[0].attendanceAt.toISOString()},{status:409});
+      const last=await db.select().from(cscAttendanceRecords).where(eq(cscAttendanceRecords.studentId,s.id))
         .orderBy(desc(cscAttendanceRecords.attendanceAt)).limit(1);
-      if(last[0] && now.getTime()-last[0].attendanceAt.getTime() < 24*60*60*1000) {
-        const next=new Date(last[0].attendanceAt.getTime()+24*60*60*1000);
-        return NextResponse.json({ok:false,message:"Attendance already recorded within the last 24 hours.",nextAvailableAt:next.toISOString()},{status:409});
-      }
-      const day=dayKey(now);
+      if(last[0] && now.getTime()-last[0].attendanceAt.getTime() < 24*60*60*1000)
+        return NextResponse.json({ok:false,message:"Attendance already recorded within the last 24 hours."},{status:409});
       try {
         const inserted=await db.insert(cscAttendanceRecords).values({studentId:s.id,attendanceAt:now,attendanceDay:day}).returning();
-        return NextResponse.json({ok:true,message:"Attendance recorded successfully.",attendanceAt:inserted[0].attendanceAt.toISOString(),attendanceDay:day});
-      } catch (e:any) {
-        if (String(e?.message||"").toLowerCase().includes("csc_attendance_student_day_uq")) {
+        return NextResponse.json({ok:true,message:isManual?"Attendance marked manually.":"Attendance recorded successfully.",attendanceAt:inserted[0].attendanceAt.toISOString(),attendanceDay:day});
+      } catch(e:any) {
+        if(String(e?.message||"").toLowerCase().includes("csc_attendance_student_day_uq"))
           return NextResponse.json({ok:false,message:"Attendance has already been recorded for today."},{status:409});
-        }
         throw e;
       }
     }
