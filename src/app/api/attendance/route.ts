@@ -25,6 +25,7 @@ function normalizePhone(value: string) {
   return value.replace(/[^0-9+]/g, "").replace(/^00/, "+");
 }
 function digits(value: string) { return value.replace(/\D/g, ""); }
+function maskPhone(value: string) { const d=digits(value); return d.length <= 4 ? "••••" : d.slice(0,-4) + "••••"; }
 function dayKey(d = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
 }
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         students: students.map((s, i) => ({
-          serial: i + 1, id: s.id, name: s.name, 
+          serial: i + 1, id: s.id, name: s.name, phoneMasked: maskPhone(s.phone), 
         })),
         records: records.map(r => ({
           studentId: r.studentId,
