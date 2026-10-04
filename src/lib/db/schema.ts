@@ -1,6 +1,6 @@
 import {
   pgTable, uuid, text, varchar, integer, boolean,
-  timestamp, jsonb, numeric, pgEnum, index, primaryKey,
+  timestamp, jsonb, numeric, pgEnum, index, primaryKey, uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // ── ENUMS ────────────────────────────────────────────────
@@ -443,3 +443,30 @@ export const emailLogs = pgTable("email_logs", {
   errorMessage: text("error_message"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+
+// ── CSC CLASS ATTENDANCE ─────────────────────────────────
+// Standalone attendance tables so this feature does not modify admission/student records.
+export const cscAttendanceStudents = pgTable("csc_attendance_students", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 120 }).notNull(),
+  phone: varchar("phone", { length: 30 }).notNull().unique(),
+  phoneLast4: varchar("phone_last4", { length: 4 }).notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (t) => [
+  index("csc_attendance_student_name_idx").on(t.name),
+]);
+
+export const cscAttendanceRecords = pgTable("csc_attendance_records", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  studentId: uuid("student_id").notNull().references(() => cscAttendanceStudents.id, { onDelete: "cascade" }),
+  attendanceAt: timestamp("attendance_at").defaultNow().notNull(),
+  attendanceDay: varchar("attendance_day", { length: 10 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("csc_attendance_student_day_uq").on(t.studentId, t.attendanceDay),
+  index("csc_attendance_at_idx").on(t.attendanceAt),
+  index("csc_attendance_student_idx").on(t.studentId),
+]);
