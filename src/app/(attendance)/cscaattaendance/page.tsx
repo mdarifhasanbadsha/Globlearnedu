@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type Student={serial:number;id:string;name:string};
+type Student={serial:number;id:string;name:string;phoneMasked:string};
 type Record={studentId:string;attendanceAt:string;attendanceDay:string};
 
 function localDateKey(d=new Date()){return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Dhaka"}).format(d)}
@@ -50,7 +50,7 @@ export default function AttendancePage(){
      </tr></thead>
      <tbody>
       {loading?<tr><td colSpan={93} className="p-8 text-center">Loading...</td></tr>:filtered.map(s=><tr key={s.id} className="border-t hover:bg-slate-50">
-       <td className="sticky left-0 bg-white px-3 py-3">{s.serial}</td><td className="sticky left-10 bg-white px-3 py-3 font-medium">{s.name}</td><td className="sticky left-[13rem] bg-white px-3 py-3 text-slate-400">Private</td>
+       <td className="sticky left-0 bg-white px-3 py-3">{s.serial}</td><td className="sticky left-10 bg-white px-3 py-3 font-medium">{s.name}</td><td className="sticky left-[13rem] bg-white px-3 py-3 font-mono tracking-wide">{s.phoneMasked}</td>
        {dates.map(d=>{const at=recMap.get(s.id+"|"+d);const today=d===localDateKey();return <td key={d} className="px-2 py-2 text-center">{at?<span className="inline-flex flex-col rounded-lg bg-emerald-50 px-2 py-1 text-emerald-700"><b>✓</b><span className="text-[11px]">{fmtTime(at)}</span></span>:today?<button onClick={()=>{setModal(s);setLast4("")}} className="rounded-lg bg-blue-600 px-3 py-2 font-semibold text-white hover:bg-blue-700">Attend</button>:<span className="text-slate-300">—</span>}</td>})}
       </tr>)}
      {!loading&&!filtered.length&&<tr><td colSpan={93} className="p-8 text-center text-slate-500">No student found.</td></tr>}
