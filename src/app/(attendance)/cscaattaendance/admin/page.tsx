@@ -1,7 +1,8 @@
 "use client";
 import {useState} from "react";
+function dhkDate(){return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Dhaka"}).format(new Date())}
 export default function AdminAttendance(){
- const [password,setPassword]=useState(""),[date,setDate]=useState(new Date().toISOString().slice(0,10)),[busy,setBusy]=useState(false),[error,setError]=useState(""),[students,setStudents]=useState<any[]>([]),[loadingStudents,setLoadingStudents]=useState(false),[live,setLive]=useState<any>(null),[liveBusy,setLiveBusy]=useState(false);
+ const [password,setPassword]=useState(""),[date,setDate]=useState(dhkDate()),[busy,setBusy]=useState(false),[error,setError]=useState(""),[students,setStudents]=useState<any[]>([]),[loadingStudents,setLoadingStudents]=useState(false),[live,setLive]=useState<any>(null),[liveBusy,setLiveBusy]=useState(false);
  async function loadStudents(){
   setLoadingStudents(true);setError("");
   try{const r=await fetch("/api/attendance?action=students");const x=await r.json();if(!r.ok||!x.ok)throw new Error(x.message||"Could not load students.");setStudents(x.students||[])}
