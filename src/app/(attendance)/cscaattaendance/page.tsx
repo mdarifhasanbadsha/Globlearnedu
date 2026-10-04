@@ -13,8 +13,8 @@ function fmtDate(d:Date){return new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/
 export default function AttendancePage(){
  const [students,setStudents]=useState<Student[]>([]),[records,setRecords]=useState<Record[]>([]);
  const [loading,setLoading]=useState(true),[search,setSearch]=useState(""),[message,setMessage]=useState("");
- const [modal,setModal]=useState<Student|null>(null),[pin,setPin]=useState(""),[saving,setSaving]=useState(false);
- const [newName,setNewName]=useState(""),[newPhone,setNewPhone]=useState(""),[newPin,setNewPin]=useState(""),[adding,setAdding]=useState(false);
+ const [modal,setModal]=useState<Student|null>(null),[last4,setLast4]=useState(""),[saving,setSaving]=useState(false);
+ const [newName,setNewName]=useState(""),[newPhone,setNewPhone]=useState(""),[adding,setAdding]=useState(false);
 
  async function load(){
   setLoading(true); try{const r=await fetch("/api/attendance?action=students",{cache:"no-store"});const x=await r.json();if(x.ok){setStudents(x.students);setRecords(x.records)}else setMessage(x.message)}catch{setMessage("Could not load attendance.")}finally{setLoading(false)}
@@ -26,11 +26,11 @@ export default function AttendancePage(){
 
  async function attend(){
   if(!modal)return; setSaving(true);setMessage("");
-  try{const r=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"attend",studentId:modal.id,pin})});const x=await r.json();setMessage(x.message||"Done");if(x.ok){setModal(null);setPin("");await load()}}catch{setMessage("Could not save attendance.")}finally{setSaving(false)}
+  try{const r=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"attend",studentId:modal.id,last4})});const x=await r.json();setMessage(x.message||"Done");if(x.ok){setModal(null);setLast4("");await load()}}catch{setMessage("Could not save attendance.")}finally{setSaving(false)}
  }
  async function add(){
   setAdding(true);setMessage("");
-  try{const r=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"register",name:newName,phone:newPhone,pin:newPin})});const x=await r.json();if(x.ok){setNewName("");setNewPhone("");setNewPin("");setMessage(x.existing ? (x.pinActivated ? "Security PIN activated. You can now attend." : "This phone is already registered and secured.") : "Student added successfully. Keep your 6-digit PIN private.");await load()}else setMessage(x.message)}catch{setMessage("Could not add student.")}finally{setAdding(false)}
+  try{const r=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"register",name:newName,phone:newPhone})});const x=await r.json();if(x.ok){setNewName("");setNewPhone("");setMessage(x.existing ? "This phone number is already registered." : "Student added successfully.");await load()}else setMessage(x.message)}catch{setMessage("Could not add student.")}finally{setAdding(false)}
  }
  return <main className="min-h-screen bg-slate-50 text-slate-900">
   <div className="mx-auto max-w-[1600px] p-3 sm:p-6">
@@ -51,7 +51,7 @@ export default function AttendancePage(){
      <tbody>
       {loading?<tr><td colSpan={93} className="p-8 text-center">Loading...</td></tr>:filtered.map(s=><tr key={s.id} className="border-t hover:bg-slate-50">
        <td className="sticky left-0 bg-white px-3 py-3">{s.serial}</td><td className="sticky left-10 bg-white px-3 py-3 font-medium">{s.name}</td><td className="sticky left-[13rem] bg-white px-3 py-3 text-slate-400">Private</td>
-       {dates.map(d=>{const at=recMap.get(s.id+"|"+d);const today=d===localDateKey();return <td key={d} className="px-2 py-2 text-center">{at?<span className="inline-flex flex-col rounded-lg bg-emerald-50 px-2 py-1 text-emerald-700"><b>✓</b><span className="text-[11px]">{fmtTime(at)}</span></span>:today?<button onClick={()=>{setModal(s);setPin("")}} className="rounded-lg bg-blue-600 px-3 py-2 font-semibold text-white hover:bg-blue-700">Attend</button>:<span className="text-slate-300">—</span>}</td>})}
+       {dates.map(d=>{const at=recMap.get(s.id+"|"+d);const today=d===localDateKey();return <td key={d} className="px-2 py-2 text-center">{at?<span className="inline-flex flex-col rounded-lg bg-emerald-50 px-2 py-1 text-emerald-700"><b>✓</b><span className="text-[11px]">{fmtTime(at)}</span></span>:today?<button onClick={()=>{setModal(s);setLast4("")}} className="rounded-lg bg-blue-600 px-3 py-2 font-semibold text-white hover:bg-blue-700">Attend</button>:<span className="text-slate-300">—</span>}</td>})}
       </tr>)}
      {!loading&&!filtered.length&&<tr><td colSpan={93} className="p-8 text-center text-slate-500">No student found.</td></tr>}
      </tbody>
@@ -59,15 +59,15 @@ export default function AttendancePage(){
    </div>
 
    <div className="mt-5 rounded-2xl border bg-white p-4 shadow-sm">
-    <h2 className="font-bold">Student not on the list?</h2><p className="mb-3 text-sm text-slate-500">Add your name, phone number and a private 6-digit attendance PIN. Keep your PIN secret.</p>
-    <div className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto]"><input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Full name" className="rounded-xl border px-4 py-3"/><input value={newPhone} onChange={e=>setNewPhone(e.target.value)} placeholder="Phone number" inputMode="tel" className="rounded-xl border px-4 py-3"/><input value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder="6-digit private PIN" inputMode="numeric" maxLength={6} className="rounded-xl border px-4 py-3"/><button disabled={adding} onClick={add} className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50">{adding?"Adding...":"Add student"}</button></div>
+    <h2 className="font-bold">Student not on the list?</h2><p className="mb-3 text-sm text-slate-500">Add your name and phone number once. Your phone number will be used to verify attendance.</p>
+    <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto]"><input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Full name" className="rounded-xl border px-4 py-3"/><input value={newPhone} onChange={e=>setNewPhone(e.target.value)} placeholder="Phone number" inputMode="tel" className="rounded-xl border px-4 py-3"/><button disabled={adding} onClick={add} className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-50">{adding?"Adding...":"Add student"}</button></div>
    </div>
   </div>
 
   {modal&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-   <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"><h2 className="text-xl font-bold">Confirm attendance</h2><p className="mt-1 text-sm text-slate-600">Student: <b>{modal.name}</b></p><p className="mb-4 text-sm text-slate-600">Enter your private 6-digit attendance PIN. Never share it with anyone.</p>
-    <input autoFocus maxLength={6} inputMode="numeric" value={pin} onChange={e=>setPin(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder="6-digit PIN" className="w-full rounded-xl border px-4 py-3 text-center text-xl tracking-widest"/>
-    <div className="mt-4 grid grid-cols-2 gap-2"><button onClick={()=>setModal(null)} className="rounded-xl border px-4 py-3">Cancel</button><button disabled={saving||pin.length!==6} onClick={attend} className="rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50">{saving?"Saving...":"Confirm"}</button></div>
+   <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"><h2 className="text-xl font-bold">Confirm attendance</h2><p className="mt-1 text-sm text-slate-600">Student: <b>{modal.name}</b></p><p className="mb-4 text-sm text-slate-600">Enter the last 4 digits of your registered phone number.</p>
+    <input autoFocus maxLength={4} inputMode="numeric" value={last4} onChange={e=>setLast4(e.target.value.replace(/\D/g,"").slice(0,4))} placeholder="Last 4 digits" className="w-full rounded-xl border px-4 py-3 text-center text-xl tracking-widest"/>
+    <div className="mt-4 grid grid-cols-2 gap-2"><button onClick={()=>setModal(null)} className="rounded-xl border px-4 py-3">Cancel</button><button disabled={saving||last4.length!==4} onClick={attend} className="rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50">{saving?"Saving...":"Confirm"}</button></div>
    </div>
   </div>}
  </main>
