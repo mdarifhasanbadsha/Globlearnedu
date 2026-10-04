@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, asc, desc, eq, gte, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cscAttendanceRecords, cscAttendanceStudents } from "@/lib/db/schema";
 
 export const dynamic = "force-dynamic";
 
 const ADMIN_PASSWORD = process.env.ATTENDANCE_ADMIN_PASSWORD || "112233";
-const TZ = process.env.ATTENDANCE_TIMEZONE || "Asia/Dhaka";
+const TZ = process.env.ATTENDANCE_TIMEZONE || "Asia/Dhaka";\nlet attendanceSchemaReady: Promise<void> | null = null;\nasync function ensureAttendanceSchema() {\n  if (!attendanceSchemaReady) {\n    attendanceSchemaReady = (async () => {\n      await db.execute(sql\`\n        CREATE TABLE IF NOT EXISTS csc_attendance_students (\n          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n          name varchar(120) NOT NULL,\n          phone varchar(30) NOT NULL UNIQUE,\n          phone_last4 varchar(4) NOT NULL,\n          is_active boolean NOT NULL DEFAULT true,\n          created_at timestamp NOT NULL DEFAULT now(),\n          updated_at timestamp NOT NULL DEFAULT now()\n        );\n        CREATE INDEX IF NOT EXISTS csc_attendance_student_name_idx ON csc_attendance_students(name);\n        CREATE TABLE IF NOT EXISTS csc_attendance_records (\n          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n          student_id uuid NOT NULL REFERENCES csc_attendance_students(id) ON DELETE CASCADE,\n          attendance_at timestamp NOT NULL DEFAULT now(),\n          attendance_day varchar(10) NOT NULL,\n          created_at timestamp NOT NULL DEFAULT now(),\n          CONSTRAINT csc_attendance_student_day_uq UNIQUE(student_id, attendance_day)\n        );\n        CREATE INDEX IF NOT EXISTS csc_attendance_at_idx ON csc_attendance_records(attendance_at);\n        CREATE INDEX IF NOT EXISTS csc_attendance_student_idx ON csc_attendance_records(student_id);\n      \`;\n    })().catch(err => { attendanceSchemaReady = null; throw err; });\n  }\n  return attendanceSchemaReady;\n}\n
 
 function normalizePhone(value: string) {
   return value.replace(/[^0-9+]/g, "").replace(/^00/, "+");
