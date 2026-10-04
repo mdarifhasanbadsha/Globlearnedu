@@ -5,7 +5,7 @@ export default function AdminAttendance(){
  async function download(type:string){
   setBusy(true);setError("");
   try{
-   const r=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"report",type,date,password})});
+   const r=await fetch(`/api/attendance?action=report&type=${encodeURIComponent(type)}&date=${encodeURIComponent(date)}&password=${encodeURIComponent(password)}`);
    if(!r.ok){const x=await r.json().catch(()=>({}));setError(x.message||"Invalid password or report error.");return}
    const blob=await r.blob();const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=r.headers.get("Content-Disposition")?.match(/filename="?([^"]+)/)?.[1]||`attendance-${type}.csv`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
   }catch{setError("Could not download report.")}finally{setBusy(false)}
