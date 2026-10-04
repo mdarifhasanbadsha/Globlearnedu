@@ -18,13 +18,14 @@ const publicPaths = [
   "/sign-out",
   "/forgot-password",
   "/reset-password",
-  "/cscaattaendance",
+
   "/verify-email",
 ];
 
 function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/study-in-china-from")) return true;
   if (pathname.startsWith("/api/auth")) return true;
+  if (pathname === "/cscaattaendance" || pathname.startsWith("/cscaattaendance/")) return true;
   if (pathname.startsWith("/api/attendance")) return true;
   if (pathname.startsWith("/api/public")) return true;
   if (pathname.startsWith("/_next")) return true;
