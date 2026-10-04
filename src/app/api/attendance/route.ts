@@ -166,6 +166,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ok:true,student:{id:s.id,name:s.name},existing:false});
     }
 
+    if (action === "setStudentStatus") {
+      const password = String(body?.password || "");
+      const studentId = String(body?.studentId || "");
+      const active = Boolean(body?.active);
+      if (password !== ADMIN_PASSWORD) return error("Invalid admin password.", 401);
+      if (!studentId) return error("Student ID is required.");
+      const student = await db.select().from(cscAttendanceStudents).where(eq(cscAttendanceStudents.id, studentId)).limit(1);
+      if (!student[0]) return error("Student not found.",404);
+      await db.update(cscAttendanceStudents).set({isActive: active, updatedAt: new Date()}).where(eq(cscAttendanceStudents.id, studentId));
+      return NextResponse.json({ok:true,message:active?"Student activated.":"Student deactivated."});
+    }
+
     if (action === "deleteStudent") {
       const password = String(body?.password || "");
       const studentId = String(body?.studentId || "");
