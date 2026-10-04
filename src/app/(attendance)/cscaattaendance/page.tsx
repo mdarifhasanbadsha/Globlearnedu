@@ -6,6 +6,7 @@ type Student={serial:number;id:string;name:string;phoneLast4:string};
 type Record={studentId:string;attendanceAt:string;attendanceDay:string};
 
 function localDateKey(d=new Date()){return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Dhaka"}).format(d)}
+function addDaysToKey(key:string,days:number){const [y,m,d]=key.split("-").map(Number);const x=new Date(Date.UTC(y,m-1,d+days));return x.toISOString().slice(0,10)}
 function fmtTime(iso:string){return new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Dhaka",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(iso))}
 function fmtDate(d:Date){return new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Dhaka",day:"2-digit",month:"short"}).format(d)}
 
@@ -19,7 +20,7 @@ export default function AttendancePage(){
   setLoading(true); try{const r=await fetch("/api/attendance?action=students",{cache:"no-store"});const x=await r.json();if(x.ok){setStudents(x.students);setRecords(x.records)}else setMessage(x.message)}catch{setMessage("Could not load attendance.")}finally{setLoading(false)}
  }
  useEffect(()=>{load()},[]);
- const dates=useMemo(()=>Array.from({length:90},(_,i)=>{const d=new Date();d.setDate(d.getDate()+i);return localDateKey(d)}),[]);
+ const dates=useMemo(()=>{const today=localDateKey();return Array.from({length:90},(_,i)=>addDaysToKey(today,i))},[]);
  const filtered=students.filter(s=>s.name.toLowerCase().includes(search.toLowerCase())||s.phoneLast4.includes(search));
  const recMap=useMemo(()=>{const m=new Map<string,string>();records.forEach(r=>m.set(r.studentId+"|"+r.attendanceDay,r.attendanceAt));return m},[records]);
 
@@ -45,7 +46,7 @@ export default function AttendancePage(){
     <div className="overflow-x-auto"><table className="min-w-max border-collapse text-sm">
      <thead className="sticky top-0 z-10 bg-slate-100"><tr>
       <th className="sticky left-0 z-20 bg-slate-100 px-3 py-3 text-left">#</th><th className="sticky left-10 z-20 bg-slate-100 px-3 py-3 text-left min-w-48">Student</th><th className="sticky left-[13rem] z-20 bg-slate-100 px-3 py-3 text-left">Phone</th>
-      {dates.map((d,i)=><th key={d} className="px-3 py-3 text-center min-w-24">{i===0?"Today":fmtDate(new Date(d+"T12:00:00"))}</th>)}
+      {dates.map((d,i)=><th key={d} className="px-3 py-3 text-center min-w-24">{i===0?"Today":d.slice(8,10)+" "+new Date(d+"T12:00:00Z").toLocaleString("en-GB",{month:"short",timeZone:"UTC"})}</th>)}
      </tr></thead>
      <tbody>
       {loading?<tr><td colSpan={93} className="p-8 text-center">Loading...</td></tr>:filtered.map(s=><tr key={s.id} className="border-t hover:bg-slate-50">
