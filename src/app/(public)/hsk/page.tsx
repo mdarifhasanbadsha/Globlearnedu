@@ -118,7 +118,7 @@ export default function HskPage() {
     <section className="bg-slate-100 py-14">
       <div className="mx-auto max-w-7xl px-5 md:px-8">
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {[[Clock3,"Exam format","Understand sections, question types, timing and scoring before test day."],[Trophy,"Scoring","Know how section scores combine into the total score."],[Lightbulb,"Preparation","Build vocabulary, listening, reading and writing skills with focused practice."],[Volume2,"Listening","Train your listening comprehension with repeated, distraction-free practice."]].map(([Icon,t,d])=><div key={String(t)} className="rounded-2xl border border-slate-200 bg-white p-6"><Icon className="h-6 w-6 text-[#C8102E]"/><h3 className="mt-4 font-black">{t}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{d}</p></div>)}
+          {[[Clock3,"Exam format","Understand sections, question types, timing and scoring before test day."],[Trophy,"Scoring","Know how section scores combine into the total score."],[Lightbulb,"Preparation","Build vocabulary, listening, reading and writing skills with focused practice."],[Volume2,"Listening","Train your listening comprehension with repeated, distraction-free practice."]].map(([Icon,t,d])=>{const I=Icon; return <div key={String(t)} className="rounded-2xl border border-slate-200 bg-white p-6"><I className="h-6 w-6 text-[#C8102E]"/><h3 className="mt-4 font-black">{String(t)}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{String(d)}</p></div>})}
         </div>
       </div>
     </section>
