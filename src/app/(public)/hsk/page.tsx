@@ -28,7 +28,21 @@ export default function HskPage() {
       <div className="absolute inset-0 hero-grid opacity-70"/>
       <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#29ABE2]/20 blur-3xl"/>
       <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-[#C8102E]/20 blur-3xl"/>
-      <div className="relative mx-auto max-w-7xl px-5 py-16 md:px-8 md:py-24">
+      <div className="relative mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10"><div className="mb-8 flex justify-end">
+  <div className="text-right">
+    <div className="h-7 overflow-hidden text-sm font-black text-white">
+      <div className="hsk-brand-rotate">
+        <div className="h-7 leading-7">Study in China</div>
+        <div className="h-7 leading-7 text-[#FFD700]">GL Education</div>
+      </div>
+    </div>
+    <div className="mt-1 text-xs font-semibold text-slate-300">Contact GL Education</div>
+    <div className="mt-1 flex flex-col text-xs font-bold text-white sm:flex-row sm:gap-3">
+      <a href="tel:+8801901923239" className="hover:text-[#29ABE2]">+8801901923239</a>
+      <a href="tel:+8615655031556" className="hover:text-[#29ABE2]">+8615655031556</a>
+    </div>
+  </div>
+</div>
         <div className="max-w-3xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold backdrop-blur"><Sparkles className="h-4 w-4 text-[#FFD700]"/> Chinese Proficiency Test Hub</span>
           <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl md:text-6xl">HSK Exam Guide</h1>
@@ -62,7 +76,15 @@ export default function HskPage() {
       </div>
     </section>
 
-    <section id="hsk30" className="bg-white py-14">
+    <style jsx>{`
+.hsk-brand-rotate{animation:hskBrandRotate 6s ease-in-out infinite}
+@keyframes hskBrandRotate{
+0%,43%{transform:translateY(0);opacity:1}
+50%{transform:translateY(-7px);opacity:.15}
+57%,93%{transform:translateY(-28px);opacity:1}
+100%{transform:translateY(-35px);opacity:0}
+}
+`}</style></section>\n    <section id="hsk30" className="bg-white py-14">
       <div className="mx-auto max-w-7xl px-5 md:px-8">
         <div className="rounded-[2rem] bg-gradient-to-br from-[#1B3A6B] via-[#10284b] to-[#0A1628] p-7 text-white shadow-xl md:p-10">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
