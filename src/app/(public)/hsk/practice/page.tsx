@@ -48,13 +48,28 @@ export default function HskPracticePage(){
       </div>
     </div>
     <div className="mt-1 text-xs font-semibold text-slate-300">Contact GL Education</div>
-    <div className="mt-1 flex flex-col text-xs font-bold text-white sm:flex-row sm:gap-3">
-      <a href="tel:+8801901923239" className="hover:text-[#29ABE2]">+8801901923239</a>
-      <a href="tel:+8615655031556" className="hover:text-[#29ABE2]">+8615655031556</a>
+    <div className="h-5 overflow-hidden text-xs font-bold text-white">
+      <div className="hsk-contact-rotate">
+        <div className="h-5 leading-5">
+          <a href="https://wa.me/8801901923239" target="_blank" rel="noreferrer" className="hover:text-[#29ABE2]">+8801901923239</a>
+          <span className="mx-1.5 text-slate-500">•</span>
+          <a href="https://wa.me/8615655031556" target="_blank" rel="noreferrer" className="hover:text-[#29ABE2]">+8615655031556</a>
+        </div>
+        <div className="h-5 leading-5 text-[#FFD700]">
+          <a href="https://wa.me/8801901923239" target="_blank" rel="noreferrer" className="hover:text-white">Click here to Chat</a>
+        </div>
+      </div>
     </div>
   </div>
 </div><style jsx>{`
 .hsk-brand-rotate{animation:hskBrandRotate 6s ease-in-out infinite}
+.hsk-contact-rotate{animation:hskContactRotate 6s ease-in-out infinite}
+@keyframes hskContactRotate{
+0%,43%{transform:translateY(0);opacity:1}
+50%{transform:translateY(-5px);opacity:.15}
+57%,93%{transform:translateY(-20px);opacity:1}
+100%{transform:translateY(-25px);opacity:0}
+}
 @keyframes hskBrandRotate{
 0%,43%{transform:translateY(0);opacity:1}
 50%{transform:translateY(-7px);opacity:.15}
