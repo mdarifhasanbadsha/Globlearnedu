@@ -84,8 +84,6 @@ export default function HskPage() {
       </div>
     </section>
 
-    </div>
-    </section>
     <section id="hsk30" className="bg-white py-14">
       <div className="mx-auto max-w-7xl px-5 md:px-8">
         <div className="rounded-[2rem] bg-gradient-to-br from-[#1B3A6B] via-[#10284b] to-[#0A1628] p-7 text-white shadow-xl md:p-10">
