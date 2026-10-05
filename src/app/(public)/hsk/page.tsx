@@ -98,7 +98,7 @@ export default function HskPage() {
             </div>
           </div>
           <div className="mt-8 grid gap-3 md:grid-cols-3">
-            {[[Target,"Competency-based","Focus on what learners can understand and do with Chinese."],[FileText,"Official syllabus","Use the current official syllabus and sample resources as your source of truth."],[ShieldCheck,"Official information","Registration, dates and policy updates should always be verified with CTI."]].map(([Icon,title,desc])=><div key={String(title)} className="rounded-2xl border border-white/10 bg-white/5 p-5"><Icon className="h-5 w-5 text-[#29ABE2]"/><h3 className="mt-3 font-bold">{title}</h3><p className="mt-1 text-sm leading-6 text-slate-400">{desc}</p></div>)}
+            {[[Target,"Competency-based","Focus on what learners can understand and do with Chinese."],[FileText,"Official syllabus","Use the current official syllabus and sample resources as your source of truth."],[ShieldCheck,"Official information","Registration, dates and policy updates should always be verified with CTI."]].map(([Icon,title,desc])=>{const I=Icon; return <div key={String(title)} className="rounded-2xl border border-white/10 bg-white/5 p-5"><I className="h-5 w-5 text-[#29ABE2]"/><h3 className="mt-3 font-bold">{String(title)}</h3><p className="mt-1 text-sm leading-6 text-slate-400">{String(desc)}</p></div>})}
           </div>
         </div>
       </div>
