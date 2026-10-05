@@ -39,7 +39,29 @@ export default function HskPracticePage(){
  const reset=()=>{setAnswers({});setBookmarks([]);setCurrent(0);setStarted(false);setFinished(false);setSaved(false);setSeconds(1800);localStorage.removeItem(STORAGE)};
  if(!started)return <main className="min-h-screen bg-slate-50"><div className="mx-auto max-w-5xl px-5 py-12 md:px-8"><Link href="/hsk" className="inline-flex items-center gap-2 text-sm font-bold text-[#1B3A6B]"><ArrowLeft className="h-4 w-4"/> Back to HSK Guide</Link><div className="mt-7 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm"><div className="bg-[#0A1628] p-8 text-white md:p-12"><span className="inline-flex rounded-full bg-[#C8102E] px-3 py-1 text-xs font-black">FREE PRACTICE</span><h1 className="mt-4 text-4xl font-black">HSK Practice Test</h1><p className="mt-3 max-w-2xl text-slate-300">A lightweight practice experience for listening and reading. Your progress is saved automatically in this browser.</p></div><div className="grid gap-4 p-8 sm:grid-cols-3"><div className="rounded-2xl bg-slate-50 p-5"><Headphones className="text-[#29ABE2]"/><b className="mt-3 block">Listening</b><span className="text-sm text-slate-500">Audio practice</span></div><div className="rounded-2xl bg-slate-50 p-5"><CheckCircle2 className="text-[#29ABE2]"/><b className="mt-3 block">Auto score</b><span className="text-sm text-slate-500">Instant results</span></div><div className="rounded-2xl bg-slate-50 p-5"><Save className="text-[#29ABE2]"/><b className="mt-3 block">Auto-save</b><span className="text-sm text-slate-500">Continue later</span></div></div><div className="border-t p-8"><button onClick={()=>setStarted(true)} className="w-full rounded-xl bg-[#C8102E] px-5 py-4 font-black text-white hover:bg-[#A50D25]">Start practice test</button></div></div></div></main>;
  if(finished)return <main className="min-h-screen bg-slate-50"><div className="mx-auto max-w-4xl px-5 py-12 md:px-8"><div className="rounded-[2rem] border bg-white p-8 text-center shadow-sm md:p-12"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50"><TrophyIcon/></div><p className="mt-5 text-sm font-black uppercase tracking-wider text-[#C8102E]">Practice complete</p><h1 className="mt-2 text-4xl font-black">{score}/{questions.length}</h1><p className="mt-2 text-slate-500">{Math.round(score/questions.length*100)}% correct</p><div className="mt-8 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-slate-50 p-4"><b>{questions.filter(x=>x.section==="Listening").filter(x=>answers[x.id]===x.answer).length}</b><span className="block text-xs text-slate-500">Listening correct</span></div><div className="rounded-xl bg-slate-50 p-4"><b>{questions.filter(x=>x.section==="Reading").filter(x=>answers[x.id]===x.answer).length}</b><span className="block text-xs text-slate-500">Reading correct</span></div><div className="rounded-xl bg-slate-50 p-4"><b>{questions.filter(x=>answers[x.id]!==undefined).length}</b><span className="block text-xs text-slate-500">Answered</span></div></div><div className="mt-8 flex flex-col gap-3 sm:flex-row"><button onClick={()=>setFinished(false)} className="flex-1 rounded-xl border px-5 py-3 font-bold">Review answers</button><button onClick={reset} className="flex-1 rounded-xl bg-[#C8102E] px-5 py-3 font-bold text-white">Try again</button></div></div></div></main>;
- return <main className="min-h-screen bg-slate-50"><div className="mx-auto max-w-6xl px-4 py-5 md:px-8 md:py-8">
+ return <main className="min-h-screen bg-slate-50"><div className="mx-auto max-w-6xl px-4 py-5 md:px-8 md:py-8"><div className="mb-8 flex justify-end">
+  <div className="text-right">
+    <div className="h-7 overflow-hidden text-sm font-black text-white">
+      <div className="hsk-brand-rotate">
+        <div className="h-7 leading-7">Study in China</div>
+        <div className="h-7 leading-7 text-[#FFD700]">GL Education</div>
+      </div>
+    </div>
+    <div className="mt-1 text-xs font-semibold text-slate-300">Contact GL Education</div>
+    <div className="mt-1 flex flex-col text-xs font-bold text-white sm:flex-row sm:gap-3">
+      <a href="tel:+8801901923239" className="hover:text-[#29ABE2]">+8801901923239</a>
+      <a href="tel:+8615655031556" className="hover:text-[#29ABE2]">+8615655031556</a>
+    </div>
+  </div>
+</div><style jsx>{`
+.hsk-brand-rotate{animation:hskBrandRotate 6s ease-in-out infinite}
+@keyframes hskBrandRotate{
+0%,43%{transform:translateY(0);opacity:1}
+50%{transform:translateY(-7px);opacity:.15}
+57%,93%{transform:translateY(-28px);opacity:1}
+100%{transform:translateY(-35px);opacity:0}
+}
+`}</style>
   <div className="flex flex-wrap items-center justify-between gap-3"><Link href="/hsk" className="inline-flex items-center gap-2 text-sm font-bold text-[#1B3A6B]"><ArrowLeft className="h-4 w-4"/> HSK Guide</Link><div className="flex items-center gap-3"><span className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 font-black shadow-sm"><Clock3 className="h-4 w-4 text-[#C8102E]"/>{mins}:{secs}</span><button onClick={()=>setSaved(true)} className="rounded-xl border bg-white px-3 py-2 text-sm font-bold">{saved?"Saved":"Save now"}</button></div></div>
   <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_280px]">
    <section className="rounded-3xl border bg-white p-5 shadow-sm md:p-8"><div className="flex items-center justify-between"><div><span className="text-xs font-black uppercase tracking-wider text-[#C8102E]">{q.section}</span><h1 className="mt-1 text-xl font-black">Question {current+1} of {questions.length}</h1></div><button onClick={()=>setBookmarks(b=>b.includes(q.id)?b.filter(x=>x!==q.id):[...b,q.id])} className={`rounded-xl p-2.5 ${bookmarks.includes(q.id)?"bg-amber-50 text-amber-600":"bg-slate-50 text-slate-500"}`}><Bookmark className="h-5 w-5"/></button></div>
