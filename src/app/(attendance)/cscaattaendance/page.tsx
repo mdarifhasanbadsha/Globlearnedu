@@ -21,7 +21,7 @@ export default function AttendancePage(){
   setLoading(true); try{const r=await fetch("/api/attendance?action=students",{cache:"no-store"});const x=await r.json();if(x.ok){setStudents(x.students);setRecords(x.records)}else setMessage(x.message)}catch{setMessage("Could not load attendance.")}finally{setLoading(false)}
  }
  useEffect(()=>{load();const t=setInterval(()=>setClassOpen(classOpenNow()),5000);return()=>clearInterval(t)},[]);
- const dates=useMemo(()=>{const today=localDateKey();return Array.from({length:90},(_,i)=>addDaysToKey(today,i))},[]);
+ const dates=useMemo(()=>{const today=localDateKey();return Array.from({length:91},(_,i)=>addDaysToKey(today,i-1))},[]);
  const filtered=students.filter(s=>s.name.toLowerCase().includes(search.toLowerCase()));
  const recMap=useMemo(()=>{const m=new Map<string,string>();records.forEach(r=>m.set(r.studentId+"|"+r.attendanceDay,r.attendanceAt));return m},[records]);
 
@@ -50,7 +50,7 @@ export default function AttendancePage(){
       {dates.map(d=>{const today=d===localDateKey();return <th key={d} className="px-3 py-3 text-center min-w-24">{today?"Today":fmtDateKey(d)}</th>})}
      </tr></thead>
      <tbody>
-      {loading?<tr><td colSpan={93} className="p-8 text-center">Loading...</td></tr>:filtered.map(s=><tr key={s.id} className="border-t hover:bg-slate-50">
+      {loading?<tr><td colSpan={94} className="p-8 text-center">Loading...</td></tr>:filtered.map(s=><tr key={s.id} className="border-t hover:bg-slate-50">
        <td className="sticky left-0 bg-white px-3 py-3">{s.serial}</td><td className="sticky left-10 bg-white px-3 py-3 font-medium">{s.name}</td><td className="sticky left-[13rem] bg-white px-3 py-3 font-mono tracking-wide">{s.phoneMasked}</td>
        {dates.map(d=>{const at=recMap.get(s.id+"|"+d);const today=d===localDateKey();return <td key={d} className="px-2 py-2 text-center">{at?<span className="inline-flex flex-col rounded-lg bg-emerald-50 px-2 py-1 text-emerald-700"><b>✓</b><span className="text-[11px]">{fmtTime(at)}</span></span>:today?(classOpen?<button onClick={()=>{setModal(s);setLast4("")}} className="rounded-lg bg-blue-600 px-3 py-2 font-semibold text-white hover:bg-blue-700">Attend</button>:<span className="text-[11px] text-amber-600">Wait for class<br/>10 PM BD</span>):<span className="text-slate-300">—</span>}</td>})}
       </tr>)}
