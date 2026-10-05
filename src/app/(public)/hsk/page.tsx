@@ -84,22 +84,7 @@ export default function HskPage() {
       </div>
     </section>
 
-    <style jsx>{`
-.hsk-brand-rotate{animation:hskBrandRotate 6s ease-in-out infinite}
-.hsk-contact-rotate{animation:hskContactRotate 6s ease-in-out infinite}
-@keyframes hskContactRotate{
-0%,43%{transform:translateY(0);opacity:1}
-50%{transform:translateY(-5px);opacity:.15}
-57%,93%{transform:translateY(-20px);opacity:1}
-100%{transform:translateY(-25px);opacity:0}
-}
-@keyframes hskBrandRotate{
-0%,43%{transform:translateY(0);opacity:1}
-50%{transform:translateY(-7px);opacity:.15}
-57%,93%{transform:translateY(-28px);opacity:1}
-100%{transform:translateY(-35px);opacity:0}
-}
-`}</style></div>
+    </div>
     </section>
     <section id="hsk30" className="bg-white py-14">
       <div className="mx-auto max-w-7xl px-5 md:px-8">
