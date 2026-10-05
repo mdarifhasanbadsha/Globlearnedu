@@ -13,6 +13,7 @@ const publicPaths = [
   "/compare",
   "/track",
   "/refer-and-earn",
+  "/hsk",
   "/sign-in",
   "/sign-up",
   "/sign-out",
