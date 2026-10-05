@@ -1,138 +1,45 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
-import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, ChevronDown, Clock3, ExternalLink, FileText, Headphones, Lightbulb, Mic2, PenLine, ShieldCheck, Sparkles, Target, Trophy, Volume2 } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, ChevronDown, Download, ExternalLink, FileAudio, FileText, Headphones, Languages, MessageSquareText, PlayCircle, Sparkles, Target, Trophy, Users } from "lucide-react";
 
-const levels = [
-  {level:"HSK 1",tag:"Beginner",words:"150+",desc:"Understand and use very simple Chinese words and sentences for everyday needs."},
-  {level:"HSK 2",tag:"Elementary",words:"300+",desc:"Handle simple, direct communication about familiar everyday topics."},
-  {level:"HSK 3",tag:"Intermediate",words:"600+",desc:"Complete basic communication tasks in daily life, study and work."},
-  {level:"HSK 4",tag:"Upper-intermediate",words:"1,200+",desc:"Communicate about more complex topics with more accurate expression."},
-  {level:"HSK 5",tag:"Advanced",words:"2,500+",desc:"Discuss abstract or professional topics and handle a wide range of tasks."},
-  {level:"HSK 6",tag:"Advanced+",words:"5,000+",desc:"Use Chinese flexibly in social communication at a high level."},
+const official="https://www.chinesetest.cn/";
+const officialHub="https://www.chinesetest.cn/Development";
+const syllabus="https://hsk.cn-bj.ufileos.com/3.0/%E6%96%B0%E7%89%88HSK%E8%80%83%E8%AF%95%E5%A4%A7%E7%BA%B21219.pdf";
+const competency="https://hsk.cn-bj.ufileos.com/3.0/HSK3.0%E8%80%83%E8%AF%95%E8%83%BD%E5%8A%9B%E6%8F%8F%E8%BF%B0.pdf";
+
+const levels=[
+[1,"150","Simple daily communication"],[2,"300","Basic daily, study and work communication"],[3,"600","Effective communication in common situations"],[4,"1,200","Complete and coherent communication"],[5,"2,500","Accurate communication in study and work"],[6,"5,000","Rich and fluent professional communication"],[7,"—","Advanced professional and academic communication"],[8,"—","Deep, appropriate and sophisticated communication"],[9,"—","Precise, deep professional and academic communication"]
+];
+const faqs=[
+["Is this site based on HSK 3.0?","Yes. GL Education's learning and practice path is designed around HSK 3.0. Official CTI notices should always be checked for the latest examination arrangements."],
+["How many HSK 3.0 levels are there?","HSK 3.0 uses nine proficiency levels. HSK 7–9 are assessed through the advanced HSK 7–9 examination and then classified into level 7, 8 or 9."],
+["Where do I register for the real HSK exam?","Use the official Chinese Test Service Website and follow the test-center instructions for your location."],
+["Are GL Education practice tests official papers?","No. GL Education practice tests are preparation tools. Official CTI resources are clearly labelled as official."],
+["Can I study vocabulary by level and lesson?","The practice hub is designed for level-wise vocabulary, flashcards, MCQs and lesson-focused practice. The vocabulary data layer can be expanded from the official HSK 3.0 syllabus dataset."]
 ];
 
-const faqs = [
-  ["What is HSK?","HSK (Hanyu Shuiping Kaoshi) is the standardized Chinese language proficiency test for non-native Chinese speakers. It is used for study, work and other academic or professional purposes."],
-  ["What is HSK 3.0?","HSK 3.0 is the upgraded Chinese proficiency assessment framework. It expands assessment beyond the traditional six written levels and places greater emphasis on integrated language ability."],
-  ["Is HSK 3.0 already available?","The official Chinese Test Service Website has published HSK 3.0 materials, including the syllabus, sample questions, competency profile and a test experience. The official worldwide launch is announced for December 13, 2026."],
-  ["How long is an HSK certificate valid?","For HSK scores, the official HSK pages state that scores are valid for two years from the test date. Always check the institution you are applying to for its own admission requirements."],
-  ["Where do I register?","Registration is handled through the official Chinese Test Service Website. Use the Register for HSK button on this page to open the official registration portal."],
-];
+function Contact(){return <div className="flex justify-end"><div className="text-right"><div className="h-7 overflow-hidden text-sm font-black text-white"><div className="hsk-brand-rotate"><div className="h-7 leading-7">Study in China</div><div className="h-7 leading-7 text-[#FFD700]">GL Education</div></div></div><div className="mt-1 text-xs font-semibold text-slate-300">Contact GL Education</div><div className="h-5 overflow-hidden text-xs font-bold text-white"><div className="hsk-contact-rotate"><div className="h-5 leading-5"><a href="https://wa.me/8801901923239" target="_blank" rel="noreferrer">+8801901923239</a><span className="mx-1.5 text-slate-500">•</span><a href="https://wa.me/8615655031556" target="_blank" rel="noreferrer">+8615655031556</a></div><div className="h-5 leading-5 text-[#FFD700]"><a href="https://wa.me/8801901923239" target="_blank" rel="noreferrer">Click here to Chat</a></div></div></div></div></div>}
 
-export default function HskPage() {
-  const [open, setOpen] = useState<string | null>("What is HSK 3.0?");
-  return <div className="min-h-screen bg-slate-50 text-slate-900">
-    <section className="relative overflow-hidden bg-[#0A1628] text-white">
-      <div className="absolute inset-0 hero-grid opacity-70"/>
-      <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#29ABE2]/20 blur-3xl"/>
-      <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-[#C8102E]/20 blur-3xl"/>
-      <div className="relative mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-10"><div className="mb-8 flex justify-end">
-  <div className="text-right">
-    <div className="h-7 overflow-hidden text-sm font-black text-white">
-      <div className="hsk-brand-rotate">
-        <div className="h-7 leading-7">Study in China</div>
-        <div className="h-7 leading-7 text-[#FFD700]">GL Education</div>
-      </div>
-    </div>
-    <div className="mt-1 text-xs font-semibold text-slate-300">Contact GL Education</div>
-    <div className="h-5 overflow-hidden text-xs font-bold text-white">
-      <div className="hsk-contact-rotate">
-        <div className="h-5 leading-5">
-          <a href="https://wa.me/8801901923239" target="_blank" rel="noreferrer" className="hover:text-[#29ABE2]">+8801901923239</a>
-          <span className="mx-1.5 text-slate-500">•</span>
-          <a href="https://wa.me/8615655031556" target="_blank" rel="noreferrer" className="hover:text-[#29ABE2]">+8615655031556</a>
-        </div>
-        <div className="h-5 leading-5 text-[#FFD700]">
-          <a href="https://wa.me/8801901923239" target="_blank" rel="noreferrer" className="hover:text-white">Click here to Chat</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-        <div className="max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold backdrop-blur"><Sparkles className="h-4 w-4 text-[#FFD700]"/> Chinese Proficiency Test Hub</span>
-          <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl md:text-6xl">HSK Exam Guide</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">Everything you need to understand HSK, explore HSK 3.0, prepare smarter, and find the official registration route.</p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/hsk/practice" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C8102E] px-6 py-3.5 font-bold shadow-lg shadow-red-950/30 transition hover:bg-[#A50D25]">Free Practice Test <ArrowRight className="h-4 w-4"/></Link>
-            <a href="https://www.chinesetest.cn/" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 font-bold backdrop-blur transition hover:bg-white/15">Register for HSK <ExternalLink className="h-4 w-4"/></a>
-          </div>
-        </div>
-        <div className="mt-12 grid gap-3 sm:grid-cols-3">
-          {[["6","Traditional HSK levels"],["3.0","New framework"],["2 years","HSK score validity"]].map(([a,b])=><div key={b} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"><div className="text-2xl font-black">{a}</div><div className="mt-1 text-sm text-slate-400">{b}</div></div>)}
-        </div>
-      </div>
-    </section>
+export default function HskPage(){
+const jsonLd={"@context":"https://schema.org","@type":"WebPage","name":"HSK 3.0 Exam Guide, Materials & Free Practice Tests","description":"HSK 3.0 study hub with exam information, materials, vocabulary practice and mock tests.","url":"https://globlearnedu.com/hsk","isPartOf":{"@type":"WebSite","name":"GL Education","url":"https://globlearnedu.com"}};
+return <main className="min-h-screen bg-slate-50 text-[#0A1628]">
+<script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
+<section className="bg-[#0A1628] text-white"><div className="mx-auto max-w-7xl px-5 py-5 md:px-8"><Contact/><div className="grid gap-10 py-14 lg:grid-cols-[1.2fr_.8fr] lg:items-center"><div><span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-[.18em] text-[#FFD700]"><Sparkles className="h-4 w-4"/> HSK 3.0 Study Hub</span><h1 className="mt-6 text-4xl font-black leading-tight md:text-6xl">HSK 3.0 Exam Guide, Materials & Free Practice Tests</h1><p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 md:text-lg">A complete Chinese proficiency study hub covering HSK 1–9, official resources, vocabulary practice, mock tests and exam preparation.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><a href={official} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C8102E] px-6 py-3.5 font-black text-white">Register for HSK <ExternalLink className="h-4 w-4"/></a><Link href="/hsk/practice" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-black text-[#0A1628]">Free Practice Test <ArrowRight className="h-4 w-4"/></Link></div></div><div className="rounded-[2rem] border border-white/10 bg-white/5 p-6"><div className="flex items-center gap-3"><Target className="h-6 w-6 text-[#29ABE2]"/><b>New-module focused</b></div><div className="mt-6 grid grid-cols-3 gap-3"><div className="rounded-2xl bg-white/5 p-4 text-center"><b className="block text-3xl">9</b><span className="text-xs text-slate-400">Levels</span></div><div className="rounded-2xl bg-white/5 p-4 text-center"><b className="block text-3xl">4+</b><span className="text-xs text-slate-400">Skills</span></div><div className="rounded-2xl bg-white/5 p-4 text-center"><b className="block text-3xl">∞</b><span className="text-xs text-slate-400">Practice</span></div></div><p className="mt-5 text-sm leading-6 text-slate-400">CTI publishes the HSK 3.0 syllabus, sample questions, competency profile and official notices. Those sources are the reference point for real exam information.</p></div></div></div></section>
 
-    <section className="mx-auto max-w-7xl px-5 py-10 md:px-8">
-      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm md:p-9">
-          <div className="flex items-center gap-3"><div className="rounded-xl bg-blue-50 p-3 text-[#1B3A6B]"><BookOpen/></div><div><p className="text-sm font-bold uppercase tracking-wider text-[#C8102E]">Start here</p><h2 className="text-2xl font-black">What is HSK?</h2></div></div>
-          <p className="mt-5 leading-8 text-slate-600">HSK is an international standardized test designed to assess the Chinese language proficiency of non-native speakers. It is commonly used as evidence of Chinese ability for education, scholarships and professional purposes.</p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {[[Headphones,"Listening"],[BookOpen,"Reading"],[PenLine,"Writing"],[Mic2,"Speaking"]].map(([Icon,label])=>{const I=Icon; return <div key={String(label)} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4"><I className="h-5 w-5 text-[#29ABE2]"/><span className="font-semibold">{String(label)}</span></div>})}
-          </div>
-        </div>
-        <div className="rounded-3xl border border-[#29ABE2]/20 bg-gradient-to-br from-blue-50 to-white p-7 shadow-sm">
-          <div className="flex items-center gap-2 text-[#1B3A6B]"><CalendarDays className="h-5 w-5"/><span className="font-bold">2026 HSK 3.0 update</span></div>
-          <h3 className="mt-4 text-2xl font-black">Official launch: 13 December 2026</h3>
-          <p className="mt-3 text-sm leading-6 text-slate-600">The official Chinese Test Service Website has announced a worldwide HSK 3.0 launch date. Registration details should be checked on the official portal.</p>
-          <a href="https://www.chinesetest.cn/" target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 font-bold text-[#C8102E]">Check official updates <ArrowRight className="h-4 w-4"/></a>
-        </div>
-      </div>
-    </section>
+<section className="border-b bg-white"><div className="mx-auto max-w-7xl px-5 py-4 md:px-8"><div className="flex flex-wrap gap-2 text-sm font-bold"><a href="#levels" className="rounded-full bg-slate-100 px-4 py-2">Levels 1–9</a><a href="#materials" className="rounded-full bg-slate-100 px-4 py-2">HSK Materials</a><a href="#exam" className="rounded-full bg-slate-100 px-4 py-2">Exam Format</a><Link href="/hsk/practice" className="rounded-full bg-[#C8102E] px-4 py-2 text-white">Practice Hub</Link></div></div></section>
 
-    <section id="hsk30" className="bg-white py-14">
-      <div className="mx-auto max-w-7xl px-5 md:px-8">
-        <div className="rounded-[2rem] bg-gradient-to-br from-[#1B3A6B] via-[#10284b] to-[#0A1628] p-7 text-white shadow-xl md:p-10">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl"><span className="inline-flex rounded-full bg-[#FFD700] px-3 py-1 text-xs font-black uppercase tracking-wider text-[#0A1628]">Featured</span><h2 className="mt-4 text-3xl font-black md:text-4xl">HSK 3.0 — New HSK</h2><p className="mt-4 leading-7 text-slate-300">Explore the upgraded framework, official syllabus, sample questions, competency profile and the official HSK 3.0 experience.</p></div>
-            <div className="flex flex-wrap gap-2">
-              {[
-                ["Syllabus","https://www.chinesetest.cn/syllabus"],
-                ["Sample questions","https://www.chinesetest.cn/"],
-                ["Try HSK 3.0","https://m-hsk3demo-intl.chinesetest.cn/"]
-              ].map(([t,u])=><a key={t} href={u} target="_blank" rel="noreferrer" className="rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/15">{t}</a>)}
-            </div>
-          </div>
-          <div className="mt-8 grid gap-3 md:grid-cols-3">
-            {[[Target,"Competency-based","Focus on what learners can understand and do with Chinese."],[FileText,"Official syllabus","Use the current official syllabus and sample resources as your source of truth."],[ShieldCheck,"Official information","Registration, dates and policy updates should always be verified with CTI."]].map(([Icon,title,desc])=>{const I=Icon; return <div key={String(title)} className="rounded-2xl border border-white/10 bg-white/5 p-5"><I className="h-5 w-5 text-[#29ABE2]"/><h3 className="mt-3 font-bold">{String(title)}</h3><p className="mt-1 text-sm leading-6 text-slate-400">{String(desc)}</p></div>})}
-          </div>
-        </div>
-      </div>
-    </section>
+<section id="levels" className="mx-auto max-w-7xl px-5 py-16 md:px-8"><div className="max-w-3xl"><span className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">HSK 3.0 levels</span><h2 className="mt-2 text-3xl font-black md:text-4xl">Choose your target HSK level</h2><p className="mt-3 leading-7 text-slate-600">HSK 3.0 is organized across nine proficiency levels. HSK 7–9 are assessed through one advanced test and then classified into level 7, 8 or 9.</p></div><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{levels.map(([n,w,d])=><a key={n} href={Number(n)<=6?"/hsk/practice?mode=mock&level="+n:"/hsk/practice?mode=mock&level=7-9"} className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="flex items-start justify-between"><div><span className="text-xs font-black uppercase text-slate-400">HSK</span><h3 className="text-3xl font-black">{n}</h3></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold">{w} words*</span></div><p className="mt-4 text-sm leading-6 text-slate-600">{d}</p><div className="mt-5 inline-flex items-center gap-2 text-sm font-black text-[#1B3A6B]">Practice Level {n}<ArrowRight className="h-4 w-4"/></div></a>)}</div><p className="mt-4 text-xs text-slate-500">*Use the current HSK 3.0 syllabus as the authoritative vocabulary source; figures shown here are study references.</p></section>
 
-    <section className="mx-auto max-w-7xl px-5 py-14 md:px-8">
-      <div className="flex items-end justify-between gap-5"><div><p className="text-sm font-black uppercase tracking-wider text-[#C8102E]">Traditional HSK</p><h2 className="mt-2 text-3xl font-black">Choose your level</h2></div><Link href="/hsk/practice" className="hidden items-center gap-2 font-bold text-[#1B3A6B] sm:flex">Practice now <ArrowRight className="h-4 w-4"/></Link></div>
-      <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {levels.map((x,i)=><div key={x.level} className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-[#29ABE2]/40 hover:shadow-md">
-          <div className="flex items-start justify-between"><div><div className="text-2xl font-black text-[#1B3A6B]">{x.level}</div><span className="text-xs font-bold text-slate-500">{x.tag}</span></div><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-[#1B3A6B]">{x.words}</span></div>
-          <p className="mt-4 text-sm leading-6 text-slate-600">{x.desc}</p>
-          <Link href="/hsk/practice" className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-[#C8102E] opacity-80 group-hover:opacity-100">Practice this level <ArrowRight className="h-4 w-4"/></Link>
-        </div>)}
-      </div>
-    </section>
+<section id="exam" className="bg-[#0A1628] text-white"><div className="mx-auto max-w-7xl px-5 py-16 md:px-8"><span className="text-xs font-black uppercase tracking-[.18em] text-[#FFD700]">New module first</span><h2 className="mt-2 text-3xl font-black md:text-4xl">Prepare for HSK 3.0, not the legacy path</h2><p className="mt-4 max-w-3xl leading-7 text-slate-300">The GL Education practice roadmap is built around HSK 3.0. Use official CTI pages for the exact test structure, registration dates and official announcements.</p><div className="mt-8 grid gap-4 md:grid-cols-4"><div className="rounded-3xl border border-white/10 bg-white/5 p-6"><Headphones className="text-[#29ABE2]"/><h3 className="mt-4 font-black">Listening</h3><p className="mt-2 text-sm leading-6 text-slate-400">Timed listening, replay and section review.</p></div><div className="rounded-3xl border border-white/10 bg-white/5 p-6"><BookOpen className="text-[#29ABE2]"/><h3 className="mt-4 font-black">Reading</h3><p className="mt-2 text-sm leading-6 text-slate-400">Level-targeted reading speed and comprehension.</p></div><div className="rounded-3xl border border-white/10 bg-white/5 p-6"><Languages className="text-[#29ABE2]"/><h3 className="mt-4 font-black">Writing</h3><p className="mt-2 text-sm leading-6 text-slate-400">Sentence and extended-response practice.</p></div><div className="rounded-3xl border border-white/10 bg-white/5 p-6"><MessageSquareText className="text-[#29ABE2]"/><h3 className="mt-4 font-black">Speaking</h3><p className="mt-2 text-sm leading-6 text-slate-400">Speaking and advanced HSK 7–9 preparation.</p></div></div><div className="mt-8 rounded-3xl border border-[#C8102E]/30 bg-[#C8102E]/10 p-6"><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><b className="text-lg">Official HSK 3.0 resources</b><p className="mt-1 text-sm text-slate-300">Syllabus, sample questions, competency profile and official notices.</p></div><a href={officialHub} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-black text-[#0A1628]">Open CTI resources <ExternalLink className="h-4 w-4"/></a></div></div></div></section>
 
-    <section className="bg-slate-100 py-14">
-      <div className="mx-auto max-w-7xl px-5 md:px-8">
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {[[Clock3,"Exam format","Understand sections, question types, timing and scoring before test day."],[Trophy,"Scoring","Know how section scores combine into the total score."],[Lightbulb,"Preparation","Build vocabulary, listening, reading and writing skills with focused practice."],[Volume2,"Listening","Train your listening comprehension with repeated, distraction-free practice."]].map(([Icon,t,d])=>{const I=Icon; return <div key={String(t)} className="rounded-2xl border border-slate-200 bg-white p-6"><I className="h-6 w-6 text-[#C8102E]"/><h3 className="mt-4 font-black">{String(t)}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{String(d)}</p></div>})}
-        </div>
-      </div>
-    </section>
+<section id="materials" className="mx-auto max-w-7xl px-5 py-16 md:px-8"><div className="max-w-3xl"><span className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">Study library</span><h2 className="mt-2 text-3xl font-black md:text-4xl">HSK Materials</h2><p className="mt-3 leading-7 text-slate-600">Official-resource navigation plus a clear structure for books, workbooks, solutions, audio and sample questions. Legacy HSK 1–6 materials are reference only; the new practice path is HSK 3.0.</p></div><div className="mt-8 grid gap-5 lg:grid-cols-3">
+<div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-center gap-3"><BookOpen className="text-[#C8102E]"/><h3 className="text-xl font-black">Official Books</h3></div><p className="mt-2 text-sm leading-6 text-slate-600">Reference the legacy Level 1–6 series and the new Level 1–9 framework.</p><div className="mt-5 space-y-2">{["Old HSK · Level 1","Old HSK · Level 2","Old HSK · Level 3","Old HSK · Level 4","Old HSK · Level 5","Old HSK · Level 6","New HSK 3.0 · Level 1–9"].map(x=><div key={x} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 text-sm"><span className="font-bold">{x}</span><a href={officialHub} target="_blank" rel="noreferrer" aria-label={"Official source for "+x}><ExternalLink className="h-4 w-4 text-[#1B3A6B]"/></a></div>)}</div><div className="mt-5 rounded-2xl bg-amber-50 p-4 text-xs leading-5 text-amber-800"><b>Audio:</b> book-audio download buttons should point only to audio you own or are authorized to redistribute. The current uploaded ZIP contains sample-test audio, not a complete licensed book-audio library.</div></div>
+<div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-center gap-3"><FileText className="text-[#C8102E]"/><h3 className="text-xl font-black">Official Workbooks</h3></div><p className="mt-2 text-sm leading-6 text-slate-600">Level-by-level workbook navigation with a dedicated place for official solution notes when available.</p><div className="mt-5 space-y-2">{[1,2,3,4,5,6].map(n=><div key={n} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3"><span className="text-sm font-bold">Workbook · HSK {n}</span><a href={officialHub} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-black text-[#1B3A6B]">Official source <ExternalLink className="h-3 w-3"/></a></div>)}</div><p className="mt-4 text-xs text-slate-500">Licensed solution PDFs can be attached to each level without changing the interface.</p></div>
+<div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-center gap-3"><Trophy className="text-[#C8102E]"/><h3 className="text-xl font-black">Official Sample Questions</h3></div><p className="mt-2 text-sm leading-6 text-slate-600">Go directly to CTI's official HSK 3.0 sample resources and download the current syllabus documents.</p><div className="mt-5 space-y-3"><a href={officialHub} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold">CTI sample-question hub <ExternalLink className="h-4 w-4"/></a><a href={syllabus} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold">HSK 3.0 syllabus PDF <Download className="h-4 w-4"/></a><a href={competency} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold">Competency profile PDF <Download className="h-4 w-4"/></a></div></div>
+</div><div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6"><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><b className="text-lg">Official HSK 3.0 syllabus</b><p className="mt-1 text-sm text-slate-600">The current published syllabus is the source of truth for tasks, vocabulary, characters and grammar.</p></div><a href={syllabus} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1B3A6B] px-5 py-3 font-black text-white">Download syllabus <Download className="h-4 w-4"/></a></div></div></section>
 
-    <section className="mx-auto max-w-4xl px-5 py-14 md:px-8">
-      <div className="text-center"><p className="text-sm font-black uppercase tracking-wider text-[#C8102E]">FAQ</p><h2 className="mt-2 text-3xl font-black">Important HSK questions</h2></div>
-      <div className="mt-7 space-y-3">{faqs.map(([q,a])=><div key={q} className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><button onClick={()=>setOpen(open===q?null:q)} className="flex w-full items-center justify-between gap-5 p-5 text-left font-bold"><span>{q}</span><ChevronDown className={`h-5 w-5 shrink-0 transition ${open===q?"rotate-180 text-[#C8102E]":""}`}/></button>{open===q&&<div className="border-t border-slate-100 px-5 pb-5 pt-4 text-sm leading-7 text-slate-600">{a}</div>}</div>)}</div>
-    </section>
+<section className="border-y bg-white"><div className="mx-auto max-w-7xl px-5 py-14 md:px-8"><div className="grid gap-5 md:grid-cols-3"><div className="rounded-3xl bg-slate-50 p-6"><FileAudio className="text-[#C8102E]"/><h3 className="mt-4 font-black">Audio practice</h3><p className="mt-2 text-sm leading-6 text-slate-600">Organize listening files by level, section and test set with replay and progress controls.</p></div><div className="rounded-3xl bg-slate-50 p-6"><PlayCircle className="text-[#C8102E]"/><h3 className="mt-4 font-black">Real-test mode</h3><p className="mt-2 text-sm leading-6 text-slate-600">Timed mock tests keep answers hidden until submission and save progress automatically.</p></div><div className="rounded-3xl bg-slate-50 p-6"><Users className="text-[#C8102E]"/><h3 className="mt-4 font-black">GL Education support</h3><p className="mt-2 text-sm leading-6 text-slate-600">A dedicated pathway for students preparing Chinese for study in China.</p></div></div></div></section>
 
-    <section className="bg-[#C8102E] py-14 text-white">
-      <div className="mx-auto max-w-5xl px-5 text-center md:px-8">
-        <h2 className="text-3xl font-black md:text-4xl">Ready to test your Chinese?</h2><p className="mx-auto mt-3 max-w-2xl text-red-100">Start with our free practice area, save your progress, and review your answers at your own pace.</p>
-        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/hsk/practice" className="rounded-xl bg-white px-6 py-3.5 font-black text-[#C8102E]">Open Free Practice Test</Link><a href="https://www.chinesetest.cn/" target="_blank" rel="noreferrer" className="rounded-xl border border-white/30 px-6 py-3.5 font-black">Official Registration <ExternalLink className="ml-1 inline h-4 w-4"/></a></div>
-      </div>
-    </section>
-  </div>;
+<section className="mx-auto max-w-7xl px-5 py-16 md:px-8"><div className="max-w-3xl"><span className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">FAQ</span><h2 className="mt-2 text-3xl font-black">HSK 3.0 questions students ask</h2></div><div className="mt-7 space-y-3">{faqs.map(([q,a])=><details key={q} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 font-black">{q}<ChevronDown className="h-5 w-5 shrink-0 transition group-open:rotate-180"/></summary><p className="mt-4 max-w-4xl text-sm leading-7 text-slate-600">{a}</p></details>)}</div></section>
+<section className="bg-[#0A1628] text-white"><div className="mx-auto max-w-7xl px-5 py-14 text-center md:px-8"><CheckCircle2 className="mx-auto h-9 w-9 text-[#29ABE2]"/><h2 className="mt-4 text-3xl font-black">Start your HSK 3.0 preparation</h2><p className="mx-auto mt-3 max-w-2xl text-slate-300">Choose a level, practice vocabulary, take a mock test and track your progress.</p><Link href="/hsk/practice" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#C8102E] px-6 py-3.5 font-black text-white">Open Free Practice Hub <ArrowRight className="h-4 w-4"/></Link></div></section>
+</main>;
 }
