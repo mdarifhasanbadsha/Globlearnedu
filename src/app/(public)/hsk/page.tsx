@@ -99,7 +99,9 @@ export default function HskPage() {
 57%,93%{transform:translateY(-28px);opacity:1}
 100%{transform:translateY(-35px);opacity:0}
 }
-`}</style></div>\n    </section>\n    <section id="hsk30" className="bg-white py-14">
+`}</style></div>
+    </section>
+    <section id="hsk30" className="bg-white py-14">
       <div className="mx-auto max-w-7xl px-5 md:px-8">
         <div className="rounded-[2rem] bg-gradient-to-br from-[#1B3A6B] via-[#10284b] to-[#0A1628] p-7 text-white shadow-xl md:p-10">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
