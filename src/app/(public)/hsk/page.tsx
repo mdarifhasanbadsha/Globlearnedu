@@ -72,7 +72,7 @@ export default function HskPage() {
           <div className="flex items-center gap-3"><div className="rounded-xl bg-blue-50 p-3 text-[#1B3A6B]"><BookOpen/></div><div><p className="text-sm font-bold uppercase tracking-wider text-[#C8102E]">Start here</p><h2 className="text-2xl font-black">What is HSK?</h2></div></div>
           <p className="mt-5 leading-8 text-slate-600">HSK is an international standardized test designed to assess the Chinese language proficiency of non-native speakers. It is commonly used as evidence of Chinese ability for education, scholarships and professional purposes.</p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {[[Headphones,"Listening"],[BookOpen,"Reading"],[PenLine,"Writing"],[Mic2,"Speaking"]].map(([Icon,label])=><div key={String(label)} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4"><Icon className="h-5 w-5 text-[#29ABE2]"/><span className="font-semibold">{label}</span></div>)}
+            {[[Headphones,"Listening"],[BookOpen,"Reading"],[PenLine,"Writing"],[Mic2,"Speaking"]].map(([Icon,label])=>{const I=Icon; return <div key={String(label)} className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4"><I className="h-5 w-5 text-[#29ABE2]"/><span className="font-semibold">{String(label)}</span></div>})}
           </div>
         </div>
         <div className="rounded-3xl border border-[#29ABE2]/20 bg-gradient-to-br from-blue-50 to-white p-7 shadow-sm">
