@@ -15,6 +15,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/blog`, priority: 0.8, changeFrequency: "daily" as const },
     { url: `${baseUrl}/compare`, priority: 0.7, changeFrequency: "weekly" as const },
     { url: `${baseUrl}/track`, priority: 0.6, changeFrequency: "monthly" as const },
+    { url: `${baseUrl}/hsk`, priority: 0.95, changeFrequency: "weekly" as const },
+    { url: `${baseUrl}/hsk/practice`, priority: 0.9, changeFrequency: "weekly" as const },
   ];
 
   const programs = [
