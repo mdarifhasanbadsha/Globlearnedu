@@ -35,13 +35,56 @@ const faqs = [
 ];
 
 function CourseJoin({ course }: { course: string }) {
+  const [open, setOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const subject = encodeURIComponent("CSCA Course Enrollment — " + course);
+    const body = encodeURIComponent(
+      "Hello GL Education,\n\nI want to join: " + course +
+      "\n\nName: " + name + "\nPhone: " + phone + "\nEmail: " + email +
+      "\n\nPlease send me the enrollment instructions.\n"
+    );
+    window.location.href = "mailto:info@globlearnedu.com?subject=" + subject + "&body=" + body;
+    setSubmitted(true);
+  };
+
   return (
-    <Link
-      href={"/contact?course=" + encodeURIComponent(course)}
-      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1B3A6B] px-5 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#102B52]"
-    >
-      Join Course <ArrowRight className="h-4 w-4" />
-    </Link>
+    <>
+      <button
+        type="button"
+        onClick={() => { setOpen(true); setSubmitted(false); }}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1B3A6B] px-5 py-3.5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-[#102B52]"
+      >
+        Join Course <ArrowRight className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#07101f]/70 px-4 py-6 backdrop-blur-sm">
+          <div role="dialog" aria-modal="true" className="relative w-full max-w-lg rounded-[2rem] bg-white p-7 shadow-2xl">
+            <button type="button" onClick={() => setOpen(false)} aria-label="Close enrollment form" className="absolute right-4 top-4 rounded-full bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"><X className="h-5 w-5" /></button>
+            <span className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">Course enrollment</span>
+            <h3 className="mt-2 pr-10 text-2xl font-black text-[#0A1628]">{course}</h3>
+            {submitted ? (
+              <div className="mt-6 rounded-2xl bg-emerald-50 p-5 text-sm leading-6 text-emerald-800">
+                Your email draft has been opened. Send it to complete your enrollment request. No WhatsApp or account sign-in is required.
+              </div>
+            ) : (
+              <form onSubmit={submit} className="mt-6 space-y-4">
+                <input required value={name} onChange={e => setName(e.target.value)} placeholder="Full name" className="w-full rounded-xl border border-slate-300 px-4 py-3.5 outline-none focus:border-[#1B3A6B]" />
+                <input required value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone number" className="w-full rounded-xl border border-slate-300 px-4 py-3.5 outline-none focus:border-[#1B3A6B]" />
+                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" className="w-full rounded-xl border border-slate-300 px-4 py-3.5 outline-none focus:border-[#1B3A6B]" />
+                <button type="submit" className="w-full rounded-xl bg-[#C8102E] px-5 py-3.5 font-black text-white hover:bg-[#a90d27]">Continue by Email</button>
+                <p className="text-center text-xs leading-5 text-slate-500">This opens your email app with the course details. You do not need to create an account.</p>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -88,7 +131,7 @@ export default function CscaPage() {
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <a href={OFFICIAL_REGISTER} target="_blank" rel="noreferrer" className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1B3A6B] px-5 py-3.5 font-black text-white">Register at csca.cn <ExternalLink className="h-4 w-4" /></a>
-                <button onClick={dismissPopup} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3.5 font-black text-[#1B3A6B]">View CSCA courses</button>
+                <button onClick={() => { dismissPopup(); setTimeout(() => document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" }), 50); }} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3.5 font-black text-[#1B3A6B]">View CSCA courses</button>
               </div>
               <p className="text-xs leading-5 text-slate-500">Official schedule source: CSCA. GL Education does not administer the examination.</p>
             </div>
