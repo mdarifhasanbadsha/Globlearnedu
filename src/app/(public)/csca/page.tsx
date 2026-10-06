@@ -78,7 +78,15 @@ function CourseJoin({ course }: { course: string }) {
                 <input required value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone number" className="w-full rounded-xl border border-slate-300 px-4 py-3.5 outline-none focus:border-[#1B3A6B]" />
                 <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" className="w-full rounded-xl border border-slate-300 px-4 py-3.5 outline-none focus:border-[#1B3A6B]" />
                 <button type="submit" className="w-full rounded-xl bg-[#C8102E] px-5 py-3.5 font-black text-white hover:bg-[#a90d27]">Continue by Email</button>
-                <p className="text-center text-xs leading-5 text-slate-500">This opens your email app with the course details. You do not need to create an account.</p>
+                <a
+                  href={"https://wa.me/8801901923239?text=" + encodeURIComponent("Hello GL Education, I want to join the CSCA course: " + course)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3.5 font-black text-white hover:bg-[#1fb85a]"
+                >
+                  Join via WhatsApp
+                </a>
+                <p className="text-center text-xs leading-5 text-slate-500">Choose email or WhatsApp. No account sign-in is required.</p>
               </form>
             )}
           </div>
