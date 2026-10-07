@@ -179,9 +179,7 @@ export default function CscaPage() {
 
       <section className="border-b bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap gap-2 px-5 py-4 md:px-8">
-          {[
-            ["#overview","Overview"],["#subjects","Subjects"],["#schedule","2026–27 Schedule"],["#courses","CSCA Courses"],["#faq","FAQ"]
-          ].map(([href,label]) => <a key={href} href={href} className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200">{label}</a>)}
+          {[["#overview","Overview"],["#subjects","Subjects"],["#schedule","2026–27 Schedule"],["#courses","CSCA Courses"],["/csca/homework","Homework"],["#faq","FAQ"]].map(([href,label]) => href.startsWith("/") ? <Link key={href} href={href} className="rounded-full bg-[#C8102E] px-4 py-2 text-sm font-black text-white transition hover:bg-[#a90d27]">{label}</Link> : <a key={href} href={href} className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200">{label}</a>)}
           <a href={ACADEMY_GUIDE} target="_blank" rel="noreferrer" className="rounded-full bg-[#1B3A6B] px-4 py-2 text-sm font-black text-white">Exam guide <ExternalLink className="ml-1 inline h-3.5 w-3.5" /></a>
         </div>
       </section>
