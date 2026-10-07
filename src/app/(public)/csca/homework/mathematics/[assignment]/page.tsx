@@ -41,14 +41,14 @@ export default function MathematicsHomework1(){
   async function start(){
     setError(""); if(!name.trim()||!phone.trim()){setError("Please enter your name and phone number.");return;}
     setLoading(true);
-    try{const r=await fetch("/api/csca/homework?assignment="+key+"&phone="+encodeURIComponent(phone.trim()));const d=await r.json();if(d.submitted){setScore(d.score);setName(d.name);setPhone(d.phone);setStage("result");}else setStage("quiz");}
+    try{const r=await fetch("/api/csca/homework?assignment="+key+"&phone="+encodeURIComponent(phone.trim()));const d=await r.json();if(d.submitted){router.push("/csca/homework/result/"+d.token);}else setStage("quiz");}
     catch{setError("Could not check your previous submission. Please try again.");} finally{setLoading(false);}
   }
 
   async function submit(){
     setError(""); if(answers.some(a=>a<0)){setError("Please answer all 10 questions before submitting.");return;}
     setLoading(true); const finalScore=answers.reduce((n,a,i)=>n+(a===QUESTIONS[i].answer?1:0),0);
-    try{const r=await fetch("/api/csca/homework",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assignment:key,name:name.trim(),phone:phone.trim(),answers,score:finalScore})});const d=await r.json();if(!r.ok){setError(d.error||"Submission failed.");return;}setScore(d.score);setName(d.name);setPhone(d.phone);setStage("result");}
+    try{const r=await fetch("/api/csca/homework",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({assignment:key,name:name.trim(),phone:phone.trim(),answers,score:finalScore})});const d=await r.json();if(!r.ok){setError(d.error||"Submission failed.");return;}router.push("/csca/homework/result/"+d.token);}
     catch{setError("Submission failed. Please check your connection and try again.");} finally{setLoading(false);}
   }
 
