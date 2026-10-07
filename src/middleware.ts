@@ -36,11 +36,9 @@ function isPublicPath(pathname: string): boolean {
   return publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
-export default auth((req) => {
+const protectedMiddleware = auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
-
-  if (isPublicPath(pathname)) return NextResponse.next();
 
   if (!session?.user) {
     const signInUrl = new URL("/sign-in", req.url);
@@ -64,6 +62,11 @@ export default auth((req) => {
 
   return NextResponse.next();
 });
+
+export default function middleware(req: Parameters<typeof protectedMiddleware>[0]) {
+  if (isPublicPath(req.nextUrl.pathname)) return NextResponse.next();
+  return protectedMiddleware(req);
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
