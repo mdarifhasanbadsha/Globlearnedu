@@ -36,7 +36,7 @@ export default function HomeworkPage() {
                 <div className="rounded-2xl bg-slate-50 p-4"><span className="text-xs font-bold text-slate-500">Assignments</span><b className="mt-1 block text-xl">{active?"20":"—"}</b></div>
                 <div className="rounded-2xl bg-slate-50 p-4"><span className="text-xs font-bold text-slate-500">Released</span><b className="mt-1 block text-xl">{active?"1 / 20":"0 / 20"}</b></div>
               </div>
-              <Link href={active?"/csca/homework/mathematics/1":"#"} aria-disabled={!active} className={"mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-black "+(active?"bg-[#C8102E] text-white hover:bg-[#a90d27]":"pointer-events-none bg-slate-100 text-slate-400")}>{active?"Open Mathematics Assignments":"Not released yet"}{active&&<ArrowRight className="h-4 w-4"/>}</Link>
+              <Link href={active?"/csca/homework/mathematics":"#"} aria-disabled={!active} className={"mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-black "+(active?"bg-[#C8102E] text-white hover:bg-[#a90d27]":"pointer-events-none bg-slate-100 text-slate-400")}>{active?"Open Mathematics Assignments":"Not released yet"}{active&&<ArrowRight className="h-4 w-4"/>}</Link>
             </div>
           ))}
         </div>
