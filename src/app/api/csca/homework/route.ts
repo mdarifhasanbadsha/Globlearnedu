@@ -24,11 +24,19 @@ async function ensureTable(){
 function normalizePhone(v:string){ return v.replace(/[^0-9+]/g,"").replace(/^00/,"+"); }
 
 function firstRow(result:any){ return result?.rows?.[0] || result?.[0]; }
+function adminToken(){ return crypto.createHmac("sha256","GL-EDU-CSCA-ADMIN").update("csca-homework-admin").digest("hex"); }
+function validAdmin(req:NextRequest){ return req.headers.get("x-csca-admin-token")===adminToken(); }
 
 export async function GET(req:NextRequest){
   try{
     await ensureTable();
     const {searchParams}=new URL(req.url);
+    if(searchParams.get("admin")==="1"){
+      if(!validAdmin(req)) return NextResponse.json({error:"Unauthorized."},{status:401});
+      const selected=searchParams.get("assignment")||"math-1";
+      const rows=await db.execute(sql`SELECT id, assignment, name, phone, score, submitted_at FROM csca_homework_submissions WHERE assignment=${selected} ORDER BY submitted_at DESC`);
+      return NextResponse.json({submissions:rows?.rows||rows||[]});
+    }
     const token=searchParams.get("token");
     const assignment=searchParams.get("assignment");
     const phone=searchParams.get("phone");
@@ -52,6 +60,14 @@ export async function POST(req:NextRequest){
   try{
     await ensureTable();
     const body=await req.json();
+    if(body.adminLogin===true){
+      const adminPhone=String(body.phone||"").replace(/[^0-9]/g,"");
+      const adminPassword=String(body.password||"");
+      const supplied=crypto.createHash("sha256").update(adminPhone+":"+adminPassword).digest("hex");
+      const expected="cedf64195389f5ef9e15ca67231c28da8fc2a78fa9de0e3f86b0428b4f14f4f9";
+      if(supplied===expected) return NextResponse.json({authenticated:true,token:adminToken()});
+      return NextResponse.json({authenticated:false,error:"Invalid admin phone number or password."},{status:401});
+    }
     const assignment=String(body.assignment||"").trim();
     const name=String(body.name||"").trim().slice(0,150);
     const phone=normalizePhone(String(body.phone||"").trim()).slice(0,40);
