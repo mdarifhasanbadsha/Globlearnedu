@@ -23,7 +23,7 @@ export default function HomeworkPage() {
           </div>
         </div>
       </section>
-      <section className="mx-auto max-w-7xl px-5 py-12 md:px-8">
+      <section className="mx-auto max-w-7xl px-5 py-12 md:px-8"><div className="mb-6 flex justify-end"><Link href="/csca/homework/admin" className="text-xs font-bold text-slate-400 hover:text-[#1B3A6B]">Admin Login</Link></div>
         <div className="grid gap-5 md:grid-cols-2">
           {subjects.map(({slug,title:subject,icon:Icon,active,desc}) => (
             <div key={slug} className={"rounded-[2rem] border bg-white p-6 shadow-sm transition md:p-7 "+(active?"border-[#C8102E]/30":"border-slate-200")}>
