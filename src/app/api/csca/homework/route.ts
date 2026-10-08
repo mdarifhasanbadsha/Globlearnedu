@@ -72,7 +72,8 @@ export async function POST(req:NextRequest){
     const name=String(body.name||"").trim().slice(0,150);
     const phone=normalizePhone(String(body.phone||"").trim()).slice(0,40);
     const answers=Array.isArray(body.answers)?body.answers.slice(0,20):[];
-    const score=Math.max(0,Math.min(10,Number(body.score)||0));
+    const maxScore=assignment==="physics-1"?20:10;
+    const score=Math.max(0,Math.min(maxScore,Number(body.score)||0));
     if(!["math-1","physics-1"].includes(assignment)) return NextResponse.json({error:"This assignment is not available."},{status:400});
     if(!name||phone.length<6) return NextResponse.json({error:"Please provide a valid name and phone number."},{status:400});
     const existing=await db.execute(sql`SELECT name, phone, score, result_token AS token FROM csca_homework_submissions WHERE assignment=${assignment} AND phone=${phone} LIMIT 1`);
