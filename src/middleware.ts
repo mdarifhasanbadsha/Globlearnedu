@@ -65,7 +65,7 @@ const protectedMiddleware = auth((req) => {
 
 export default function middleware(req: Parameters<typeof protectedMiddleware>[0]) {
   if (isPublicPath(req.nextUrl.pathname)) return NextResponse.next();
-  return protectedMiddleware(req);
+  return (protectedMiddleware as any)(req);
 }
 
 export const config = {
