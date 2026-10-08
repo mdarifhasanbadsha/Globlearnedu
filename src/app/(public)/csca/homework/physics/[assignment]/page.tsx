@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle2, Eye, MessageCircle, Sparkles, Trophy, AlertCircle, Atom } from "lucide-react";
+import { ArrowLeft, ArrowRight, Atom } from "lucide-react";
 
 const QUESTIONS = [
  {q:"Which statement correctly describes Newton's First Law of Motion?",options:["A body always needs a force to keep moving","A body remains at rest or moves with uniform velocity in a straight line unless acted upon by an external unbalanced force","Every action has an equal and opposite reaction","Force is always equal to velocity"],answer:1,explain:"The PPT defines the First Law as the Law of Inertia."},
@@ -27,9 +27,6 @@ const QUESTIONS = [
  {q:"An object starts from rest and accelerates at 4 m/s² for 3 s. What displacement does it cover?",options:["6 m","12 m","18 m","36 m"],answer:2,explain:"s = ut + ½at² = 0 + ½×4×9 = 18 m."},
  {q:"An object has u = 10 m/s, a = 2 m/s² and s = 24 m. What is its final velocity?",options:["12 m/s","14 m/s","16 m/s","18 m/s"],answer:1,explain:"v² = u² + 2as = 100 + 96 = 196, so v = 14 m/s."},
 ];
-
-const FB="https://www.facebook.com/globlearneducation"; const WA="8801993295109";
-function resultMessage(score:number){if(score>=14)return{title:"Excellent Physics Work! 🎉",text:"Congratulations! You have a strong understanding of the first Physics class.",tone:"success"};if(score>=7)return{title:"Good start — review the topic 📚",text:"You have a good start. Review the formulas and practice questions once more to strengthen your understanding.",tone:"review"};return{title:"Please review Class 1 carefully",text:"You may have missed some important parts of the class. Review the topic and visit GL Education's Facebook page for the recorded class.",tone:"missed"};}
 
 export default function PhysicsHomework1(){
  const router=useRouter(); const params=useParams(); const [stage,setStage]=useState<"intro"|"quiz">("intro"); const [name,setName]=useState(""); const [phone,setPhone]=useState(""); const [answers,setAnswers]=useState<number[]>(Array(20).fill(-1)); const [loading,setLoading]=useState(false); const [error,setError]=useState(""); const key="physics-1";
