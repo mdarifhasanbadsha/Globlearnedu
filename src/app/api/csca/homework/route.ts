@@ -41,7 +41,7 @@ export async function GET(req:NextRequest){
     const assignment=searchParams.get("assignment");
     const phone=searchParams.get("phone");
     if(token){
-      const rows=await db.execute(sql`SELECT name, phone, score, assignment, result_token AS token, submitted_at FROM csca_homework_submissions WHERE result_token=${token} LIMIT 1`);
+      const rows=await db.execute(sql`SELECT name, phone, score, answers, assignment, result_token AS token, submitted_at FROM csca_homework_submissions WHERE result_token=${token} LIMIT 1`);
       const row=firstRow(rows);
       return NextResponse.json(row?{submitted:true,...row}:{submitted:false});
     }
@@ -73,7 +73,7 @@ export async function POST(req:NextRequest){
     const phone=normalizePhone(String(body.phone||"").trim()).slice(0,40);
     const answers=Array.isArray(body.answers)?body.answers.slice(0,20):[];
     const score=Math.max(0,Math.min(10,Number(body.score)||0));
-    if(assignment!=="math-1") return NextResponse.json({error:"This assignment is not available."},{status:400});
+    if(!["math-1","physics-1"].includes(assignment)) return NextResponse.json({error:"This assignment is not available."},{status:400});
     if(!name||phone.length<6) return NextResponse.json({error:"Please provide a valid name and phone number."},{status:400});
     const existing=await db.execute(sql`SELECT name, phone, score, result_token AS token FROM csca_homework_submissions WHERE assignment=${assignment} AND phone=${phone} LIMIT 1`);
     const old=firstRow(existing);
