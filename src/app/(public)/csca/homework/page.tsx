@@ -5,7 +5,7 @@ import { Calculator, Atom, FlaskConical, Languages, LockKeyhole, CheckCircle2, A
 
 const subjects = [
   { slug:"mathematics", title:"Mathematics", icon:Calculator, active:true, desc:"Definitions, formulas, coordinate geometry and CSCA-style basic practice." },
-  { slug:"physics", title:"Physics", icon:Atom, active:false, desc:"Assignments will be released after the relevant classes." },
+  { slug:"physics", title:"Physics", icon:Atom, active:true, desc:"Motion and Kinematics: Newton’s Laws, formulas, projectile motion and basic practice." },
   { slug:"chemistry", title:"Chemistry", icon:FlaskConical, active:false, desc:"Assignments will be released after the relevant classes." },
   { slug:"chinese-language", title:"Chinese Language", icon:Languages, active:false, desc:"Language assignments will be released with the Chinese classes." },
 ];
@@ -34,9 +34,9 @@ export default function HomeworkPage() {
               <h2 className="mt-5 text-2xl font-black">{subject}</h2><p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <div className="rounded-2xl bg-slate-50 p-4"><span className="text-xs font-bold text-slate-500">Assignments</span><b className="mt-1 block text-xl">{active?"20":"—"}</b></div>
-                <div className="rounded-2xl bg-slate-50 p-4"><span className="text-xs font-bold text-slate-500">Released</span><b className="mt-1 block text-xl">{active?"1 / 20":"0 / 20"}</b></div>
+                <div className="rounded-2xl bg-slate-50 p-4"><span className="text-xs font-bold text-slate-500">Released</span><b className="mt-1 block text-xl">{active?(slug==="physics"?"1 / 20":"1 / 20"):"0 / 20"}</b></div>
               </div>
-              <Link href={active?"/csca/homework/mathematics":"#"} aria-disabled={!active} className={"mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-black "+(active?"bg-[#C8102E] text-white hover:bg-[#a90d27]":"pointer-events-none bg-slate-100 text-slate-400")}>{active?"Open Mathematics Assignments":"Not released yet"}{active&&<ArrowRight className="h-4 w-4"/>}</Link>
+              <Link href={slug==="physics"?"/csca/homework/physics":active?"/csca/homework/mathematics":"#"} aria-disabled={!active} className={"mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-black "+(active?"bg-[#C8102E] text-white hover:bg-[#a90d27]":"pointer-events-none bg-slate-100 text-slate-400")}>{slug==="physics"?"Open Physics Assignments":active?"Open Mathematics Assignments":"Not released yet"}{active&&<ArrowRight className="h-4 w-4"/>}</Link>
             </div>
           ))}
         </div>
