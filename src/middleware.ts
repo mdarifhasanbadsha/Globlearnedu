@@ -30,6 +30,7 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/cscaattaendance" || pathname.startsWith("/cscaattaendance/")) return true;
   if (pathname.startsWith("/api/attendance")) return true;
   if (pathname.startsWith("/api/csca/homework")) return true;
+  if (pathname.startsWith("/api/csca/mocktest")) return true;
   if (pathname.startsWith("/api/public")) return true;
   if (pathname.startsWith("/_next")) return true;
   if (pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?|ttf|eot)$/)) return true;
