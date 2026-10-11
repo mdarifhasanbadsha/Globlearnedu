@@ -443,7 +443,7 @@ const mathematics1: MockExam = {
         "(−1, 2)",
         "(1, 2)"
       ],
-      "answerIndex": 0,
+      "answerIndex": 1,
       "marks": 2.0833333333333335
     },
     {
