@@ -39,7 +39,7 @@ export async function GET(req:NextRequest){try{
   await ensureTable();const s=p.get("subject")||"",n=Number(p.get("test")||0),phone=normalizePhone(p.get("phone")||"");
   if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||phone.length<6)return NextResponse.json({error:"Please check the test and phone number."},{status:400});
   const key=mockKey(s,n);const r=await db.execute(sql`SELECT candidate_name,phone,score,total_marks,question_count,away_count,result_token AS token,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} AND phone=${phone} LIMIT 1`);
-  const row=firstRow(r);return NextResponse.json(row?{taken:true,...row}:{taken:false},{headers:{"Cache-Control":"no-store"});
+  const row=firstRow(r);return NextResponse.json(row?{taken:true,...row}:{taken:false},{headers:{"Cache-Control":"no-store"}});
  }
  if(p.get("admin")==="1"){
   await ensureTable();if(!validAdmin(req))return NextResponse.json({error:"Unauthorized."},{status:401});
