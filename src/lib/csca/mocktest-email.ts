@@ -29,7 +29,7 @@ export async function sendMockTestSubmissionEmails(input: SubmissionEmailInput) 
   const submitted = new Date(input.submittedAt).toLocaleString("en-GB", {
     timeZone: "Asia/Dhaka", dateStyle: "medium", timeStyle: "short"
   });
-  const teacherMessage = "Hello GL Education, I have completed " + testTitle + " and scored " +
+  const teacherMessage = "Hello GL Education, my name is " + input.candidateName + " and my phone number is " + input.phone + ". I completed " + testTitle + " and scored " +
     scoreLabel + "/" + input.totalMarks + " (" + percent +
     "%). I would like guidance about CSCA preparation and studying in China. Please share the available support and next steps.";
   const teacherUrl = "https://wa.me/8801993295109?text=" + encodeURIComponent(teacherMessage);
