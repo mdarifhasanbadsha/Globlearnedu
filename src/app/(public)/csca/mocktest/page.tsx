@@ -20,11 +20,11 @@ const faqs = [
   },
   {
     q: "Is this an official CSCA mock test or a real past paper?",
-    a: "No. The released Mathematics Mock Test 1 is an original practice paper prepared for this collection. It is not an official CSCA paper, a past paper released by the exam organiser, or endorsed by the China Scholarship Council. It is designed for independent exam-style practice."
+    a: "No. The released Mathematics mock tests are original practice papers prepared for this collection. It is not an official CSCA paper, a past paper released by the exam organiser, or endorsed by the China Scholarship Council. It is designed for independent exam-style practice."
   },
   {
     q: "How many questions and how much time are in Mathematics Mock Test 1?",
-    a: "This GL Education practice paper contains 48 single-answer multiple-choice questions, a 60-minute timer and a maximum score of 100 marks. Always confirm the current official format and requirements on csca.cn."
+    a: "Each released GL Education Mathematics practice paper contains 48 single-answer multiple-choice questions, a 60-minute timer and a maximum score of 100 marks. Always confirm the current official format and requirements on csca.cn."
   },
   {
     q: "Are the CSCA practice questions free?",
@@ -48,7 +48,7 @@ const faqs = [
   },
   {
     q: "Are these official CSCA exam questions?",
-    a: "No. The released Math Mock Test 1 is an original practice paper for this collection. It is written to support preparation and should not be represented as a leaked, official or recalled CSCA paper."
+    a: "No. The released Mathematics mock tests are original practice papers for this collection. It is written to support preparation and should not be represented as a leaked, official or recalled CSCA paper."
   },
   {
     q: "How should I prepare with a CSCA practice test?",
@@ -76,7 +76,7 @@ const pageStructuredData = {
       "@id": "https://globlearnedu.com/csca/mocktest#webpage",
       "url": "https://globlearnedu.com/csca/mocktest",
       "name": "Free CSCA Mock Test Online | Mathematics, Physics & Chemistry",
-      "description": "Take a free realistic CSCA-style mock test online. Start Mathematics Mock Test 1 with 48 questions, 60 minutes, instant scoring and a downloadable result.",
+      "description": "Take a free realistic CSCA-style mock test online. Explore Mathematics Mock Tests 1 and 2, each with 48 questions, a 60-minute timer, instant scoring and an answer-review option.",
       "isPartOf": { "@type": "WebSite", "@id": "https://globlearnedu.com/#website", "url": "https://globlearnedu.com/", "name": "Globlearn Education" },
       "inLanguage": "en",
       "breadcrumb": { "@id": "https://globlearnedu.com/csca/mocktest#breadcrumb" },
