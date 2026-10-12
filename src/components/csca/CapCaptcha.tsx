@@ -11,10 +11,15 @@ const CAP_WIDGET_SRC = "https://cdn.jsdelivr.net/npm/@cap.js/widget";
 
 export default function CapCaptcha({ onTokenChange }: CapCaptchaProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const onTokenChangeRef = useRef(onTokenChange);
   const endpoint = process.env.NEXT_PUBLIC_CAP_API_ENDPOINT?.trim();
 
   useEffect(() => {
-    onTokenChange("");
+    onTokenChangeRef.current = onTokenChange;
+  }, [onTokenChange]);
+
+  useEffect(() => {
+    onTokenChangeRef.current("");
     const container = containerRef.current;
     if (!container || !endpoint) return;
 
@@ -26,9 +31,9 @@ export default function CapCaptcha({ onTokenChange }: CapCaptchaProps) {
 
     const handleSolve = (event: Event) => {
       const detail = (event as CustomEvent<{ token?: string }>).detail;
-      onTokenChange(String(detail?.token || ""));
+      onTokenChangeRef.current(String(detail?.token || ""));
     };
-    const handleReset = () => onTokenChange("");
+    const handleReset = () => onTokenChangeRef.current("");
 
     widget.addEventListener("solve", handleSolve);
     widget.addEventListener("reset", handleReset);
@@ -39,7 +44,7 @@ export default function CapCaptcha({ onTokenChange }: CapCaptchaProps) {
       widget.removeEventListener("reset", handleReset);
       container.replaceChildren();
     };
-  }, [endpoint, onTokenChange]);
+  }, [endpoint]);
 
   return (
     <div className="mt-5">
