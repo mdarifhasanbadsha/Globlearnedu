@@ -8,8 +8,8 @@ import {getMockExam} from "@/lib/csca/mocktest-bank";
 import {isValidMockSubject,mockKey,RELEASED_MOCKS} from "@/lib/csca/mocktest-public";
 
 const firstRow=(r:any)=>r?.rows?.[0]||r?.[0];
-const isValidPhone=(v:string)=>/^0\\d{10}$/.test(v);
-const isValidComEmail=(v:string)=>/^[^\\s@]+@[^\\s@]+\\.com$/i.test(v.trim());
+const isValidPhone=(v:string)=>/^0\d{10}$/.test(v);
+const isValidComEmail=(v:string)=>/^[^\s@]+@[^\s@]+\.com$/i.test(v.trim());
 const normalizePhone=(v:string)=>{const d=v.replace(/[^0-9]/g,"");return d.length===11&&d.startsWith("01")?"88"+d:d;};
 const adminToken=()=>crypto.createHmac("sha256","GL-EDU-CSCA-ADMIN").update("csca-homework-admin").digest("hex");
 const validAdmin=(r:NextRequest)=>r.headers.get("x-csca-admin-token")===adminToken();
