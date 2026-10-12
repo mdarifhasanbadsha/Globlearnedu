@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     q: "Where can I take a free CSCA mock test online?",
-    a: "You can start with released Mathematics Mock Tests 1 and 2 on this GL Education page. Each is an online, timed practice paper with 48 questions, a 60-minute limit and a result out of 100 marks. Physics and Chemistry mock tests stay locked until their question sets are ready."
+    a: "GL Education is building a 20-test series for each of Mathematics, Physics and Chemistry. Released tests can be started from the subject pages; availability updates automatically as complete question sets are added and checked. Each released core-subject paper uses 48 questions, a 60-minute limit and a result out of 100 marks."
   },
   {
     q: "Is this an official CSCA mock test or a real past paper?",
@@ -33,7 +33,7 @@ const faqs = [
   },
   {
     q: "Which CSCA subjects can I practise here?",
-    a: "This page lists Mathematics, Physics and Chemistry. Mathematics Mock Tests 1 and 2 are currently released. Physics and Chemistry are listed for navigation but are marked Not Released Yet; their exam buttons remain unavailable until the question sets are reviewed."
+    a: "This page lists a planned series of 20 mock tests each for Mathematics, Physics and Chemistry. The availability count on each subject page shows which complete sets can be started now. New sets appear when their full question papers and answer keys are added and validated."
   },
   {
     q: "Can I take the CSCA Mathematics mock test on my phone?",
@@ -77,7 +77,7 @@ const pageStructuredData = {
       "@id": "https://globlearnedu.com/csca/mocktest#webpage",
       "url": "https://globlearnedu.com/csca/mocktest",
       "name": "Free CSCA Mock Test Online | Mathematics, Physics & Chemistry",
-      "description": "Take a free realistic CSCA-style mock test online. Explore Mathematics Mock Tests 1 and 2, each with 48 questions, a 60-minute timer, instant scoring and an answer-review option.",
+      "description": "Explore GL Education’s 20-test CSCA-style practice series for Mathematics, Physics and Chemistry. Released tests include a timed 48-question paper, scoring and answer review; additional sets are published as complete question banks are added and validated.",
       "isPartOf": { "@type": "WebSite", "@id": "https://globlearnedu.com/#website", "url": "https://globlearnedu.com/", "name": "Globlearn Education" },
       "inLanguage": "en",
       "breadcrumb": { "@id": "https://globlearnedu.com/csca/mocktest#breadcrumb" },
@@ -90,7 +90,7 @@ const pageStructuredData = {
       "url": "https://globlearnedu.com/csca/mocktest",
       "applicationCategory": "EducationalApplication",
       "operatingSystem": "Any modern web browser",
-      "description": "An independent CSCA-style practice environment with an available timed Mathematics mock test and result report. Not an official CSCA examination.",
+      "description": "An independent CSCA-style practice platform planning 20 mock tests for each core subject. Released tests provide timed practice and results; this is not an official CSCA examination.",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" }
     },
     {
@@ -109,11 +109,11 @@ const commonSubjectStats = [["48", "Questions"], ["60", "Minutes"], ["100", "Mar
 
 const featureSlides = [
   {
-    eyebrow: "MATHEMATICS · 2 MOCK TESTS RELEASED",
+    eyebrow: `MATHEMATICS · ${RELEASED_MOCKS.mathematics.length} OF 20 MOCK TESTS RELEASED`,
     title: "Official Mathematics syllabus",
     description: "The official syllabus covers Sets & Inequalities; Functions; Geometry & Algebra; and Probability & Statistics. Topics include set operations and quadratic/rational inequalities; function properties and elementary functions; arithmetic/geometric sequences and introductory calculus; analytic geometry, vectors, complex numbers, space geometry, probability, mean, variance and normal distribution.",
     stats: commonSubjectStats,
-    detail: "Based on the official 2025 CSCA Mathematics syllabus. GL Education Mock Tests 1 and 2 are independent practice papers—not official or past CSCA papers."
+    detail: `Based on the official 2025 CSCA Mathematics syllabus. ${RELEASED_MOCKS.mathematics.length} of 20 planned Mathematics practice sets are currently released. All GL Education papers are independent practice resources, not official or past CSCA papers.`
   },
   {
     eyebrow: "PHYSICS · NO MOCK TEST RELEASED YET",
@@ -165,7 +165,7 @@ export default function FreeMockTestsPage() {
             <div className="max-w-3xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[.16em] text-[#FFD700]"><ClipboardCheck className="h-4 w-4" /> Free online CSCA exam practice · 2026–2027</span>
               <h1 className="mt-5 text-4xl font-black leading-tight md:text-6xl">Free CSCA Mock Test Online</h1>
-              <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200 md:text-lg">Prepare for the China Scholastic Competency Assessment with realistic timed practice, original CSCA-style questions, instant scoring and a result report. Two Mathematics mock tests are available now, with exam topics and all subject categories shown below.</p>
+              <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200 md:text-lg">Prepare for the China Scholastic Competency Assessment with a planned series of 20 mock tests for each of Mathematics, Physics and Chemistry. Released papers provide timed, exam-style practice, scoring and answer review. Availability updates as complete question sets are added and checked.</p>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300">Independent preparation resource by GL Education. This is not the official CSCA exam and the released paper is not an official or past CSCA paper.</p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={browseSubjects} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C8102E] px-6 py-4 font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-red-800">Browse Exam Subjects <ArrowRight className="h-4 w-4" /></button>
@@ -237,8 +237,8 @@ export default function FreeMockTestsPage() {
               <span className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-[#C8102E]"><Sparkles className="h-4 w-4" /> Free CSCA practice</span>
               <h2 className="mt-3 text-3xl font-black md:text-4xl">Free CSCA Practice Questions and Realistic Mock Exams</h2>
               <p className="mt-5 leading-8 text-slate-600">Searching for <strong>CSCA exam practice</strong>, <strong>free CSCA mock tests</strong> or <strong>CSCA Mathematics questions</strong>? Use this page to practise in a structured online exam environment before your official test. The aim is to help you work under time pressure, review your performance and become familiar with a computer-based test flow.</p>
-              <p className="mt-4 leading-8 text-slate-600">The released Mathematics Mock Tests 1 and 2 each use 48 single-answer questions, a 60-minute time limit and a 100-mark scoring scale. The paper is an original practice resource written for this collection—it is designed as realistic CSCA-style preparation, but it is not the real official exam or a released past paper.</p>
-              <p className="mt-4 leading-8 text-slate-600">Physics and Chemistry are included as subject categories so students can find future practice sets in one place. Their mock tests remain marked <em>Not Released Yet</em> until the papers have been supplied and reviewed. We do not label unavailable tests as live or invent questions to fill the slots.</p>
+              <p className="mt-4 leading-8 text-slate-600">Each released core-subject mock is designed around 48 single-answer questions, a 60-minute time limit and a 100-mark scoring scale. GL Education creates independent CSCA-style practice resources; they are not the real official exam or released past papers. Check the subject cards above for the live release count in the 20-test series.</p>
+              <p className="mt-4 leading-8 text-slate-600">Each subject has 20 planned mock-test slots. A slot becomes available when its complete question set and answer key are added to the exam bank and pass basic structural checks. Until then, the page clearly marks it as not released; we do not invent questions or advertise incomplete exams as live.</p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row"><Link href="/csca/mocktest/mathematics/1" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C8102E] px-5 py-3.5 font-black text-white">Start Free CSCA Math Mock <ArrowRight className="h-4 w-4" /></Link><Link href="/csca" className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3.5 font-black text-[#1B3A6B]">Read the CSCA Exam Guide</Link></div>
             </div>
             <aside className="rounded-[2rem] border border-slate-200 bg-slate-50 p-6 md:p-7">
@@ -264,7 +264,7 @@ export default function FreeMockTestsPage() {
           {[
             ["Purpose","Official assessment for the applicable admissions route","Independent exam-preparation practice"],
             ["Registration and score","Use official CSCA systems and rules","Practice record and result page only"],
-            ["Available questions","Follow the official exam organiser's materials and policies","Original Mathematics Mock Tests 1 and 2 are available now"],
+            ["Available questions","Follow the official exam organiser's materials and policies",`${RELEASED_MOCKS.mathematics.length} Mathematics practice set(s) released; each subject is planned for 20 sets`],
             ["Cost to attempt this mock","Official exam fees may apply; check the official portal","The released practice mock is free"],
             ["Recognition","Official CSCA result, subject to official rules","Not an official score, transcript or admission result"]
           ].map(([feature,official,gl])=><tr key={feature}><th scope="row" className="px-5 py-4 align-top font-black text-[#0A1628]">{feature}</th><td className="px-5 py-4 align-top">{official}</td><td className="px-5 py-4 align-top">{gl}</td></tr>)}
@@ -278,7 +278,7 @@ export default function FreeMockTestsPage() {
           <div className="flex items-center gap-3"><Target className="h-7 w-7 text-[#FFD700]" /><div><p className="text-xs font-black uppercase tracking-[.18em] text-[#FFD700]">A simple study workflow</p><h2 className="mt-2 text-3xl font-black md:text-4xl">How to use a CSCA practice test</h2></div></div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
-              ["01","Choose a released mock","Choose either released Mathematics mock test and read its instructions before starting."],
+              ["01","Choose a released mock","Choose any available test shown on the subject page and read its instructions before starting. New tests appear as complete sets are released."],
               ["02","Practise under time pressure","Work independently, manage your time and avoid switching away from the test screen."],
               ["03","Review and plan","Check your result, note weak topics and return to your CSCA preparation materials."]
             ].map(([n,title,desc])=><article key={n} className="rounded-2xl border border-white/10 bg-white/5 p-5"><span className="text-3xl font-black text-[#FFD700]">{n}</span><h3 className="mt-4 text-lg font-black">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-300">{desc}</p></article>)}
@@ -288,7 +288,7 @@ export default function FreeMockTestsPage() {
       </section>
 
       <section id="csca-faq" className="mx-auto max-w-7xl px-5 py-14 md:px-8">
-        <div className="max-w-3xl"><p className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">Frequently asked questions</p><h2 className="mt-2 text-3xl font-black md:text-4xl">CSCA Mock Test and Exam Preparation FAQs</h2><p className="mt-3 leading-7 text-slate-600">Answers about free CSCA practice questions, the released Mathematics mock, test results and official exam requirements.</p></div>
+        <div className="max-w-3xl"><p className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">Frequently asked questions</p><h2 className="mt-2 text-3xl font-black md:text-4xl">CSCA Mock Test and Exam Preparation FAQs</h2><p className="mt-3 leading-7 text-slate-600">Answers about the 20-test subject series, available CSCA practice questions, mock-test results and official exam requirements.</p></div>
         <div className="mt-7 grid gap-3 lg:grid-cols-2">{faqs.map(({q,a},i)=><details key={q} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><summary className="flex cursor-pointer list-none items-start justify-between gap-4 font-black leading-6"><span><span className="mr-2 text-xs text-[#C8102E]">{String(i+1).padStart(2,"0")}</span>{q}</span><ArrowRight className="mt-1 h-4 w-4 shrink-0 transition group-open:rotate-90" /></summary><p className="mt-4 text-sm leading-7 text-slate-600">{a}</p></details>)}</div>
       </section>
 
