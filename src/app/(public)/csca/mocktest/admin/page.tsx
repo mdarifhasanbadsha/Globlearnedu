@@ -52,11 +52,11 @@ const waPhone = (v: string) => {
   if (d.startsWith("880") && d.length === 13) return d;
   if (d.startsWith("86") && d.length === 13) return d;
   // Bangladesh local format: 019XXXXXXXX -> 88019XXXXXXXX.
-  if (/^01[3-9]\\d{8}$/.test(d)) return "88" + d;
+  if (/^01[3-9]\d{8}$/.test(d)) return "88" + d;
   // Bangladesh without the leading 0: 19XXXXXXXX -> 88019XXXXXXXX.
-  if (/^1[3-9]\\d{8}$/.test(d)) return "880" + d;
+  if (/^1[3-9]\d{8}$/.test(d)) return "880" + d;
   // China local mobile format: 11 digits beginning with 1.
-  if (/^1[3-9]\\d{9}$/.test(d)) return "86" + d;
+  if (/^1[3-9]\d{9}$/.test(d)) return "86" + d;
   return d;
 };
 const validEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(String(v || "").trim());
