@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { MOCK_SUBJECTS, RELEASED_MOCKS } from "@/lib/csca/mocktest-public";
 import { PHONE_COUNTRIES } from "@/lib/csca/phone-countries";
-import CapCaptcha from "@/components/csca/CapCaptcha";
 
 type ExamAttempt = {
   id: string;
@@ -88,8 +87,7 @@ export default function MockTestAdmin() {
   const [token, setToken] = useState("");
   const [logged, setLogged] = useState(false);
   const [loginError, setLoginError] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaWidgetVersion, setCaptchaWidgetVersion] = useState(0);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [mode, setMode] = useState<"students" | "reports">("students");
 
   const [students, setStudents] = useState<Student[]>([]);
@@ -176,8 +174,8 @@ export default function MockTestAdmin() {
 
   async function login() {
     setLoginError("");
-    if (!captchaToken) {
-      setLoginError("Please complete the CAPTCHA verification first.");
+    if (captchaAnswer.trim() !== "126") {
+      setLoginError("Incorrect answer. Please solve 39 + 87.");
       return;
     }
     setStudentsLoading(true);
@@ -185,20 +183,16 @@ export default function MockTestAdmin() {
       const r = await fetch("/api/csca/homework", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminLogin: true, phone, password, captchaToken })
+        body: JSON.stringify({ adminLogin: true, phone, password, captchaAnswer })
       });
       const d = await r.json();
       if (!r.ok) {
-        setCaptchaToken("");
-        setCaptchaWidgetVersion(v => v + 1);
         throw new Error(d.error || "Login failed.");
       }
       setToken(d.token);
       setLogged(true);
       await loadStudents(d.token);
     } catch (e) {
-      setCaptchaToken("");
-      setCaptchaWidgetVersion(v => v + 1);
       setLoginError(e instanceof Error ? e.message : "Unable to connect.");
     } finally {
       setStudentsLoading(false);
@@ -351,9 +345,9 @@ export default function MockTestAdmin() {
           <label className="mt-4 block text-sm font-bold">Password
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => { if (e.key === "Enter") void login(); }} placeholder="Password" className="mt-2 w-full rounded-xl border px-4 py-3" />
           </label>
-          <CapCaptcha key={captchaWidgetVersion} onTokenChange={setCaptchaToken} />
+          <label className="mt-5 block text-sm font-bold">Security question: What is 39 + 87? <input value={captchaAnswer} onChange={e => setCaptchaAnswer(e.target.value)} inputMode="numeric" placeholder="Enter the answer" className="mt-2 w-full rounded-xl border px-4 py-3" /></label>
           {loginError && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm font-bold text-red-700">{loginError}</p>}
-          <button onClick={() => void login()} disabled={studentsLoading || !captchaToken || !process.env.NEXT_PUBLIC_CAP_API_ENDPOINT} className="mt-5 w-full rounded-xl bg-[#C8102E] px-5 py-3.5 font-black text-white disabled:opacity-50">
+          <button onClick={() => void login()} disabled={studentsLoading} className="mt-5 w-full rounded-xl bg-[#C8102E] px-5 py-3.5 font-black text-white disabled:opacity-50">
             {studentsLoading ? "Signing in…" : "Login to Reports"}
           </button>
         </div>
