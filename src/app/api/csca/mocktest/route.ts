@@ -36,6 +36,26 @@ export async function GET(req:NextRequest){try{
   return NextResponse.json({released:true,exam:publicExam(e)},{headers:{"Cache-Control":"no-store"}});
  }
  const token=p.get("token");
+ if(token && p.get("review")==="1"){
+  await ensureTable();
+  const r=await db.execute(sql`SELECT exam_key,answers,result_token AS token FROM csca_mocktest_attempts WHERE result_token=${token} LIMIT 1`);
+  const row=firstRow(r);
+  if(!row)return NextResponse.json({submitted:false},{status:404,headers:{"Cache-Control":"no-store"}});
+  const exam=getMockExam(String(row.exam_key||""));
+  if(!exam)return NextResponse.json({submitted:false},{status:404,headers:{"Cache-Control":"no-store"}});
+  let savedAnswers:number[]=[];
+  try{
+   const raw=row.answers;
+   savedAnswers=Array.isArray(raw)?raw.map((v:unknown)=>Number(v)):JSON.parse(String(raw||"[]"));
+   if(!Array.isArray(savedAnswers))savedAnswers=[];
+  }catch{savedAnswers=[];}
+  const questions=exam.questions.map((q,i)=>({
+   number:i+1,prompt:q.prompt,options:q.options,
+   selectedIndex:Number.isInteger(savedAnswers[i])?savedAnswers[i]:-1,
+   answerIndex:q.answerIndex,explanation:q.explanation||"",marks:q.marks??1
+  }));
+  return NextResponse.json({submitted:true,questions},{headers:{"Cache-Control":"no-store"}});
+ }
  if(token){await ensureTable();const r=await db.execute(sql`SELECT exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts WHERE result_token=${token} LIMIT 1`);const row=firstRow(r);return NextResponse.json(row?{submitted:true,...row}:{submitted:false},{headers:{"Cache-Control":"no-store"}});}
  if(p.get("action")==="existing"){
   await ensureTable();const s=p.get("subject")||"",n=Number(p.get("test")||0),phone=normalizePhone(p.get("phone")||"");
