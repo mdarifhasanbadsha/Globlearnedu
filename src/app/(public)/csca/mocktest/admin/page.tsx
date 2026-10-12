@@ -8,6 +8,7 @@ import {
   ClipboardList, ShieldCheck, Clock3, TrendingUp, CheckCircle2
 } from "lucide-react";
 import { MOCK_SUBJECTS, RELEASED_MOCKS } from "@/lib/csca/mocktest-public";
+import { PHONE_COUNTRIES } from "@/lib/csca/phone-countries";
 
 type ExamAttempt = {
   id: string;
@@ -25,6 +26,7 @@ type ExamAttempt = {
 };
 type Student = {
   phone: string;
+  country_iso2?: string | null;
   name: string;
   email: string;
   exam_count: number;
@@ -44,7 +46,7 @@ const displayPhone = (v: string) => {
   const d = digits(v);
   if (d.startsWith("880") && d.length === 13) return "0" + d.slice(3);
   if (d.startsWith("86") && d.length === 13) return "+86 " + d.slice(2);
-  return d;
+  return d.length >= 8 ? "+" + d : d;
 };
 const waPhone = (v: string) => {
   const d = digits(v);
@@ -61,6 +63,19 @@ const waPhone = (v: string) => {
 };
 const validEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(String(v || "").trim());
 const titleCase = (v: string) => v ? v.charAt(0).toUpperCase() + v.slice(1) : "Subject";
+const studentCountryIso = (student: Student) => {
+  const saved = String(student.country_iso2 || "").toLowerCase();
+  if (PHONE_COUNTRIES.some(country => country.iso2 === saved)) return saved;
+  const d = digits(student.phone);
+  const matches = PHONE_COUNTRIES.filter(country => d.startsWith(country.dialCode));
+  if (!matches.length) return "";
+  const longest = Math.max(...matches.map(country => country.dialCode.length));
+  const best = matches.filter(country => country.dialCode.length === longest);
+  return best.length === 1 ? best[0].iso2 : "";
+};
+const studentCountryLabel = (student: Student) =>
+  PHONE_COUNTRIES.find(country => country.iso2 === studentCountryIso(student))?.name || "Not recorded";
+
 const dateLabel = (v: string) => {
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
@@ -78,6 +93,11 @@ export default function MockTestAdmin() {
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentError, setStudentError] = useState("");
   const [search, setSearch] = useState("");
+  const [countryFilter, setCountryFilter] = useState("all");
+  const [subjectFilter, setSubjectFilter] = useState("all");
+  const [minScore, setMinScore] = useState("");
+  const [maxScore, setMaxScore] = useState("");
+  const [studentSort, setStudentSort] = useState<"recent" | "attempts" | "high" | "low">("recent");
   const [expandedPhone, setExpandedPhone] = useState("");
   const [sendingPhone, setSendingPhone] = useState("");
   const [actionError, setActionError] = useState("");
@@ -91,14 +111,28 @@ export default function MockTestAdmin() {
 
   const filteredStudents = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return students;
-    return students.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.phone.toLowerCase().includes(q) ||
-      displayPhone(s.phone).includes(q) ||
-      s.email.toLowerCase().includes(q)
-    );
-  }, [students, search]);
+    const min = minScore === "" ? 0 : Math.max(0, Math.min(100, Number(minScore)));
+    const max = maxScore === "" ? 100 : Math.max(0, Math.min(100, Number(maxScore)));
+    const filtered = students.filter(s => {
+      const iso = studentCountryIso(s);
+      if (countryFilter === "unknown" && iso) return false;
+      if (countryFilter !== "all" && countryFilter !== "unknown" && iso !== countryFilter) return false;
+      if (subjectFilter !== "all" && !s.attempts.some(at => at.subject === subjectFilter)) return false;
+      if (minScore !== "" && s.average_score < min) return false;
+      if (maxScore !== "" && s.average_score > max) return false;
+      if (q && ![
+        s.name, s.phone, displayPhone(s.phone), s.email, studentCountryLabel(s)
+      ].some(value => String(value || "").toLowerCase().includes(q))) return false;
+      return true;
+    });
+    filtered.sort((a, b) => {
+      if (studentSort === "attempts") return b.exam_count - a.exam_count || b.average_score - a.average_score;
+      if (studentSort === "high") return b.average_score - a.average_score || b.exam_count - a.exam_count;
+      if (studentSort === "low") return a.average_score - b.average_score || b.exam_count - a.exam_count;
+      return new Date(b.last_submitted_at).getTime() - new Date(a.last_submitted_at).getTime();
+    });
+    return filtered;
+  }, [students, search, countryFilter, subjectFilter, minScore, maxScore, studentSort]);
 
   async function loadStudents(t = token) {
     setStudentError("");
@@ -217,9 +251,9 @@ export default function MockTestAdmin() {
   }
 
   function downloadStudents() {
-    const head = ["Full name", "Phone number", "Email", "Exams taken", "Average score (%)", "Latest exam date"];
+    const head = ["Full name", "Phone number", "Country", "Email", "Exams taken", "Average score (%)", "Latest exam date"];
     const body = filteredStudents.map(s => [
-      s.name, displayPhone(s.phone), s.email, s.exam_count, s.average_score, dateLabel(s.last_submitted_at)
+      s.name, displayPhone(s.phone), studentCountryLabel(s), s.email, s.exam_count, s.average_score, dateLabel(s.last_submitted_at)
     ]);
     const blob = new Blob(["\ufeff" + [head, ...body].map(row => row.map(csvCell).join(",")).join("\n")], {
       type: "text/csv;charset=utf-8"
@@ -353,16 +387,52 @@ export default function MockTestAdmin() {
                   <button onClick={downloadStudents} disabled={!filteredStudents.length} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-[#1B3A6B] disabled:opacity-40"><Download className="h-4 w-4" /> Export CSV</button>
                 </div>
               </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                <label className="block text-xs font-bold text-slate-500">Country
+                  <select value={countryFilter} onChange={e => setCountryFilter(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-[#1B3A6B]">
+                    <option value="all">All countries</option>
+                    <option value="unknown">Not recorded / ambiguous</option>
+                    {PHONE_COUNTRIES.map(country => <option key={country.iso2} value={country.iso2}>{country.name} (+{country.dialCode})</option>)}
+                  </select>
+                </label>
+                <label className="block text-xs font-bold text-slate-500">Subject attempted
+                  <select value={subjectFilter} onChange={e => setSubjectFilter(e.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-[#1B3A6B]">
+                    <option value="all">Any subject</option>
+                    <option value="mathematics">Mathematics</option>
+                    <option value="physics">Physics</option>
+                    <option value="chemistry">Chemistry</option>
+                  </select>
+                </label>
+                <label className="block text-xs font-bold text-slate-500">Average score min (%)
+                  <input type="number" min="0" max="100" value={minScore} onChange={e => setMinScore(e.target.value)} placeholder="0" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-[#1B3A6B]" />
+                </label>
+                <label className="block text-xs font-bold text-slate-500">Average score max (%)
+                  <input type="number" min="0" max="100" value={maxScore} onChange={e => setMaxScore(e.target.value)} placeholder="100" className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-[#1B3A6B]" />
+                </label>
+                <label className="block text-xs font-bold text-slate-500">Sort students
+                  <select value={studentSort} onChange={e => setStudentSort(e.target.value as "recent" | "attempts" | "high" | "low")} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-[#1B3A6B]">
+                    <option value="recent">Latest activity</option>
+                    <option value="attempts">Most mock tests taken</option>
+                    <option value="high">Highest average score</option>
+                    <option value="low">Lowest average score</option>
+                  </select>
+                </label>
+                <div className="flex items-end">
+                  <button onClick={() => { setSearch(""); setCountryFilter("all"); setSubjectFilter("all"); setMinScore(""); setMaxScore(""); setStudentSort("recent"); }} className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">Reset filters</button>
+                </div>
+              </div>
+              <p className="mt-3 text-xs font-semibold text-slate-500">Showing {filteredStudents.length} of {students.length} unique students.</p>
               {studentError && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{studentError}</p>}
               {actionError && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{actionError}</p>}
               {actionNotice && <p className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-sm font-bold text-emerald-800"><CheckCircle2 className="h-4 w-4" /> {actionNotice}</p>}
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1000px] text-left text-sm">
+              <table className="w-full min-w-[1200px] text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-5 py-4">Student</th>
                     <th className="px-5 py-4">Phone number</th>
+                    <th className="px-5 py-4">Country</th>
                     <th className="px-5 py-4">Exams taken</th>
                     <th className="px-5 py-4">Average score</th>
                     <th className="px-5 py-4">Latest activity</th>
@@ -382,6 +452,7 @@ export default function MockTestAdmin() {
                             <p className="mt-1 max-w-[220px] break-all text-xs leading-5 text-slate-500">{student.email || "Email not recorded"}</p>
                           </td>
                           <td className="px-5 py-5 font-bold tabular-nums">{displayPhone(student.phone)}</td>
+                          <td className="px-5 py-5 text-sm text-slate-600">{studentCountryLabel(student)}</td>
                           <td className="px-5 py-5"><span className="rounded-full bg-blue-50 px-3 py-1.5 font-black text-[#1B3A6B]">{student.exam_count}</span><span className="ml-2 text-xs text-slate-500">attempts</span></td>
                           <td className="px-5 py-5"><p className="text-lg font-black text-[#1B3A6B]">{student.average_score.toFixed(1)}%</p><p className="mt-1 text-[11px] text-slate-400">Average percentage</p></td>
                           <td className="px-5 py-5 text-xs leading-5 text-slate-500">{dateLabel(student.last_submitted_at)}</td>
@@ -402,7 +473,7 @@ export default function MockTestAdmin() {
                         </tr>
                         {expanded && (
                           <tr key={student.phone + "-history"}>
-                            <td colSpan={6} className="bg-[#F7F9FC] px-5 py-5">
+                            <td colSpan={7} className="bg-[#F7F9FC] px-5 py-5">
                               <div className="flex flex-wrap items-end justify-between gap-3">
                                 <div>
                                   <p className="text-xs font-black uppercase tracking-widest text-[#C8102E]">Student exam history</p>
