@@ -10,7 +10,7 @@ export default function MockResultPage(){const params=useParams();const [data,se
  const subject=String(data.subject||"").replace(/^./,s=>s.toUpperCase()),title=subject+" · Mock Test "+data.test_number,score=Number(data.score),total=Number(data.total_marks),pct=total?Math.round(score/total*100):0;
  const url=typeof window!=="undefined"?window.location.href:"https://globlearnedu.com/csca/mocktest/result/"+data.token;
  const email=String(data.candidate_email||"");
- const studyMessage="Hello GL Education, I have completed "+title+" and would like guidance about CSCA preparation and studying in China. Please share the available support and next steps.";
+ const studyMessage="Hello GL Education, my name is "+String(data.candidate_name||"")+" and my phone number is "+String(data.phone||"")+". I completed "+title+" and scored "+score+"/"+total+" ("+pct+"%). I would like guidance about CSCA preparation and studying in China. Please share the available support and next steps.";
  const studyUrl="https://wa.me/8801993295109?text="+encodeURIComponent(studyMessage);
  const wa=encodeURIComponent("🎓 *GL Education — Free CSCA Mock Test Result*\n\nHello GL Education!\nI completed *"+title+"*.\n\n👤 Name: "+data.candidate_name+"\n📱 Phone: "+data.phone+"\n🏆 Score: "+score+"/"+total+" ("+pct+"%)\n🖥️ Screen departures: "+Number(data.away_count||0)+"\n📄 Result: "+url+"\n\nThank you — GL Education | Study in China");
  function download(){window.print();}
