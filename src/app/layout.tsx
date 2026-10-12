@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
+import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -31,6 +32,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div id="scroll-progress" />
           {children}
         </SessionProvider>
+        {/* Google Analytics: loaded once for every route after the page becomes interactive. */}
+        <Script
+          id="google-analytics-init"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){window.dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-27JZLMW7HB');
+            `,
+          }}
+        />
+        <Script
+          id="google-analytics-loader"
+          src="https://www.googletagmanager.com/gtag/js?id=G-27JZLMW7HB"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
