@@ -9,10 +9,18 @@ import {isValidMockSubject,mockKey,RELEASED_MOCKS} from "@/lib/csca/mocktest-pub
 
 const firstRow=(r:any)=>r?.rows?.[0]||r?.[0];
 const phoneDigits=(v:string)=>v.replace(/[^0-9]/g,"");
-const isValidStoredPhone=(v:string)=>/^8801\d{9}$/.test(v)||/^861\d{10}$/.test(v);
-const isValidPhone=(v:string)=>{const d=phoneDigits(v);return isValidStoredPhone(d)||/^01\d{9}$/.test(d);};
+const isValidStoredPhone=(v:string)=>/^[1-9]\d{6,14}$/.test(v);
+const isValidPhone=(v:string)=>{
+ const d=phoneDigits(v);
+ return isValidStoredPhone(d)||/^01[3-9]\d{8}$/.test(d)||/^1[3-9]\d{8}$/.test(d);
+};
 const isValidEmail=(v:string)=>/^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(v.trim());
-const normalizePhone=(v:string)=>{const d=phoneDigits(v);if(isValidStoredPhone(d))return d;if(/^01\d{9}$/.test(d))return "880"+d.slice(1);return d;};
+const normalizePhone=(v:string)=>{
+ const d=phoneDigits(v);
+ if(/^01[3-9]\d{8}$/.test(d))return "880"+d.slice(1);
+ if(/^1[3-9]\d{8}$/.test(d))return "880"+d;
+ return d;
+};
 const adminToken=()=>crypto.createHmac("sha256","GL-EDU-CSCA-ADMIN").update("csca-homework-admin").digest("hex");
 const validAdmin=(r:NextRequest)=>r.headers.get("x-csca-admin-token")===adminToken();
 
@@ -87,7 +95,7 @@ export async function GET(req:NextRequest){try{
  if(token){await ensureTable();const r=await db.execute(sql`SELECT exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts WHERE result_token=${token} LIMIT 1`);const row=firstRow(r);return NextResponse.json(row?{submitted:true,...row}:{submitted:false},{headers:{"Cache-Control":"no-store"}});}
  if(p.get("action")==="existing"){
   await ensureTable();const s=p.get("subject")||"",n=Number(p.get("test")||0),rawPhone=p.get("phone")||"",email=(p.get("email")||"").trim().toLowerCase();
-  if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!isValidPhone(rawPhone)||!isValidEmail(email))return NextResponse.json({error:"Choose Bangladesh (+880) or China (+86), enter a valid mobile number, and provide a valid email address."},{status:400});
+  if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!isValidPhone(rawPhone)||!isValidEmail(email))return NextResponse.json({error:"Enter a valid international mobile number and a valid email address."},{status:400});
   const phone=normalizePhone(rawPhone);const key=mockKey(s,n);const r=await db.execute(sql`SELECT candidate_name,phone,score,total_marks,question_count,away_count,result_token AS token,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} AND phone=${phone} ORDER BY submitted_at DESC LIMIT 1`);
   const row=firstRow(r);return NextResponse.json(row?{taken:true,...row}:{taken:false},{headers:{"Cache-Control":"no-store"}});
  }
@@ -124,7 +132,7 @@ export async function POST(req:NextRequest){try{
  if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!RELEASED_MOCKS[s].includes(n))return NextResponse.json({error:"This mock test is not released yet."},{status:403});
  const key=mockKey(s,n),e=getMockExam(key);if(!e)return NextResponse.json({error:"This mock test is not released yet."},{status:403});
  const name=String(b.name||"").trim().slice(0,180),rawPhone=String(b.phone||"").trim(),email=String(b.email||"").trim().toLowerCase().slice(0,320);
- if(!name||!isValidPhone(rawPhone)||!isValidEmail(email))return NextResponse.json({error:"Enter your name, a valid Bangladesh (+880) or China (+86) mobile number, and a valid email address."},{status:400});
+ if(!name||!isValidPhone(rawPhone)||!isValidEmail(email))return NextResponse.json({error:"Enter your name, a valid international mobile number, and a valid email address."},{status:400});
  const phone=normalizePhone(rawPhone).slice(0,40);
  const answers=Array.isArray(b.answers)?b.answers.slice(0,e.questions.length).map((v:unknown)=>Number.isInteger(v)?Number(v):-1):[];
  if(answers.length!==e.questions.length||answers.some((a:number,i:number)=>a < -1||a>=e.questions[i].options.length))return NextResponse.json({error:"The submitted answer sheet is incomplete or invalid."},{status:400});
