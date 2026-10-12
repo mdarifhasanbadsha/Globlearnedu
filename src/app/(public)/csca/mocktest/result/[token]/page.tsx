@@ -3,7 +3,6 @@ import {useEffect,useState} from "react";
 import {useParams} from "next/navigation";
 import Link from "next/link";
 import {Download,MessageCircle,Trophy,ArrowLeft,MonitorOff,Users,ArrowRight} from "lucide-react";
-function esc(v:string){return String(v??"").replace(/[&<>"]/g,c=>c==="&"?"&amp;":c==="<"?"&lt;":c===">"?"&gt;":"&quot;");}
 export default function MockResultPage(){const params=useParams();const [data,setData]=useState<any>(null);const [loading,setLoading]=useState(true);
  useEffect(()=>{fetch("/api/csca/mocktest?token="+encodeURIComponent(String(params.token||"")),{cache:"no-store"}).then(r=>r.json()).then(setData).finally(()=>setLoading(false));},[params.token]);
  if(loading)return <main className="min-h-screen grid place-items-center bg-slate-50">Loading result…</main>;
