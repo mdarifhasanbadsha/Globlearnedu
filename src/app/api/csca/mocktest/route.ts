@@ -87,7 +87,7 @@ export async function GET(req:NextRequest){try{
  if(token){await ensureTable();const r=await db.execute(sql`SELECT exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts WHERE result_token=${token} LIMIT 1`);const row=firstRow(r);return NextResponse.json(row?{submitted:true,...row}:{submitted:false},{headers:{"Cache-Control":"no-store"}});}
  if(p.get("action")==="existing"){
   await ensureTable();const s=p.get("subject")||"",n=Number(p.get("test")||0),rawPhone=p.get("phone")||"",email=(p.get("email")||"").trim().toLowerCase();
-  if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!isValidPhone(rawPhone)||!isValidEmail(email))return NextResponse.json({error:"Use an 11-digit phone number starting with 0 and a valid email address ending in .com."},{status:400});
+  if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!isValidPhone(rawPhone)||!isValidEmail(email))return NextResponse.json({error:"Choose Bangladesh (+880) or China (+86), enter a valid mobile number, and provide a valid email address."},{status:400});
   const phone=normalizePhone(rawPhone);const key=mockKey(s,n);const r=await db.execute(sql`SELECT candidate_name,phone,score,total_marks,question_count,away_count,result_token AS token,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} AND phone=${phone} ORDER BY submitted_at DESC LIMIT 1`);
   const row=firstRow(r);return NextResponse.json(row?{taken:true,...row}:{taken:false},{headers:{"Cache-Control":"no-store"}});
  }
