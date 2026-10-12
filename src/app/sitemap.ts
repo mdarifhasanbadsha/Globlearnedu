@@ -5,6 +5,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
   const staticPages = [
+    { url: `${baseUrl}/csca`, priority: 0.98, changeFrequency: "weekly" as const },
+    { url: `${baseUrl}/csca/mocktest`, priority: 0.99, changeFrequency: "weekly" as const },
     { url: baseUrl, priority: 1.0, changeFrequency: "weekly" as const },
     { url: `${baseUrl}/about`, priority: 0.8, changeFrequency: "monthly" as const },
     { url: `${baseUrl}/contact`, priority: 0.8, changeFrequency: "monthly" as const },
