@@ -54,7 +54,10 @@ export async function GET(req:NextRequest){try{
    const student=grouped.get(phone);const total=Number(row.total_marks)||0;const score=Number(row.score)||0;
    student.attempts.push({id:String(row.id||""),subject:String(row.subject||""),test_number:Number(row.test_number)||0,score,total_marks:total,percentage:total?Math.round(score/total*10000)/100:0,question_count:Number(row.question_count)||0,duration_minutes:Number(row.duration_minutes)||0,away_count:Number(row.away_count)||0,token:String(row.token||""),started_at:row.started_at,submitted_at:row.submitted_at});
   }
-  const students=Array.from(grouped.values()).map(student=>{const attempts=student.attempts as any[];const average=attempts.length?attempts.reduce((sum,a)=>sum+Number(a.percentage||0),0)/attempts.length:0;return {...student,exam_count:attempts.length,average_score:Math.round(average*100)/100};});
+  const baseStudents=Array.from(grouped.values()).map(student=>{const attempts=student.attempts as any[];const average=attempts.length?attempts.reduce((sum,a)=>sum+Number(a.percentage||0),0)/attempts.length:0;return {...student,exam_count:attempts.length,average_score:Math.round(average*100)/100};});
+  const followupResult=await db.execute(sql`SELECT phone,MAX(sent_at) AS email_sent_at FROM csca_mocktest_followups WHERE channel='email' AND status='sent' AND sent_at>now()-interval '24 hours' GROUP BY phone`);
+  const recentEmails=new Map<string,string>();for(const row of (followupResult?.rows||followupResult||[]) as any[]){recentEmails.set(String(row.phone||""),row.email_sent_at?new Date(row.email_sent_at).toISOString():"");}
+  const students=baseStudents.map(student=>({...student,email_sent_at:recentEmails.get(student.phone)||null}));
   return NextResponse.json({students},{headers:{"Cache-Control":"no-store"}});
  }
  const token=p.get("token");
