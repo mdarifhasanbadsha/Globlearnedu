@@ -3,11 +3,14 @@ import {db} from "@/lib/db";
 import {sql} from "drizzle-orm";
 import crypto from "crypto";
 import { sendMockTestSubmissionEmails } from "@/lib/csca/mocktest-email";
+import { sendMockTestThankYouEmail } from "@/lib/csca/mocktest-followup-email";
 import {getMockExam} from "@/lib/csca/mocktest-bank";
 import {isValidMockSubject,mockKey,RELEASED_MOCKS} from "@/lib/csca/mocktest-public";
 
 const firstRow=(r:any)=>r?.rows?.[0]||r?.[0];
-const normalizePhone=(v:string)=>{const d=v.replace(/[^0-9]/g,"").replace(/^00/,"");return d.length===11&&d.startsWith("01")?"88"+d:d;};
+const isValidPhone=(v:string)=>/^0\\d{10}$/.test(v);
+const isValidComEmail=(v:string)=>/^[^\\s@]+@[^\\s@]+\\.com$/i.test(v.trim());
+const normalizePhone=(v:string)=>{const d=v.replace(/[^0-9]/g,"");return d.length===11&&d.startsWith("01")?"88"+d:d;};
 const adminToken=()=>crypto.createHmac("sha256","GL-EDU-CSCA-ADMIN").update("csca-homework-admin").digest("hex");
 const validAdmin=(r:NextRequest)=>r.headers.get("x-csca-admin-token")===adminToken();
 
@@ -21,6 +24,10 @@ async function ensureTable(){
  )`);
  await db.execute(sql`ALTER TABLE csca_mocktest_attempts ADD COLUMN IF NOT EXISTS away_count integer NOT NULL DEFAULT 0`);
  await db.execute(sql`ALTER TABLE csca_mocktest_attempts ADD COLUMN IF NOT EXISTS candidate_email varchar(320) NOT NULL DEFAULT ''`);
+ await db.execute(sql`ALTER TABLE csca_mocktest_attempts DROP CONSTRAINT IF EXISTS csca_mocktest_attempts_exam_key_phone_key`);
+ await db.execute(sql`CREATE INDEX IF NOT EXISTS csca_mocktest_attempts_phone_idx ON csca_mocktest_attempts(phone)`);
+ await db.execute(sql`CREATE TABLE IF NOT EXISTS csca_mocktest_followups(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),phone varchar(40) NOT NULL,recipient_email varchar(320) NOT NULL,channel varchar(20) NOT NULL DEFAULT 'email',status varchar(20) NOT NULL DEFAULT 'sent',sent_at timestamp NOT NULL DEFAULT now())`);
+ await db.execute(sql`CREATE INDEX IF NOT EXISTS csca_mocktest_followups_phone_idx ON csca_mocktest_followups(phone,channel,sent_at)`);
 }
 function publicExam(e:NonNullable<ReturnType<typeof getMockExam>>){
  return {subject:e.subject,testNumber:e.testNumber,title:e.title,durationMinutes:e.durationMinutes,totalMarks:e.totalMarks,
@@ -34,6 +41,21 @@ export async function GET(req:NextRequest){try{
   if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!RELEASED_MOCKS[s].includes(n))return NextResponse.json({released:false},{status:404,headers:{"Cache-Control":"no-store"}});
   const e=getMockExam(mockKey(s,n));if(!e)return NextResponse.json({released:false},{status:404});
   return NextResponse.json({released:true,exam:publicExam(e)},{headers:{"Cache-Control":"no-store"}});
+ }
+ if(p.get("students")==="1"){
+  await ensureTable();
+  if(!validAdmin(req))return NextResponse.json({error:"Unauthorized."},{status:401});
+  const result=await db.execute(sql`SELECT id,exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts ORDER BY submitted_at DESC`);
+  const records:any[]=result?.rows||result||[];
+  const grouped=new Map<string,any>();
+  for(const row of records){
+   const phone=String(row.phone||"");if(!phone)continue;
+   if(!grouped.has(phone))grouped.set(phone,{phone,name:String(row.candidate_name||""),email:String(row.candidate_email||""),last_submitted_at:row.submitted_at,attempts:[]});
+   const student=grouped.get(phone);const total=Number(row.total_marks)||0;const score=Number(row.score)||0;
+   student.attempts.push({id:String(row.id||""),subject:String(row.subject||""),test_number:Number(row.test_number)||0,score,total_marks:total,percentage:total?Math.round(score/total*10000)/100:0,question_count:Number(row.question_count)||0,duration_minutes:Number(row.duration_minutes)||0,away_count:Number(row.away_count)||0,token:String(row.token||""),started_at:row.started_at,submitted_at:row.submitted_at});
+  }
+  const students=Array.from(grouped.values()).map(student=>{const attempts=student.attempts as any[];const average=attempts.length?attempts.reduce((sum,a)=>sum+Number(a.percentage||0),0)/attempts.length:0;return {...student,exam_count:attempts.length,average_score:Math.round(average*100)/100};});
+  return NextResponse.json({students},{headers:{"Cache-Control":"no-store"}});
  }
  const token=p.get("token");
  if(token && p.get("review")==="1"){
@@ -58,9 +80,9 @@ export async function GET(req:NextRequest){try{
  }
  if(token){await ensureTable();const r=await db.execute(sql`SELECT exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts WHERE result_token=${token} LIMIT 1`);const row=firstRow(r);return NextResponse.json(row?{submitted:true,...row}:{submitted:false},{headers:{"Cache-Control":"no-store"}});}
  if(p.get("action")==="existing"){
-  await ensureTable();const s=p.get("subject")||"",n=Number(p.get("test")||0),phone=normalizePhone(p.get("phone")||"");
-  if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||phone.length<6)return NextResponse.json({error:"Please check the test and phone number."},{status:400});
-  const key=mockKey(s,n);const r=await db.execute(sql`SELECT candidate_name,phone,score,total_marks,question_count,away_count,result_token AS token,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} AND phone=${phone} LIMIT 1`);
+  await ensureTable();const s=p.get("subject")||"",n=Number(p.get("test")||0),rawPhone=p.get("phone")||"",email=(p.get("email")||"").trim().toLowerCase();
+  if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!isValidPhone(rawPhone)||!isValidComEmail(email))return NextResponse.json({error:"Use an 11-digit phone number starting with 0 and a valid email address ending in .com."},{status:400});
+  const phone=normalizePhone(rawPhone);const key=mockKey(s,n);const r=await db.execute(sql`SELECT candidate_name,phone,score,total_marks,question_count,away_count,result_token AS token,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} AND phone=${phone} ORDER BY submitted_at DESC LIMIT 1`);
   const row=firstRow(r);return NextResponse.json(row?{taken:true,...row}:{taken:false},{headers:{"Cache-Control":"no-store"}});
  }
  if(p.get("admin")==="1"){
