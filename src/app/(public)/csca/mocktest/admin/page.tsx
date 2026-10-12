@@ -48,16 +48,16 @@ const displayPhone = (v: string) => {
   if (d.startsWith("86") && d.length === 13) return "+86 " + d.slice(2);
   return d.length >= 8 ? "+" + d : d;
 };
-const waPhone = (v: string) => {
+const waPhone = (v: string, countryIso?: string) => {
   const d = digits(v);
-  // Already stored in international format.
+  // New records have already been stored in international format with the selected country recorded.
+  if (countryIso && PHONE_COUNTRIES.some(country => country.iso2 === countryIso)) return d;
   if (d.startsWith("880") && d.length === 13) return d;
   if (d.startsWith("86") && d.length === 13) return d;
-  // Bangladesh local format: 019XXXXXXXX -> 88019XXXXXXXX.
+  // Legacy Bangladesh local formats.
   if (/^01[3-9]\d{8}$/.test(d)) return "88" + d;
-  // Bangladesh without the leading 0: 19XXXXXXXX -> 88019XXXXXXXX.
   if (/^1[3-9]\d{8}$/.test(d)) return "880" + d;
-  // China local mobile format: 11 digits beginning with 1.
+  // Old China local format.
   if (/^1[3-9]\d{9}$/.test(d)) return "86" + d;
   return d;
 };
@@ -212,7 +212,7 @@ export default function MockTestAdmin() {
       (resultUrl ? "\n\nYour result: " + resultUrl : "") +
       "\n\nYou are very welcome to contact us if you need guidance with CSCA preparation, admission to universities in China, or your wider study-abroad journey. We will be glad to help with relevant information and next steps." +
       "\n\nWarm regards,\nGL Education · Study in China";
-    return "https://wa.me/" + waPhone(student.phone) + "?text=" + encodeURIComponent(message);
+    return "https://wa.me/" + waPhone(student.phone, studentCountryIso(student)) + "?text=" + encodeURIComponent(message);
   }
 
   async function sendThankYouEmail(student: Student) {
@@ -462,7 +462,7 @@ export default function MockTestAdmin() {
                                 {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                                 {expanded ? "Hide exam history" : "View exam history"}
                               </button>
-                              <button onClick={() => void sendThankYouEmail(student)} disabled={!canEmail} title={cooling ? "A thank-you email was already sent in the last 24 hours" : !validEmail(student.email) ? "A valid .com email is required" : "Send one personalized email to this student"} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] px-3 py-2.5 text-xs font-black text-white hover:bg-[#102B52] disabled:cursor-not-allowed disabled:opacity-50">
+                              <button onClick={() => void sendThankYouEmail(student)} disabled={!canEmail} title={cooling ? "A thank-you email was already sent in the last 24 hours" : !validEmail(student.email) ? "A valid email address is required" : "Send one personalized email to this student"} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] px-3 py-2.5 text-xs font-black text-white hover:bg-[#102B52] disabled:cursor-not-allowed disabled:opacity-50">
                                 <Mail className="h-3.5 w-3.5" /> {sendingPhone === student.phone ? "Sending email…" : cooling ? "Email sent recently" : "Send thank-you email"}
                               </button>
                               <a href={whatsappUrl(student)} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#25D366] px-3 py-2.5 text-xs font-black text-white hover:bg-[#1fb85a]">
