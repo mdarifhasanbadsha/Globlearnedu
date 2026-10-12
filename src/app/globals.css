@@ -100,6 +100,9 @@ body {
   background-size: 60px 60px;
 }
 
+/* Hide the global WhatsApp contact widget while a timed CSCA exam is active. */
+body.csca-exam-active [data-floating-whatsapp] { display: none !important; }
+
 /* Scroll progress bar */
 #scroll-progress {
   position: fixed;
