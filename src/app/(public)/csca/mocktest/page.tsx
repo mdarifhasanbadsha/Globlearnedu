@@ -60,7 +60,7 @@ const faqs = [
   },
   {
     q: "Can I retake a CSCA mock test?",
-    a: "The site can identify a saved attempt by phone number and test. When you choose to take the same mock again, the new attempt replaces the previous saved result for that test and phone number."
+    a: "The site uses your 11-digit phone number to find earlier attempts. Every submission is kept as a separate history entry, so you can review results from each attempt later."
   },
   {
     q: "What should I do if I need help with CSCA preparation or studying in China?",
