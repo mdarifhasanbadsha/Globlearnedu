@@ -2,7 +2,7 @@ import {NextRequest,NextResponse} from "next/server";
 import {db} from "@/lib/db";
 import {sql} from "drizzle-orm";
 import crypto from "crypto";
-import { sendEmail } from "@/lib/email/resend";
+import { sendMockTestSubmissionEmails } from "@/lib/csca/mocktest-email";
 import {getMockExam} from "@/lib/csca/mocktest-bank";
 import {isValidMockSubject,mockKey,RELEASED_MOCKS} from "@/lib/csca/mocktest-public";
 
@@ -67,8 +67,16 @@ export async function POST(req:NextRequest){try{
  const token=crypto.randomUUID(),awayCount=Math.max(0,Math.min(1000,Math.floor(Number(b.awayCount)||0)));
  const r=await db.execute(sql`
   INSERT INTO csca_mocktest_attempts(exam_key,subject,test_number,candidate_name,candidate_email,phone,answers,score,total_marks,question_count,duration_minutes,away_count,result_token,started_at,submitted_at)
-  VALUES(${key},${s},${n},${name},${email},${phone},${JSON.stringify(answers)},${e.totalMarks},${e.questions.length},${e.durationMinutes},${awayCount},${token},${String(b.startedAt||new Date().toISOString())},now())
+  VALUES(${key},${s},${n},${name},${email},${phone},${JSON.stringify(answers)},${score},${e.totalMarks},${e.questions.length},${e.durationMinutes},${awayCount},${token},${String(b.startedAt||new Date().toISOString())},now())
   ON CONFLICT(exam_key,phone) DO UPDATE SET candidate_name=EXCLUDED.candidate_name,candidate_email=EXCLUDED.candidate_email,answers=EXCLUDED.answers,score=EXCLUDED.score,total_marks=EXCLUDED.total_marks,question_count=EXCLUDED.question_count,duration_minutes=EXCLUDED.duration_minutes,away_count=EXCLUDED.away_count,result_token=EXCLUDED.result_token,started_at=EXCLUDED.started_at,submitted_at=now()
   RETURNING exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at`);
- return NextResponse.json({submitted:true,...(firstRow(r)||{})},{headers:{"Cache-Control":"no-store"}});
+ const row=firstRow(r)||{};
+ const emailStatus=await sendMockTestSubmissionEmails({
+  candidateName:String(row.candidate_name||name),candidateEmail:String(row.candidate_email||email),
+  phone:String(row.phone||phone),subject:s,testNumber:n,score:Number(row.score??score),
+  totalMarks:Number(row.total_marks??e.totalMarks),questionCount:Number(row.question_count??e.questions.length),
+  durationMinutes:Number(row.duration_minutes??e.durationMinutes),awayCount:Number(row.away_count??awayCount),
+  token:String(row.token||token),submittedAt:String(row.submitted_at||new Date().toISOString())
+ });
+ return NextResponse.json({submitted:true,...row,emailSent:emailStatus.studentSent},{headers:{"Cache-Control":"no-store"}});
  }catch(e){console.error("Mock-test POST error",e);return NextResponse.json({error:"Unable to submit this mock test right now."},{status:500});}}
