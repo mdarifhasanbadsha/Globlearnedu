@@ -19,14 +19,9 @@ const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (c) =>
 
 export async function sendMockTestThankYouEmail(input: ThankYouInput) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com").replace(/\/$/, "");
-  const resultUrl = baseUrl + "/csca/mocktest/result/" + encodeURIComponent(input.resultToken);
   const testTitle = input.subject.charAt(0).toUpperCase() + input.subject.slice(1) + " · Mock Test " + input.testNumber;
-  const score = Number(input.score).toFixed(2).replace(/\.00$/, "");
-  const percent = input.totalMarks > 0 ? Math.round((input.score / input.totalMarks) * 100) : 0;
   const name = esc(input.candidateName);
   const safeTitle = esc(testTitle);
-  const safeScore = esc(score + "/" + input.totalMarks + " (" + percent + "%)");
-  const safeResult = esc(resultUrl);
   const waMessage = encodeURIComponent(
     "Hello GL Education, I recently completed " + testTitle +
     ". I would like guidance about CSCA preparation, admission to universities in China, or my study-abroad journey. Please share the available support. Thank you."
