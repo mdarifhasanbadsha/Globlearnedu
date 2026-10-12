@@ -61,16 +61,17 @@ export async function sendMockTestSubmissionEmails(input: SubmissionEmailInput) 
     teacherUrl + '" style="' + button + 'background:#c8102e">Contact for Study in China</a></p><p style="font-size:12px;color:#64748b;margin-top:24px">This is a practice result, not an official CSCA score report.</p></div></div></div>';
 
   const adminHtml = frame +
-    '<h1 style="font-size:24px;margin:16px 0 6px">New CSCA Mock Test Submission</h1><p style="color:#dbe5f0;margin:0">A student has submitted a mock test.</p></div><div style="padding:24px"><h2 style="margin-top:0">' +
-    studentEsc + '</h2><table style="width:100%;border-collapse:collapse;font-size:14px">' +
-    '<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;color:#64748b">Test</td><td style="padding:10px;border-bottom:1px solid #e2e8f0;font-weight:bold">' + testEsc + '</td></tr>' +
-    '<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;color:#64748b">Phone</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">' + phoneEsc + '</td></tr>' +
-    '<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;color:#64748b">Email</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">' + emailEsc + '</td></tr>' +
-    '<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;color:#64748b">Result</td><td style="padding:10px;border-bottom:1px solid #e2e8f0;font-weight:bold">' + scoreEsc + '</td></tr>' +
-    '<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;color:#64748b">Screen departures</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">' + input.awayCount + '</td></tr>' +
-    '<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;color:#64748b">Submitted</td><td style="padding:10px;border-bottom:1px solid #e2e8f0">' + dateEsc + '</td></tr></table><p style="margin-top:22px"><a href="' +
-    urlEsc + '" style="' + button + 'background:#1b3a6b">Open Student Result</a><a href="https://wa.me/' + whatsappPhone +
-    '?text=' + encodeURIComponent(contactMessage) + '" style="' + button + 'background:#16a34a">Contact Student on WhatsApp</a></p></div></div></div>';
+    '<h1 style="font-size:21px;line-height:1.35;margin:12px 0 5px">New CSCA Mock Test Submission</h1><p style="font-size:13px;color:#dbe5f0;line-height:1.5;margin:0">A student has completed a mock test.</p></div>' +
+    '<div style="padding:20px 22px"><h2 style="font-size:18px;margin:0 0 12px">' + studentEsc + '</h2>' +
+    '<table role="presentation" style="width:100%;border-collapse:collapse;font-size:13px;line-height:1.5">' +
+    '<tr><td style="width:36%;padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#64748b">Test</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-weight:bold">' + testEsc + '</td></tr>' +
+    '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#64748b">Phone</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0">' + phoneEsc + '</td></tr>' +
+    '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#64748b">Email</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;word-break:break-word">' + emailEsc + '</td></tr>' +
+    '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#64748b">Score</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-weight:bold">' + scoreEsc + '</td></tr>' +
+    '<tr><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;color:#64748b">Screen departures</td><td style="padding:8px 10px;border-bottom:1px solid #e2e8f0">' + input.awayCount + '</td></tr>' +
+    '<tr><td style="padding:8px 10px;color:#64748b">Submitted</td><td style="padding:8px 10px">' + dateEsc + '</td></tr></table>' +
+    '<p style="margin:18px 0 0;line-height:1.5"><a href="' + urlEsc + '" style="' + button + 'background:#1b3a6b;margin:0 8px 8px 0">Open Result</a><a href="https://wa.me/' + whatsappPhone +
+    '?text=' + encodeURIComponent(contactMessage) + '" style="' + button + 'background:#16a34a;margin:0 0 8px">WhatsApp Student</a></p></div></div></div>';
 
   const [student, admin] = await Promise.all([
     sendEmail({
