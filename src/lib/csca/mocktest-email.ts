@@ -49,16 +49,17 @@ export async function sendMockTestSubmissionEmails(input: SubmissionEmailInput) 
   const button = "display:inline-block;padding:13px 18px;border-radius:10px;text-decoration:none;font-weight:700;color:#ffffff;margin:5px 5px 5px 0;";
   const frame = '<div style="margin:0;background:#f1f5f9;padding:24px 10px;font-family:Arial,Helvetica,sans-serif;color:#0a1628"><div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dbe3ea;border-radius:16px;overflow:hidden"><div style="background:#0a1628;color:#fff;padding:24px"><div style="color:#ffd700;font-size:12px;font-weight:bold;letter-spacing:1.5px">GL EDUCATION · STUDY IN CHINA</div>';
   const studentHtml = frame +
-    '<h1 style="font-size:24px;margin:16px 0 6px">Your CSCA Mock Test Result</h1><p style="color:#dbe5f0;margin:0">' + testEsc +
-    '</p></div><div style="padding:24px"><p>Hello ' + studentEsc +
-    ',</p><p>Thank you for completing a GL Education CSCA mock examination. Your result is ready.</p>' +
-    '<div style="background:#eff6ff;border-radius:12px;padding:20px;text-align:center"><div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#52616b">Your score</div><div style="font-size:38px;font-weight:bold;color:#1b3a6b;margin-top:8px">' +
-    scoreEsc + '</div><div style="font-size:13px;color:#52616b;margin-top:6px">' +
-    input.questionCount + ' questions · ' + input.durationMinutes + ' minutes · Submitted ' + dateEsc +
-    '</div></div><p style="margin-top:22px">View or save your result report:</p><p><a href="' + urlEsc +
-    '" style="' + button + 'background:#1b3a6b">View My Result</a></p><h3 style="margin-top:24px">Join the CSCA student community</h3><p>Connect with other students, share preparation tips and receive updates.</p><p><a href="https://chat.whatsapp.com/IHhgPyOj4fQCzLsTJAoq1g" style="' +
-    button + 'background:#16a34a">Click to Join CSCA Discussion Group</a></p><p style="margin-top:22px">Need guidance about CSCA preparation or studying in China? Our team is happy to help.</p><p><a href="' +
-    teacherUrl + '" style="' + button + 'background:#c8102e">Contact for Study in China</a></p><p style="font-size:12px;color:#64748b;margin-top:24px">This is a practice result, not an official CSCA score report.</p></div></div></div>';
+    '<h1 style="font-size:22px;line-height:1.35;margin:12px 0 5px">Your CSCA Mock Test Result</h1><p style="font-size:13px;color:#dbe5f0;line-height:1.5;margin:0">' + testEsc + '</p></div>' +
+    '<div style="padding:20px 22px;font-size:14px;line-height:1.6;color:#334155"><p style="margin:0 0 10px">Hello ' + studentEsc + ',</p>' +
+    '<p style="margin:0 0 16px">Thank you for completing a CSCA practice test with GL Education. Your result is ready.</p>' +
+    '<div style="background:#eff6ff;border-radius:10px;padding:16px;text-align:center;margin:0 0 16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#52616b">Your score</div>' +
+    '<div style="font-size:30px;font-weight:bold;color:#1b3a6b;margin-top:5px">' + scoreEsc + '</div>' +
+    '<div style="font-size:12px;color:#52616b;margin-top:5px">' + input.questionCount + ' questions · ' + input.durationMinutes + ' minutes · ' + dateEsc + '</div></div>' +
+    '<p style="margin:0 0 14px"><a href="' + urlEsc + '" style="' + button + 'background:#1b3a6b;margin:0">View Result & Explanations</a></p>' +
+    '<p style="margin:0 0 8px">Need help with CSCA preparation or studying in China?</p>' +
+    '<p style="margin:0 0 14px"><a href="' + teacherUrl + '" style="' + button + 'background:#16a34a;margin:0 8px 8px 0">Contact us on WhatsApp</a>' +
+    '<a href="https://chat.whatsapp.com/IHhgPyOj4fQCzLsTJAoq1g" style="' + button + 'background:#475569;margin:0 0 8px">Join CSCA Discussion</a></p>' +
+    '<p style="font-size:11px;line-height:1.5;color:#64748b;margin:14px 0 0">This is a practice result, not an official CSCA score report.</p></div></div></div>';
 
   const adminHtml = frame +
     '<h1 style="font-size:21px;line-height:1.35;margin:12px 0 5px">New CSCA Mock Test Submission</h1><p style="font-size:13px;color:#dbe5f0;line-height:1.5;margin:0">A student has completed a mock test.</p></div>' +
