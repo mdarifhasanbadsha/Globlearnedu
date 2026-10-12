@@ -83,7 +83,7 @@ export async function POST(req:NextRequest){try{
  const answers=Array.isArray(b.answers)?b.answers.slice(0,e.questions.length).map((v:unknown)=>Number.isInteger(v)?Number(v):-1):[];
  if(!name||phone.length<6||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return NextResponse.json({error:"Enter your passport name, a valid phone number, and a valid email address."},{status:400});
  if(answers.length!==e.questions.length||answers.some((a:number,i:number)=>a < -1||a>=e.questions[i].options.length))return NextResponse.json({error:"The submitted answer sheet is incomplete or invalid."},{status:400});
- const score=e.questions.reduce((sum,q,i)=>sum+(answers[i]===q.answerIndex?(q.marks??1):0),0);
+ const rawScore=e.questions.reduce((sum,q,i)=>sum+(answers[i]===q.answerIndex?(q.marks??1):0),0);const score=Math.round(rawScore*100)/100;
  const token=crypto.randomUUID(),awayCount=Math.max(0,Math.min(1000,Math.floor(Number(b.awayCount)||0)));
  const r=await db.execute(sql`
   INSERT INTO csca_mocktest_attempts(exam_key,subject,test_number,candidate_name,candidate_email,phone,answers,score,total_marks,question_count,duration_minutes,away_count,result_token,started_at,submitted_at)
