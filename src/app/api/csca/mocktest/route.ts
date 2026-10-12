@@ -113,6 +113,14 @@ export async function GET(req:NextRequest){try{
 
 export async function POST(req:NextRequest){try{
  await ensureTable();const b=await req.json();
+ if(b.action==="deleteAttempt"){
+  if(!validAdmin(req))return NextResponse.json({error:"Unauthorized."},{status:401});
+  const id=String(b.id||"").trim();
+  if(!id||id.length>100)return NextResponse.json({error:"A valid attempt ID is required."},{status:400});
+  const deleted=await db.execute(sql`DELETE FROM csca_mocktest_attempts WHERE id=${id} RETURNING id`);
+  if(!firstRow(deleted))return NextResponse.json({error:"This attempt was not found or was already deleted."},{status:404});
+  return NextResponse.json({deleted:true,id},{headers:{"Cache-Control":"no-store"}});
+ }
  if(b.action==="sendThankYouEmail"){
   if(!validAdmin(req))return NextResponse.json({error:"Unauthorized."},{status:401});
   const phone=normalizePhone(String(b.phone||""));
