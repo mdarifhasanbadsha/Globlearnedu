@@ -236,3 +236,9 @@ body.csca-exam-active [data-floating-whatsapp] { display: none !important; }
 }
 .hsk-brand-rotate { animation: hskBrandRotate 6s ease-in-out infinite; }
 .hsk-contact-rotate { animation: hskContactRotate 6s ease-in-out infinite; }
+
+
+/* Keep the floating WhatsApp shortcut out of the focused CSCA exam experience. */
+body.csca-exam-active [data-floating-whatsapp] {
+  display: none !important;
+}
