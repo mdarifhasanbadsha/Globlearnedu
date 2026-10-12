@@ -43,15 +43,16 @@ const digits = (v: string) => String(v || "").replace(/[^0-9]/g, "");
 const displayPhone = (v: string) => {
   const d = digits(v);
   if (d.startsWith("880") && d.length === 13) return "0" + d.slice(3);
+  if (d.startsWith("86") && d.length === 13) return "+86 " + d.slice(2);
   return d;
 };
 const waPhone = (v: string) => {
   const d = digits(v);
-  if (d.startsWith("880")) return d;
+  if (d.startsWith("880") || d.startsWith("86")) return d;
   if (d.startsWith("0")) return "88" + d;
   return d;
 };
-const validComEmail = (v: string) => /^[^\s@]+@[^\s@]+\.com$/i.test(String(v || "").trim());
+const validEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(String(v || "").trim());
 const titleCase = (v: string) => v ? v.charAt(0).toUpperCase() + v.slice(1) : "Subject";
 const dateLabel = (v: string) => {
   const d = new Date(v);
@@ -176,8 +177,8 @@ export default function MockTestAdmin() {
   async function sendThankYouEmail(student: Student) {
     setActionError("");
     setActionNotice("");
-    if (!validComEmail(student.email)) {
-      setActionError("This student does not have a valid .com email address saved, so the email cannot be sent.");
+    if (!validEmail(student.email)) {
+      setActionError("This student does not have a valid email address saved, so the email cannot be sent.");
       return;
     }
     if (student.email_sent_at && Date.now() - new Date(student.email_sent_at).getTime() < 24 * 60 * 60 * 1000) {
