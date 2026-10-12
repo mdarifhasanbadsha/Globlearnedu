@@ -372,7 +372,7 @@ export default function MockTestAdmin() {
                 <tbody className="divide-y divide-slate-100">
                   {filteredStudents.map(student => {
                     const cooling = Boolean(student.email_sent_at && Date.now() - new Date(student.email_sent_at).getTime() < 24 * 60 * 60 * 1000);
-                    const canEmail = validComEmail(student.email) && !cooling && sendingPhone !== student.phone;
+                    const canEmail = validEmail(student.email) && !cooling && sendingPhone !== student.phone;
                     const expanded = expandedPhone === student.phone;
                     return (
                       <Fragment key={student.phone}>
@@ -391,7 +391,7 @@ export default function MockTestAdmin() {
                                 {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                                 {expanded ? "Hide exam history" : "View exam history"}
                               </button>
-                              <button onClick={() => void sendThankYouEmail(student)} disabled={!canEmail} title={cooling ? "A thank-you email was already sent in the last 24 hours" : !validComEmail(student.email) ? "A valid .com email is required" : "Send one personalized email to this student"} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] px-3 py-2.5 text-xs font-black text-white hover:bg-[#102B52] disabled:cursor-not-allowed disabled:opacity-50">
+                              <button onClick={() => void sendThankYouEmail(student)} disabled={!canEmail} title={cooling ? "A thank-you email was already sent in the last 24 hours" : !validEmail(student.email) ? "A valid .com email is required" : "Send one personalized email to this student"} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1B3A6B] px-3 py-2.5 text-xs font-black text-white hover:bg-[#102B52] disabled:cursor-not-allowed disabled:opacity-50">
                                 <Mail className="h-3.5 w-3.5" /> {sendingPhone === student.phone ? "Sending email…" : cooling ? "Email sent recently" : "Send thank-you email"}
                               </button>
                               <a href={whatsappUrl(student)} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#25D366] px-3 py-2.5 text-xs font-black text-white hover:bg-[#1fb85a]">
