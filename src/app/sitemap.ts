@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { MOCK_SUBJECTS, RELEASED_MOCKS } from "@/lib/csca/mocktest-public";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://globlearnedu.com";
@@ -68,8 +69,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly" as const,
   }));
 
+  const mockTestPages = MOCK_SUBJECTS.flatMap(subject => {
+    const releasedTests = RELEASED_MOCKS[subject.slug];
+    if (releasedTests.length === 0) return [];
+    return [
+      {
+        url: `${baseUrl}/csca/mocktest/${subject.slug}`,
+        priority: 0.9,
+        changeFrequency: "weekly" as const,
+      },
+      ...releasedTests.map(testNumber => ({
+        url: `${baseUrl}/csca/mocktest/${subject.slug}/${testNumber}`,
+        priority: 0.82,
+        changeFrequency: "monthly" as const,
+      })),
+    ];
+  });
+
   return [
     ...staticPages,
+    ...mockTestPages,
     ...programs,
     ...universities,
     ...blogSlugs,
