@@ -34,28 +34,23 @@ export async function sendMockTestThankYouEmail(input: ThankYouInput) {
   const contactUrl = "https://wa.me/8801993295109?text=" + waMessage;
   const button = "display:inline-block;padding:13px 18px;border-radius:10px;text-decoration:none;font-weight:700;color:#fff;margin:5px 5px 5px 0;";
   const html =
-    '<div style="margin:0;background:#f1f5f9;padding:24px 10px;font-family:Arial,Helvetica,sans-serif;color:#0a1628">' +
-      '<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dbe3ea;border-radius:16px;overflow:hidden">' +
-        '<div style="background:#0a1628;color:#fff;padding:26px">' +
-          '<div style="color:#ffd700;font-size:12px;font-weight:bold;letter-spacing:1.5px">GL EDUCATION · STUDY IN CHINA</div>' +
-          '<h1 style="font-size:25px;margin:18px 0 8px">Thank you for taking our mock test</h1>' +
-          '<p style="color:#dbe5f0;margin:0">' + safeTitle + '</p>' +
+    '<div style="margin:0;background:#f1f5f9;padding:18px 10px;font-family:Arial,Helvetica,sans-serif;color:#0a1628">' +
+      '<div style="max-width:580px;margin:0 auto;background:#fff;border:1px solid #dbe3ea;border-radius:12px;overflow:hidden">' +
+        '<div style="background:#0a1628;color:#fff;padding:20px 22px">' +
+          '<div style="color:#ffd700;font-size:11px;font-weight:bold;letter-spacing:1.2px">GL EDUCATION · STUDY IN CHINA</div>' +
+          '<h1 style="font-size:21px;line-height:1.35;margin:12px 0 5px">Thank you for taking our CSCA mock test</h1>' +
+          '<p style="color:#dbe5f0;font-size:13px;line-height:1.5;margin:0">' + safeTitle + '</p>' +
         '</div>' +
-        '<div style="padding:26px">' +
-          '<p style="font-size:16px">Hello ' + name + ',</p>' +
-          '<p style="font-size:15px;line-height:1.75;color:#334155">Thank you for spending your time on a CSCA practice test arranged by GL Education. We hope the exercise helped you assess your preparation and identify what to practise next.</p>' +
-          '<div style="background:#eff6ff;border-radius:12px;padding:18px;text-align:center;margin:20px 0">' +
-            '<div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#52616b">Recorded result</div>' +
-            '<div style="font-size:32px;font-weight:bold;color:#1b3a6b;margin-top:8px">' + safeScore + '</div>' +
-            '<div style="font-size:13px;color:#52616b;margin-top:6px">' + input.questionCount + ' questions · ' + input.durationMinutes + ' minutes</div>' +
-            '<p style="margin:18px 0 0"><a href="' + safeResult + '" style="' + button + 'background:#1b3a6b">View Result & Answer Explanations</a></p>' +
-          '</div>' +
-          '<h2 style="font-size:18px;margin:24px 0 8px">We are happy to help with your next steps</h2>' +
-          '<p style="font-size:15px;line-height:1.75;color:#334155">You are welcome to contact GL Education if you need guidance with CSCA preparation, university admission in China, application planning, or your broader study-abroad journey. We will be glad to point you toward the relevant information and support.</p>' +
-          '<p style="margin:20px 0"><a href="' + contactUrl + '" style="' + button + 'background:#c8102e">Contact GL Education on WhatsApp</a> <a href="https://globlearnedu.com/csca" style="' + button + 'background:#1b3a6b">CSCA Preparation Guide</a></p>' +
-          '<p style="font-size:14px;line-height:1.7;color:#334155">Thank you again, and best wishes for your preparation.</p>' +
-          '<p style="font-size:14px;line-height:1.7;color:#334155">Warm regards,<br><b>GL Education · Study in China</b></p>' +
-          '<div style="border-top:1px solid #e2e8f0;margin-top:24px;padding-top:15px;font-size:11px;line-height:1.6;color:#64748b">This is a personal follow-up about a mock test you completed on the GL Education website. It is sent to the email address provided during exam entry. If you do not want further follow-up messages, reply to this email and tell our team.</div>' +
+        '<div style="padding:20px 22px;font-size:14px;line-height:1.65;color:#334155">' +
+          '<p style="margin:0 0 12px">Hello ' + name + ',</p>' +
+          '<p style="margin:0 0 14px">Thank you for practising with GL Education. We hope the mock test helps you plan your next steps.</p>' +
+          '<p style="margin:0 0 8px"><strong>Need guidance for studying in China?</strong></p>' +
+          '<p style="margin:0 0 14px">We can help you explore CSCA preparation, university admission, scholarship opportunities, and universities in China that offer scholarships.</p>' +
+          '<p style="margin:0 0 14px">GL Education has helped over 1,000 students pursue study opportunities in China.</p>' +
+          '<p style="margin:16px 0 18px"><a href="' + contactUrl + '" style="' + button + 'background:#16a34a;margin:0 8px 8px 0">Chat with us on WhatsApp</a><a href="https://globlearnedu.com/csca" style="' + button + 'background:#1b3a6b;margin:0 0 8px">CSCA Preparation</a></p>' +
+          '<p style="margin:0 0 12px">You can also reply to this email, and our team will be happy to guide you.</p>' +
+          '<p style="margin:0">Best wishes,<br><strong>GL Education · Study in China</strong></p>' +
+          '<div style="border-top:1px solid #e2e8f0;margin-top:18px;padding-top:10px;font-size:11px;line-height:1.5;color:#64748b">This is a follow-up to the CSCA mock test you completed. If you do not want further follow-up messages, reply to this email and let us know.</div>' +
         '</div>' +
       '</div>' +
     '</div>';
