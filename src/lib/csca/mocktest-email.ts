@@ -15,9 +15,9 @@ type SubmissionEmailInput = {
   submittedAt: string;
 };
 
-const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (c) => ({
-  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-}[c] || c));
+const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (c) =>
+  c === "&" ? "&amp;" : c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === '"' ? "&quot;" : "&#39;"
+);
 
 export async function sendMockTestSubmissionEmails(input: SubmissionEmailInput) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com").replace(/\/$/, "");
