@@ -20,12 +20,12 @@ const esc = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, (c) => (
 }[c] || c));
 
 export async function sendMockTestSubmissionEmails(input: SubmissionEmailInput) {
-  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com").replace(/\\/$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://globlearnedu.com").replace(/\/$/, "");
   const resultUrl = baseUrl + "/csca/mocktest/result/" + encodeURIComponent(input.token);
   const subjectTitle = input.subject.charAt(0).toUpperCase() + input.subject.slice(1);
   const testTitle = subjectTitle + " · Mock Test " + input.testNumber;
   const percent = input.totalMarks ? Math.round((input.score / input.totalMarks) * 100) : 0;
-  const scoreLabel = Number(input.score).toFixed(2).replace(/\\.00$/, "");
+  const scoreLabel = Number(input.score).toFixed(2).replace(/\.00$/, "");
   const submitted = new Date(input.submittedAt).toLocaleString("en-GB", {
     timeZone: "Asia/Dhaka", dateStyle: "medium", timeStyle: "short"
   });
