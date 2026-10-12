@@ -14,9 +14,12 @@ const OFFICIAL_ABOUT = "https://csca.cn/about/examintro";
 const ACADEMY_GUIDE = "https://csca.app/en/exam-guide";
 
 const exams = [
-  { date: "November 14–15, 2026", registration: "October 15–21, 2026", status: "Registration opens soon", highlight: true },
-  { date: "December 19–20, 2026", registration: "Registration not yet open", status: "Upcoming" },
-  { date: "January 23–24, 2027", registration: "Registration not yet open", status: "Upcoming" },
+  { date: "November 14–15, 2026", registration: "Registration: October 15–21, 2026 (Beijing Time)", status: "Next exam", highlight: true },
+  { date: "December 19–20, 2026", registration: "Check the official portal for registration updates", status: "Scheduled" },
+  { date: "January 23–24, 2027", registration: "Check the official portal for registration updates", status: "Scheduled" },
+  { date: "March 13–14, 2027", registration: "Check the official portal for registration updates", status: "Scheduled" },
+  { date: "April 24–25, 2027", registration: "Check the official portal for registration updates", status: "Scheduled" },
+  { date: "June 26–27, 2027", registration: "Check the official portal for registration updates", status: "Scheduled" },
 ];
 
 const subjects = [
@@ -251,7 +254,7 @@ export default function CscaPage() {
 
       <section id="schedule" className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div><span className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">Latest schedule</span><h2 className="mt-2 text-3xl font-black md:text-4xl">CSCA 2026–2027 examination dates</h2><p className="mt-3 max-w-3xl leading-7 text-slate-600">These dates reflect the latest schedule currently displayed on the official CSCA website. Registration status can change, so the official portal remains the final reference.</p></div>
+          <div><span className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">Latest schedule</span><h2 className="mt-2 text-3xl font-black md:text-4xl">CSCA 2026–2027 examination dates</h2><p className="mt-3 max-w-3xl leading-7 text-slate-600">The official CSCA website has announced exam sessions from November 2026 through June 2027. The dates below cover all six currently announced sessions. Registration windows for later sessions should be confirmed on the official portal as details are published.</p></div>
           <a href={OFFICIAL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-black text-[#1B3A6B]">Check official schedule <ExternalLink className="h-4 w-4" /></a>
         </div>
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
