@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import Script from "next/script";
 
 type CapCaptchaProps = {
@@ -23,11 +23,10 @@ export default function CapCaptcha({ onTokenChange }: CapCaptchaProps) {
     const container = containerRef.current;
     if (!container || !endpoint) return;
 
-    const widget = createElement("cap-widget", {
-      "data-cap-api-endpoint": endpoint,
-      "data-cap-i18n-initial-state": "Verify you're human",
-      "data-cap-i18n-solved-label": "Verification complete",
-    }) as HTMLElement;
+    const widget = document.createElement("cap-widget");
+    widget.setAttribute("data-cap-api-endpoint", endpoint);
+    widget.setAttribute("data-cap-i18n-initial-state", "Verify you're human");
+    widget.setAttribute("data-cap-i18n-solved-label", "Verification complete");
 
     const handleSolve = (event: Event) => {
       const detail = (event as CustomEvent<{ token?: string }>).detail;
@@ -48,7 +47,7 @@ export default function CapCaptcha({ onTokenChange }: CapCaptchaProps) {
 
   return (
     <div className="mt-5">
-      <Script src={CAP_WIDGET_SRC} strategy="afterInteractive" />
+      <Script src={CAP_WIDGET_SRC} type="module" strategy="afterInteractive" />
       {endpoint ? (
         <div ref={containerRef} aria-label="CAPTCHA verification" />
       ) : (
