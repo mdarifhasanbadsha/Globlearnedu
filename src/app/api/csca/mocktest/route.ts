@@ -97,20 +97,36 @@ export async function GET(req:NextRequest){try{
 
 export async function POST(req:NextRequest){try{
  await ensureTable();const b=await req.json();
+ if(b.action==="sendThankYouEmail"){
+  if(!validAdmin(req))return NextResponse.json({error:"Unauthorized."},{status:401});
+  const phone=String(b.phone||"").replace(/[^0-9]/g,"");
+  if(!/^0\d{10}$/.test(phone)&&!/^880\d{10}$/.test(phone))return NextResponse.json({error:"Invalid student phone number."},{status:400});
+  const recent=await db.execute(sql`SELECT sent_at FROM csca_mocktest_followups WHERE phone=${phone} AND channel='email' AND status='sent' AND sent_at>now()-interval '24 hours' ORDER BY sent_at DESC LIMIT 1`);
+  if(firstRow(recent))return NextResponse.json({error:"A thank-you email was already sent to this student in the last 24 hours. Please wait before sending another."},{status:429});
+  const studentResult=await db.execute(sql`SELECT candidate_name,candidate_email,phone,subject,test_number,score,total_marks,question_count,duration_minutes,result_token AS token FROM csca_mocktest_attempts WHERE phone=${phone} ORDER BY submitted_at DESC LIMIT 1`);
+  const student=firstRow(studentResult);
+  if(!student)return NextResponse.json({error:"Student record not found."},{status:404});
+  const candidateEmail=String(student.candidate_email||"").trim().toLowerCase();
+  if(!isValidComEmail(candidateEmail))return NextResponse.json({error:"This student record does not have a valid .com email address."},{status:400});
+  const sent=await sendMockTestThankYouEmail({candidateName:String(student.candidate_name||"Student"),candidateEmail,phone:String(student.phone||phone),subject:String(student.subject||"mathematics"),testNumber:Number(student.test_number)||1,score:Number(student.score)||0,totalMarks:Number(student.total_marks)||100,questionCount:Number(student.question_count)||48,durationMinutes:Number(student.duration_minutes)||60,resultToken:String(student.token||"")});
+  if(!sent.success)return NextResponse.json({error:"The email service could not send this message. No successful send was recorded; please try again later."},{status:502});
+  await db.execute(sql`INSERT INTO csca_mocktest_followups(phone,recipient_email,channel,status,sent_at) VALUES(${phone},${candidateEmail},'email','sent',now())`);
+  return NextResponse.json({sent:true,message:"Thank-you email sent."},{headers:{"Cache-Control":"no-store"}});
+ }
  if(b.action!=="submit")return NextResponse.json({error:"Invalid request."},{status:400});
  const s=String(b.subject||""),n=Number(b.testNumber||0);
  if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!RELEASED_MOCKS[s].includes(n))return NextResponse.json({error:"This mock test is not released yet."},{status:403});
  const key=mockKey(s,n),e=getMockExam(key);if(!e)return NextResponse.json({error:"This mock test is not released yet."},{status:403});
- const name=String(b.name||"").trim().slice(0,180),email=String(b.email||"").trim().toLowerCase().slice(0,320),phone=normalizePhone(String(b.phone||"")).slice(0,40);
+ const name=String(b.name||"").trim().slice(0,180),rawPhone=String(b.phone||"").trim(),email=String(b.email||"").trim().toLowerCase().slice(0,320);
+ if(!name||!isValidPhone(rawPhone)||!isValidComEmail(email))return NextResponse.json({error:"Enter your passport name, an 11-digit phone number starting with 0, and a valid .com email address."},{status:400});
+ const phone=normalizePhone(rawPhone).slice(0,40);
  const answers=Array.isArray(b.answers)?b.answers.slice(0,e.questions.length).map((v:unknown)=>Number.isInteger(v)?Number(v):-1):[];
- if(!name||phone.length<6||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return NextResponse.json({error:"Enter your passport name, a valid phone number, and a valid email address."},{status:400});
  if(answers.length!==e.questions.length||answers.some((a:number,i:number)=>a < -1||a>=e.questions[i].options.length))return NextResponse.json({error:"The submitted answer sheet is incomplete or invalid."},{status:400});
  const rawScore=e.questions.reduce((sum,q,i)=>sum+(answers[i]===q.answerIndex?(q.marks??1):0),0);const score=Math.round(rawScore*100)/100;
  const token=crypto.randomUUID(),awayCount=Math.max(0,Math.min(1000,Math.floor(Number(b.awayCount)||0)));
  const r=await db.execute(sql`
   INSERT INTO csca_mocktest_attempts(exam_key,subject,test_number,candidate_name,candidate_email,phone,answers,score,total_marks,question_count,duration_minutes,away_count,result_token,started_at,submitted_at)
   VALUES(${key},${s},${n},${name},${email},${phone},${JSON.stringify(answers)},${score},${e.totalMarks},${e.questions.length},${e.durationMinutes},${awayCount},${token},${String(b.startedAt||new Date().toISOString())},now())
-  ON CONFLICT(exam_key,phone) DO UPDATE SET candidate_name=EXCLUDED.candidate_name,candidate_email=EXCLUDED.candidate_email,answers=EXCLUDED.answers,score=EXCLUDED.score,total_marks=EXCLUDED.total_marks,question_count=EXCLUDED.question_count,duration_minutes=EXCLUDED.duration_minutes,away_count=EXCLUDED.away_count,result_token=EXCLUDED.result_token,started_at=EXCLUDED.started_at,submitted_at=now()
   RETURNING exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at`);
  const row=firstRow(r)||{};
  const emailStatus=await sendMockTestSubmissionEmails({
