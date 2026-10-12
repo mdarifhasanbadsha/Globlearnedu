@@ -62,7 +62,7 @@ export async function POST(req:NextRequest){
     const body=await req.json();
     if(body.adminLogin===true){
       const captchaToken=String(body.captchaToken||"").trim();
-      const capEndpoint=String(process.env.CAP_API_ENDPOINT||process.env.NEXT_PUBLIC_CAP_API_ENDPOINT||"").trim().replace(/\\/+$/, "");
+      const capEndpoint=String(process.env.CAP_API_ENDPOINT||process.env.NEXT_PUBLIC_CAP_API_ENDPOINT||"").trim().replace(/\/+$/, "");
       const capSecret=String(process.env.CAP_SECRET_KEY||"").trim();
       if(!capEndpoint||!capSecret){
         return NextResponse.json({error:"Admin CAPTCHA is not configured on the server. Please configure the Cap endpoint and secret key."},{status:503});
