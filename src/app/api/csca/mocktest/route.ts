@@ -6,6 +6,7 @@ import { sendMockTestSubmissionEmails } from "@/lib/csca/mocktest-email";
 import { sendMockTestThankYouEmail } from "@/lib/csca/mocktest-followup-email";
 import {getMockExam} from "@/lib/csca/mocktest-bank";
 import {isValidMockSubject,mockKey,RELEASED_MOCKS} from "@/lib/csca/mocktest-public";
+import {PHONE_COUNTRIES} from "@/lib/csca/phone-countries";
 
 const firstRow=(r:any)=>r?.rows?.[0]||r?.[0];
 const phoneDigits=(v:string)=>v.replace(/[^0-9]/g,"");
@@ -27,13 +28,14 @@ const validAdmin=(r:NextRequest)=>r.headers.get("x-csca-admin-token")===adminTok
 async function ensureTable(){
  await db.execute(sql`CREATE TABLE IF NOT EXISTS csca_mocktest_attempts(
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),exam_key varchar(100) NOT NULL,subject varchar(30) NOT NULL,test_number integer NOT NULL,
-  candidate_name varchar(180) NOT NULL,candidate_email varchar(320) NOT NULL DEFAULT '',phone varchar(40) NOT NULL,answers jsonb NOT NULL DEFAULT '[]'::jsonb,
+  candidate_name varchar(180) NOT NULL,candidate_email varchar(320) NOT NULL DEFAULT '',phone varchar(40) NOT NULL,country_iso2 varchar(2),answers jsonb NOT NULL DEFAULT '[]'::jsonb,
   score numeric(10,2) NOT NULL DEFAULT 0,total_marks numeric(10,2) NOT NULL,question_count integer NOT NULL,
   duration_minutes integer NOT NULL,away_count integer NOT NULL DEFAULT 0,result_token varchar(100) NOT NULL UNIQUE,
   started_at timestamp NOT NULL DEFAULT now(),submitted_at timestamp NOT NULL DEFAULT now(),UNIQUE(exam_key,phone)
  )`);
  await db.execute(sql`ALTER TABLE csca_mocktest_attempts ADD COLUMN IF NOT EXISTS away_count integer NOT NULL DEFAULT 0`);
  await db.execute(sql`ALTER TABLE csca_mocktest_attempts ADD COLUMN IF NOT EXISTS candidate_email varchar(320) NOT NULL DEFAULT ''`);
+ await db.execute(sql`ALTER TABLE csca_mocktest_attempts ADD COLUMN IF NOT EXISTS country_iso2 varchar(2)`);
  const oldPhoneUnique=await db.execute(sql`SELECT 1 FROM pg_constraint WHERE conrelid=to_regclass('public.csca_mocktest_attempts') AND conname='csca_mocktest_attempts_exam_key_phone_key' LIMIT 1`);
  if(firstRow(oldPhoneUnique))await db.execute(sql`ALTER TABLE csca_mocktest_attempts DROP CONSTRAINT csca_mocktest_attempts_exam_key_phone_key`);
  await db.execute(sql`CREATE INDEX IF NOT EXISTS csca_mocktest_attempts_phone_idx ON csca_mocktest_attempts(phone)`);
@@ -56,12 +58,12 @@ export async function GET(req:NextRequest){try{
  if(p.get("students")==="1"){
   await ensureTable();
   if(!validAdmin(req))return NextResponse.json({error:"Unauthorized."},{status:401});
-  const result=await db.execute(sql`SELECT id,exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts ORDER BY submitted_at DESC`);
+  const result=await db.execute(sql`SELECT id,exam_key,subject,test_number,candidate_name,candidate_email,phone,country_iso2,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts ORDER BY submitted_at DESC`);
   const records:any[]=result?.rows||result||[];
   const grouped=new Map<string,any>();
   for(const row of records){
    const phone=String(row.phone||"");if(!phone)continue;
-   if(!grouped.has(phone))grouped.set(phone,{phone,name:String(row.candidate_name||""),email:String(row.candidate_email||""),last_submitted_at:row.submitted_at,attempts:[]});
+   if(!grouped.has(phone))grouped.set(phone,{phone,name:String(row.candidate_name||""),email:String(row.candidate_email||""),country_iso2:String(row.country_iso2||""),last_submitted_at:row.submitted_at,attempts:[]});
    const student=grouped.get(phone);const total=Number(row.total_marks)||0;const score=Number(row.score)||0;
    student.attempts.push({id:String(row.id||""),subject:String(row.subject||""),test_number:Number(row.test_number)||0,score,total_marks:total,percentage:total?Math.round(score/total*10000)/100:0,question_count:Number(row.question_count)||0,duration_minutes:Number(row.duration_minutes)||0,away_count:Number(row.away_count)||0,token:String(row.token||""),started_at:row.started_at,submitted_at:row.submitted_at});
   }
@@ -103,7 +105,7 @@ export async function GET(req:NextRequest){try{
   await ensureTable();if(!validAdmin(req))return NextResponse.json({error:"Unauthorized."},{status:401});
   const s=p.get("subject")||"mathematics",n=Number(p.get("test")||1);
   if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20)return NextResponse.json({error:"Invalid subject/test."},{status:400});
-  const key=mockKey(s,n);const r=await db.execute(sql`SELECT id,exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} ORDER BY submitted_at DESC`);
+  const key=mockKey(s,n);const r=await db.execute(sql`SELECT id,exam_key,subject,test_number,candidate_name,candidate_email,phone,country_iso2,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} ORDER BY submitted_at DESC`);
   const e=getMockExam(key);return NextResponse.json({submissions:r?.rows||r||[],exam:e?publicExam(e):null},{headers:{"Cache-Control":"no-store"}});
  }
  return NextResponse.json({error:"Invalid request."},{status:400});
@@ -134,14 +136,16 @@ export async function POST(req:NextRequest){try{
  const name=String(b.name||"").trim().slice(0,180),rawPhone=String(b.phone||"").trim(),email=String(b.email||"").trim().toLowerCase().slice(0,320);
  if(!name||!isValidPhone(rawPhone)||!isValidEmail(email))return NextResponse.json({error:"Enter your name, a valid international mobile number, and a valid email address."},{status:400});
  const phone=normalizePhone(rawPhone).slice(0,40);
+ const requestedCountryIso=String(b.countryIso||"").toLowerCase();
+ const countryIso=PHONE_COUNTRIES.some(country=>country.iso2===requestedCountryIso)?requestedCountryIso:phone.startsWith("880")?"bd":phone.startsWith("86")?"cn":null;
  const answers=Array.isArray(b.answers)?b.answers.slice(0,e.questions.length).map((v:unknown)=>Number.isInteger(v)?Number(v):-1):[];
  if(answers.length!==e.questions.length||answers.some((a:number,i:number)=>a < -1||a>=e.questions[i].options.length))return NextResponse.json({error:"The submitted answer sheet is incomplete or invalid."},{status:400});
  const rawScore=e.questions.reduce((sum,q,i)=>sum+(answers[i]===q.answerIndex?(q.marks??1):0),0);const score=Math.round(rawScore*100)/100;
  const token=crypto.randomUUID(),awayCount=Math.max(0,Math.min(1000,Math.floor(Number(b.awayCount)||0)));
  const r=await db.execute(sql`
-  INSERT INTO csca_mocktest_attempts(exam_key,subject,test_number,candidate_name,candidate_email,phone,answers,score,total_marks,question_count,duration_minutes,away_count,result_token,started_at,submitted_at)
-  VALUES(${key},${s},${n},${name},${email},${phone},${JSON.stringify(answers)},${score},${e.totalMarks},${e.questions.length},${e.durationMinutes},${awayCount},${token},${String(b.startedAt||new Date().toISOString())},now())
-  RETURNING exam_key,subject,test_number,candidate_name,candidate_email,phone,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at`);
+  INSERT INTO csca_mocktest_attempts(exam_key,subject,test_number,candidate_name,candidate_email,phone,country_iso2,answers,score,total_marks,question_count,duration_minutes,away_count,result_token,started_at,submitted_at)
+  VALUES(${key},${s},${n},${name},${email},${phone},${countryIso},${JSON.stringify(answers)},${score},${e.totalMarks},${e.questions.length},${e.durationMinutes},${awayCount},${token},${String(b.startedAt||new Date().toISOString())},now())
+  RETURNING exam_key,subject,test_number,candidate_name,candidate_email,phone,country_iso2,score,total_marks,question_count,duration_minutes,away_count,result_token AS token,started_at,submitted_at`);
  const row=firstRow(r)||{};
  const emailStatus=await sendMockTestSubmissionEmails({
   candidateName:String(row.candidate_name||name),candidateEmail:String(row.candidate_email||email),
