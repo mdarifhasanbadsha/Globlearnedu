@@ -28,10 +28,13 @@ const subjects = [
 ];
 
 const faqs = [
-  ["What is CSCA?", "CSCA is a standardized academic-level test for international students planning undergraduate study in China. It is organized under the China Scholarship Council and is used by Chinese universities as an academic reference."],
-  ["Which subjects should I take?", "Requirements depend on your target university, major and scholarship route. Mathematics is widely relevant; Professional Chinese, Science Chinese, Physics and Chemistry may be required or selected according to the programme."],
-  ["Where do I register?", "Always use the official CSCA portal for real exam registration and check the latest announcement before paying any exam fee."],
-  ["Is the GL Education course an official CSCA course?", "No. GL Education courses are independent preparation programmes designed to help students prepare for the CSCA. The official exam remains administered through the CSCA system."],
+  ["What is CSCA?", "CSCA is the China Scholastic Competency Assessment, an academic-level test used in pathways for international students applying to undergraduate study in China. Check the official portal and your target university for current requirements."],
+  ["Which CSCA subjects should I take?", "Requirements depend on the university, intended major, language of instruction and scholarship route. Confirm the subjects requested by each target university instead of relying on a generic subject list."],
+  ["Where do I register for the official CSCA exam?", "Use the official CSCA website at csca.cn for exam announcements, registration and official exam-related instructions. GL Education is not the exam organiser."],
+  ["Is the GL Education course an official CSCA course?", "No. GL Education provides independent preparation support. The official examination and its score reports remain separate from GL Education courses and practice tests."],
+  ["Can I take a free CSCA mock test online?", "Yes. GL Education currently provides a free online Mathematics Mock Test 1 with 48 questions, a 60-minute timer and results after submission. The released test is an original practice paper, not an official or past CSCA paper."],
+  ["Will a GL Education mock test result count as my official CSCA score?", "No. A practice test helps you rehearse and review your preparation. It cannot replace official exam registration, an official exam sitting or an official CSCA score report."],
+  ["How can I prepare for the CSCA exam?", "Review the requirements of your target university, study the relevant subject material, practise questions and attempt a timed mock test. Use the result to identify topics to review before taking another practice set."],
 ];
 
 function CourseJoin({ course }: { course: string }) {
@@ -227,6 +230,34 @@ export default function CscaPage() {
         </div>
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {exams.map((exam) => <div key={exam.date} className={"rounded-3xl border bg-white p-6 shadow-sm "+(exam.highlight?"border-[#C8102E] ring-2 ring-[#C8102E]/10":"border-slate-200")}><div className="flex items-center justify-between gap-3"><span className={"rounded-full px-3 py-1 text-xs font-black "+(exam.highlight?"bg-red-50 text-[#C8102E]":"bg-slate-100 text-slate-600")}>{exam.status}</span><CalendarDays className="h-5 w-5 text-slate-400"/></div><h3 className="mt-5 text-2xl font-black">{exam.date}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{exam.registration}</p>{exam.highlight && <a href={OFFICIAL_REGISTER} target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-2 text-sm font-black text-[#C8102E]">Register when open <ExternalLink className="h-4 w-4" /></a>}</div>)}
+        </div>
+      </section>
+
+      <section id="csca-free-mock-test" className="bg-gradient-to-br from-[#071A35] via-[#103B5C] to-[#1B3A6B] text-white">
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 md:px-8 md:py-16 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-wider text-[#FFD700]"><Sparkles className="h-4 w-4" /> Free CSCA practice</span>
+            <h2 className="mt-4 text-3xl font-black leading-tight md:text-4xl">Free CSCA Mock Test Online — Timed Mathematics Practice</h2>
+            <p className="mt-4 max-w-2xl leading-8 text-slate-200">Looking for CSCA exam preparation, free CSCA practice questions or a realistic CSCA mock test? GL Education offers an independent online practice environment so students can rehearse answering questions under a timer and review their result after submission.</p>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">Mathematics Mock Test 1 is currently available with 48 questions, 60 minutes and 100 marks. It is an original CSCA-style practice paper, not an official CSCA exam or a past paper released by the exam organiser. Physics and Chemistry mock tests will appear as available only after their question sets are reviewed.</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link href="/csca/mocktest" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C8102E] px-5 py-3.5 font-black text-white transition hover:bg-red-800">Explore Free CSCA Mock Tests <ArrowRight className="h-4 w-4" /></Link>
+              <Link href="/csca/mocktest/mathematics/1" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-5 py-3.5 font-black text-white transition hover:bg-white/10">Start Mathematics Mock 1 <Calculator className="h-4 w-4" /></Link>
+            </div>
+          </div>
+          <div className="rounded-[2rem] border border-white/15 bg-white/5 p-6 md:p-7">
+            <div className="flex items-center justify-between gap-3"><p className="text-xs font-black uppercase tracking-[.16em] text-[#FFD700]">Available practice paper</p><span className="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-black text-emerald-200">FREE</span></div>
+            <h3 className="mt-4 text-2xl font-black">CSCA Mathematics Mock Test 1</h3>
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              {[["48","Questions"],["60","Minutes"],["100","Marks"]].map(([v,l]) => <div key={l} className="rounded-xl border border-white/10 bg-[#071A35]/40 p-3 text-center"><b className="block text-2xl">{v}</b><span className="text-[11px] text-slate-300">{l}</span></div>)}
+            </div>
+            <div className="mt-5 space-y-3 text-sm leading-6 text-slate-200">
+              <p className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-300" /> Full-screen timed practice interface</p>
+              <p className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-300" /> Instant score and result report</p>
+              <p className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-300" /> Save or print the result as a PDF</p>
+            </div>
+            <p className="mt-5 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-slate-300">Practice resource by GL Education. It does not register you for the official CSCA examination and is not endorsed by the exam organiser.</p>
+          </div>
         </div>
       </section>
 
