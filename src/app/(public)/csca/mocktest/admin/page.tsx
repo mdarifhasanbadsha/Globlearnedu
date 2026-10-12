@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, LockKeyhole, Download, Users, MessageCircle, Mail,
@@ -367,7 +367,7 @@ export default function MockTestAdmin() {
                     const canEmail = validComEmail(student.email) && !cooling && sendingPhone !== student.phone;
                     const expanded = expandedPhone === student.phone;
                     return (
-                      <>
+                      <Fragment key={student.phone}>
                         <tr key={student.phone} className="align-top hover:bg-slate-50/70">
                           <td className="px-5 py-5">
                             <p className="font-black text-[#0A1628]">{student.name || "Name not recorded"}</p>
@@ -426,7 +426,7 @@ export default function MockTestAdmin() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     );
                   })}
                   {!studentsLoading && filteredStudents.length === 0 && (
