@@ -24,7 +24,8 @@ async function ensureTable(){
  )`);
  await db.execute(sql`ALTER TABLE csca_mocktest_attempts ADD COLUMN IF NOT EXISTS away_count integer NOT NULL DEFAULT 0`);
  await db.execute(sql`ALTER TABLE csca_mocktest_attempts ADD COLUMN IF NOT EXISTS candidate_email varchar(320) NOT NULL DEFAULT ''`);
- await db.execute(sql`ALTER TABLE csca_mocktest_attempts DROP CONSTRAINT IF EXISTS csca_mocktest_attempts_exam_key_phone_key`);
+ const oldPhoneUnique=await db.execute(sql`SELECT 1 FROM pg_constraint WHERE conrelid=to_regclass('public.csca_mocktest_attempts') AND conname='csca_mocktest_attempts_exam_key_phone_key' LIMIT 1`);
+ if(firstRow(oldPhoneUnique))await db.execute(sql`ALTER TABLE csca_mocktest_attempts DROP CONSTRAINT csca_mocktest_attempts_exam_key_phone_key`);
  await db.execute(sql`CREATE INDEX IF NOT EXISTS csca_mocktest_attempts_phone_idx ON csca_mocktest_attempts(phone)`);
  await db.execute(sql`CREATE TABLE IF NOT EXISTS csca_mocktest_followups(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),phone varchar(40) NOT NULL,recipient_email varchar(320) NOT NULL,channel varchar(20) NOT NULL DEFAULT 'email',status varchar(20) NOT NULL DEFAULT 'sent',sent_at timestamp NOT NULL DEFAULT now())`);
  await db.execute(sql`CREATE INDEX IF NOT EXISTS csca_mocktest_followups_phone_idx ON csca_mocktest_followups(phone,channel,sent_at)`);
