@@ -1,27 +1,34 @@
 import type { Metadata } from "next";
 
+const title = "CSCA Exam 2026–2027: Dates, Subjects & Free Preparation | GL Education";
+const description = "CSCA 2026–2027 guide for international students: understand the China Scholastic Competency Assessment, check official exam dates and subject requirements, and explore free CSCA practice questions and realistic mock tests.";
+
 export const metadata: Metadata = {
-  title: "CSCA Exam 2026–2027: Dates, Registration, Syllabus & Free Courses | GL Education",
-  description: "CSCA 2026–2027 guide for international students: latest exam dates, registration period, subjects, fees, preparation guidance and free GL Education CSCA courses.",
+  title: { absolute: title },
+  description,
   keywords: [
-    "CSCA exam 2026","CSCA exam 2027","CSCA registration","CSCA exam dates",
-    "CSCA syllabus","CSCA mathematics","CSCA physics","CSCA chemistry",
-    "CSCA preparation course","CSCA Bangladesh","study in China","CSCA free course"
+    "CSCA exam", "China Scholastic Competency Assessment", "CSCA exam 2026",
+    "CSCA exam 2027", "CSCA registration", "CSCA exam dates", "CSCA syllabus",
+    "CSCA exam preparation", "CSCA Mathematics", "CSCA Physics", "CSCA Chemistry",
+    "free CSCA mock test", "CSCA practice questions", "study in China"
   ],
-  alternates: { canonical: "/csca" },
+  alternates: { canonical: "https://globlearnedu.com/csca" },
   openGraph: {
-    title: "CSCA Exam 2026–2027: Dates, Registration & Free Courses | GL Education",
-    description: "Latest CSCA schedule, registration guidance, subject structure and free GL Education preparation courses.",
+    title,
+    description,
     type: "website",
-    url: "/csca",
-    siteName: "GL Education"
+    url: "https://globlearnedu.com/csca",
+    siteName: "Globlearn Education",
+    locale: "en_US",
+    images: [{ url: "/seo/csca-exam-guide.svg", width: 1200, height: 630, alt: "CSCA Exam Guide 2026–2027 by GL Education" }]
   },
   twitter: {
     card: "summary_large_image",
-    title: "CSCA Exam 2026–2027 | GL Education",
-    description: "Latest CSCA registration, exam dates, subjects and free preparation courses."
+    title,
+    description,
+    images: ["/seo/csca-exam-guide.svg"]
   },
-  robots: { index: true, follow: true }
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } }
 };
 
 export default function CscaLayout({ children }: { children: React.ReactNode }) {
