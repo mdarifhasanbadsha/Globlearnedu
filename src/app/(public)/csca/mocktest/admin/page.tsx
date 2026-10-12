@@ -108,6 +108,9 @@ export default function MockTestAdmin() {
   const [rows, setRows] = useState<Submission[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportError, setReportError] = useState("");
+  const [deletingAttemptId, setDeletingAttemptId] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteNotice, setDeleteNotice] = useState("");
 
   const filteredStudents = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -186,6 +189,35 @@ export default function MockTestAdmin() {
       setLoginError(e instanceof Error ? e.message : "Unable to connect.");
     } finally {
       setStudentsLoading(false);
+    }
+  }
+
+  async function deleteAttempt(row: Submission) {
+    const label = row.candidate_name + " — " + titleCase(row.subject) + " Mock Test " + row.test_number;
+    if (!window.confirm("Permanently delete this submitted attempt?\n\n" + label + "\n\nThis cannot be undone. The student's other attempts will remain.")) return;
+    setDeletingAttemptId(row.id);
+    setDeleteError("");
+    setDeleteNotice("");
+    try {
+      const r = await fetch("/api/csca/mocktest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-csca-admin-token": token },
+        body: JSON.stringify({ action: "deleteAttempt", id: row.id })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Could not delete this attempt.");
+      setRows(current => current.filter(item => item.id !== row.id));
+      setStudents(current => current.map(student => {
+        const attempts = student.attempts.filter(attempt => attempt.id !== row.id);
+        if (!attempts.length) return null;
+        const average = attempts.reduce((sum, attempt) => sum + (attempt.total_marks ? attempt.score / attempt.total_marks * 100 : 0), 0) / attempts.length;
+        return { ...student, attempts, exam_count: attempts.length, average_score: Math.round(average * 100) / 100, last_submitted_at: attempts[0].submitted_at };
+      }).filter((student): student is Student => student !== null));
+      setDeleteNotice("The selected attempt was permanently deleted.");
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Could not delete this attempt.");
+    } finally {
+      setDeletingAttemptId("");
     }
   }
 
@@ -557,6 +589,8 @@ export default function MockTestAdmin() {
                   </div>
                 </div>
                 {reportError && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{reportError}</p>}
+                {deleteError && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{deleteError}</p>}
+                {deleteNotice && <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-bold text-emerald-800">{deleteNotice}</p>}
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   {rows.map((r, i) => (
                     <article key={r.id || i} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -574,6 +608,7 @@ export default function MockTestAdmin() {
                         <p className="mt-3 text-xs text-slate-500">Submitted: {dateLabel(r.submitted_at)}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
                           <Link href={"/csca/mocktest/result/" + r.token} className="rounded-lg border px-3 py-2 text-xs font-black text-[#1B3A6B]">Open result</Link>
+                          <button type="button" onClick={() => void deleteAttempt(r)} disabled={deletingAttemptId === r.id} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-50 disabled:opacity-50"><span>{deletingAttemptId === r.id ? "Deleting…" : "Delete attempt"}</span></button>
                           <a href={"https://wa.me/" + waPhone(r.phone) + "?text=" + encodeURIComponent("Hello " + r.candidate_name + ", thank you for taking a GL Education CSCA mock test. You are welcome to contact us for guidance with CSCA preparation, admission in China, or your study-abroad journey. — GL Education")} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-3 py-2 text-xs font-black text-white"><MessageCircle className="h-3.5 w-3.5" /> Prepare WhatsApp message</a>
                         </div>
                       </div>
