@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 const title = "Free CSCA Mock Test Online | Realistic Exam Practice";
-const description = "Take free realistic CSCA-style practice online. Choose Mathematics Mock Test 1 or 2, each with 48 questions, a 60-minute timer, instant scoring and answer explanations. Independent practice, not an official CSCA paper.";
+const description = "Take free CSCA-style practice online. Choose Mathematics Mock Test 1 or 2, each with 48 questions and a 60-minute timer. Get instant scores, then review your submitted answers and worked explanations. Independent practice, not an official CSCA paper.";
 
 export const metadata: Metadata = {
   title: { absolute: title },
