@@ -982,7 +982,7 @@ const mathematics2: MockExam = {
       ],
       "answerIndex": 3,
       "marks": 2.0833333333333335,
-      "explanation": "The gradients are −1/k and −5/10 = −1/2. For parallel lines, −1/k = −1/2, so k = 2. The supplied option list omitted 2; option D has been corrected to 2."
+      "explanation": "The gradients are −1/k and −5/10 = −1/2. For parallel lines, set −1/k = −1/2, giving k = 2."
     },
     {
       "prompt": "Find the equation of the circle whose diameter has endpoints A(0, 0) and B(6, 8).",
