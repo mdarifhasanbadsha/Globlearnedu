@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import {
   Calculator, Atom, FlaskConical, ArrowRight, ClipboardCheck, ShieldCheck,
@@ -104,33 +105,35 @@ const pageStructuredData = {
   ]
 };
 
+const commonSubjectStats = [["48", "Questions"], ["60", "Minutes"], ["100", "Marks"]];
+
 const featureSlides = [
   {
     eyebrow: "MATHEMATICS · 2 MOCK TESTS RELEASED",
-    title: "Mathematics exam topics",
-    description: "Practise functions and inverse functions, calculus and tangents, coordinate geometry, circles and ellipses, trigonometry, complex numbers, vectors, sets, sequences, probability and statistics.",
-    stats: [["48","Questions"],["60","Minutes"],["100","Marks"]],
-    detail: "Mock Tests 1 and 2 are available now. Each is an original practice paper, not an official or past CSCA paper."
+    title: "Official Mathematics syllabus",
+    description: "The official syllabus covers Sets & Inequalities; Functions; Geometry & Algebra; and Probability & Statistics. Topics include set operations and quadratic/rational inequalities; function properties and elementary functions; arithmetic/geometric sequences and introductory calculus; analytic geometry, vectors, complex numbers, space geometry, probability, mean, variance and normal distribution.",
+    stats: commonSubjectStats,
+    detail: "Based on the official 2025 CSCA Mathematics syllabus. GL Education Mock Tests 1 and 2 are independent practice papers—not official or past CSCA papers."
   },
   {
-    eyebrow: "PHYSICS · TEST SETS IN PREPARATION",
-    title: "Physics topic overview",
-    description: "Planned practice areas include mechanics and motion, forces, work and energy, waves and oscillations, electricity and magnetism, heat and thermodynamics, and modern physics.",
-    stats: [["0 / 20","Released"],["60 min*","Format"],["MCQ*","Type"]],
-    detail: "Physics tests remain locked until their question sets have been supplied and reviewed. *Format details are indicative; confirm each released test's instructions."
+    eyebrow: "PHYSICS · NO MOCK TEST RELEASED YET",
+    title: "Official Physics syllabus",
+    description: "The official syllabus covers Mechanics; Electromagnetism; Thermodynamics; Optics; and Modern Physics. Topics include kinematics, Newton’s laws, momentum, work and energy, circular motion, oscillations and waves; electrostatics, circuits, magnetic forces and induction; gas kinetic theory and the first law; reflection/refraction, interference/diffraction; photoelectric effect, atomic structure and nuclear physics.",
+    stats: commonSubjectStats,
+    detail: "Based on the official 2025 CSCA Physics syllabus. GL Education Physics mock tests are still being prepared; no test is available yet."
   },
   {
-    eyebrow: "CHEMISTRY · TEST SETS IN PREPARATION",
-    title: "Chemistry topic overview",
-    description: "Planned practice areas include atomic structure and periodic trends, chemical bonding, stoichiometry, solutions and gases, acids and bases, equilibrium, kinetics, and organic chemistry.",
-    stats: [["0 / 20","Released"],["60 min*","Format"],["MCQ*","Type"]],
-    detail: "Chemistry tests remain locked until their question sets have been supplied and reviewed. *Format details are indicative; confirm each released test's instructions."
+    eyebrow: "CHEMISTRY · NO MOCK TEST RELEASED YET",
+    title: "Official Chemistry syllabus",
+    description: "The official syllabus covers Basic Chemical Concepts & Calculations; Properties & Reactions of Substances; Chemical Theories & Laws; and Chemical Experiments & Applications. Topics include matter, equations, concentration, pH and ideal-gas calculations; inorganic/organic substances, redox and ionic reactions; atomic structure, periodic law, bonding, kinetics/equilibrium and electrolyte solutions; laboratory methods, gases, purification and industrial processes.",
+    stats: commonSubjectStats,
+    detail: "Based on the official 2025 CSCA Chemistry syllabus. GL Education Chemistry mock tests are still being prepared; no test is available yet."
   },
   {
     eyebrow: "HOW MOCK TESTS WORK",
     title: "Practise, score and learn",
     description: "Choose a subject and a released test, complete the timed single-answer questions, submit your paper, then use the result page to review your selected options and read explanations.",
-    stats: [["1 answer","Per question"],["Instant","Score"],["Review","Answers"]],
+    stats: [["Choose", "A subject"], ["Take", "A timed test"], ["Review", "Your answers"]],
     detail: "These are independent GL Education practice resources and do not register you for the official CSCA examination."
   }
 ];
@@ -138,6 +141,14 @@ const featureSlides = [
 export default function FreeMockTestsPage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const slide = featureSlides[activeSlide];
+
+  // Auto-advance the carousel; manual controls reset the interval.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setActiveSlide(current => (current + 1) % featureSlides.length);
+    }, 8000);
+    return () => window.clearTimeout(timer);
+  }, [activeSlide]);
   const browseSubjects = () => document.getElementById("subjects")?.scrollIntoView({ behavior: "smooth", block: "start" });
   return (
     <main className="min-h-screen bg-slate-50 text-[#0A1628]">
@@ -168,13 +179,23 @@ export default function FreeMockTestsPage() {
               <div aria-hidden="true" className="absolute -inset-4 rounded-[2.5rem] bg-[#29ABE2]/10 blur-2xl" />
               <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-[#0A1628]/90 p-6 shadow-2xl md:p-7">
                 <div className="flex items-center justify-between gap-3"><span className="text-xs font-black uppercase tracking-[.14em] text-[#FFD700]">Exam topics & details</span><span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-slate-300">{String(activeSlide+1).padStart(2,"0")} / {String(featureSlides.length).padStart(2,"0")}</span></div>
-                <div className="mt-5 min-h-[245px]">
-                  <p className="text-[10px] font-black uppercase tracking-[.16em] text-[#29ABE2]">{slide.eyebrow}</p>
-                  <h2 className="mt-3 text-2xl font-black leading-tight">{slide.title}</h2>
-                  <p className="mt-4 text-sm leading-7 text-slate-300">{slide.description}</p>
-                </div>
-                <div className="mt-5 grid grid-cols-3 gap-2">{slide.stats.map(([value,label])=><div key={label} className="rounded-xl border border-white/10 bg-white/5 p-3 text-center"><b className="block text-lg md:text-xl">{value}</b><span className="mt-1 block text-[10px] leading-4 text-slate-400">{label}</span></div>)}</div>
-                <p className="mt-4 min-h-[64px] rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-slate-300">{slide.detail}</p>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={activeSlide}
+                    initial={{ opacity: 0, x: 18 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -18 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <div className="mt-5 min-h-[245px]" aria-live="off">
+                      <p className="text-[10px] font-black uppercase tracking-[.16em] text-[#29ABE2]">{slide.eyebrow}</p>
+                      <h2 className="mt-3 text-2xl font-black leading-tight">{slide.title}</h2>
+                      <p className="mt-4 text-sm leading-7 text-slate-300">{slide.description}</p>
+                    </div>
+                    <div className="mt-5 grid grid-cols-3 gap-2">{slide.stats.map(([value,label])=><div key={label} className="rounded-xl border border-white/10 bg-white/5 p-3 text-center"><b className="block text-lg md:text-xl">{value}</b><span className="mt-1 block text-[10px] leading-4 text-slate-400">{label}</span></div>)}</div>
+                    <p className="mt-4 min-h-[64px] rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-slate-300">{slide.detail} <a href="https://csca.cn/testprep/" target="_blank" rel="noreferrer" className="ml-1 inline-flex font-black text-[#29ABE2] underline underline-offset-2 hover:text-white">Official syllabus ↗</a></p>
+                  </motion.div>
+                </AnimatePresence>
                 <button type="button" onClick={browseSubjects} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#C8102E] px-5 py-3.5 font-black text-white transition hover:bg-red-800">Browse Exam Subjects <ArrowRight className="h-4 w-4" /></button>
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <button type="button" onClick={() => setActiveSlide(v => (v - 1 + featureSlides.length) % featureSlides.length)} aria-label="Previous exam topic slide" className="inline-flex items-center gap-1 rounded-lg border border-white/15 px-3 py-2 text-xs font-black text-slate-200 hover:bg-white/10"><ChevronLeft className="h-4 w-4" /> Previous</button>
