@@ -21,7 +21,7 @@ export default function FloatingWhatsApp() {
   }
 
   return (
-    <div className="fixed bottom-24 md:bottom-8 right-4 z-50 flex flex-col items-end gap-2">
+    <div data-floating-whatsapp className="csca-floating-whatsapp fixed bottom-24 md:bottom-8 right-4 z-50 flex flex-col items-end gap-2">
       {/* Tooltip bubble */}
       {showTooltip && !dismissed && (
         <div className="relative bg-white rounded-2xl shadow-2xl p-4 max-w-[220px] border border-gray-100">
