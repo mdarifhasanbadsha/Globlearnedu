@@ -37,6 +37,31 @@ const faqs = [
   ["How can I prepare for the CSCA exam?", "Review the requirements of your target university, study the relevant subject material, practise questions and attempt a timed mock test. Use the result to identify topics to review before taking another practice set."],
 ];
 
+const cscaStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://globlearnedu.com/csca#webpage",
+      "url": "https://globlearnedu.com/csca",
+      "name": "CSCA Exam Guide 2026–2027: Dates, Subjects & Free Preparation",
+      "description": "Guide to the China Scholastic Competency Assessment, official exam schedule, subject requirements, free CSCA practice questions and realistic mock tests.",
+      "inLanguage": "en",
+      "isPartOf": { "@type": "WebSite", "@id": "https://globlearnedu.com/#website", "url": "https://globlearnedu.com/", "name": "Globlearn Education" },
+      "publisher": { "@type": "Organization", "name": "Globlearn Education", "url": "https://globlearnedu.com/" },
+      "breadcrumb": { "@id": "https://globlearnedu.com/csca#breadcrumb" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://globlearnedu.com/csca#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://globlearnedu.com/" },
+        { "@type": "ListItem", "position": 2, "name": "CSCA Exam Guide", "item": "https://globlearnedu.com/csca" }
+      ]
+    }
+  ]
+};
+
 function CourseJoin({ course }: { course: string }) {
   const [open, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -114,6 +139,7 @@ export default function CscaPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-[#0A1628]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(cscaStructuredData) }} />
       {popup && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#07101f]/70 px-4 py-6 backdrop-blur-sm">
           <div role="dialog" aria-modal="true" aria-labelledby="csca-alert-title" className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white shadow-2xl">
