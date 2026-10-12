@@ -61,6 +61,30 @@ export async function POST(req:NextRequest){
     await ensureTable();
     const body=await req.json();
     if(body.adminLogin===true){
+      const captchaToken=String(body.captchaToken||"").trim();
+      const capEndpoint=String(process.env.CAP_API_ENDPOINT||process.env.NEXT_PUBLIC_CAP_API_ENDPOINT||"").trim().replace(/\\/+$/, "");
+      const capSecret=String(process.env.CAP_SECRET_KEY||"").trim();
+      if(!capEndpoint||!capSecret){
+        return NextResponse.json({error:"Admin CAPTCHA is not configured on the server. Please configure the Cap endpoint and secret key."},{status:503});
+      }
+      if(!captchaToken){
+        return NextResponse.json({error:"Please complete the CAPTCHA verification first."},{status:400});
+      }
+      try{
+        const verification=await fetch(capEndpoint+"/siteverify",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({secret:capSecret,response:captchaToken}),
+          cache:"no-store"
+        });
+        const verificationResult=await verification.json() as {success?:boolean};
+        if(!verification.ok||verificationResult.success!==true){
+          return NextResponse.json({error:"CAPTCHA verification failed. Please try again."},{status:400});
+        }
+      }catch(error){
+        console.error("CSCA admin CAPTCHA verification error",error);
+        return NextResponse.json({error:"Unable to verify CAPTCHA right now. Please try again."},{status:502});
+      }
       const adminPhone=String(body.phone||"").replace(/[^0-9]/g,"");
       const adminPassword=String(body.password||"");
       const supplied=crypto.createHash("sha256").update(adminPhone+":"+adminPassword).digest("hex");
