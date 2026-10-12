@@ -159,7 +159,6 @@ export default function FreeMockTestsPage() {
             <nav aria-label="Breadcrumb" className="text-sm font-bold text-slate-300">
               <Link href="/csca" className="hover:text-white">CSCA Exam Guide</Link><span className="mx-2">/</span><span aria-current="page">Free Mock Tests</span>
             </nav>
-            <Link href="/csca/mocktest/admin" className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-slate-200 transition hover:bg-white/10">Admin Login</Link>
           </div>
           <div className="mt-9 grid items-center gap-10 lg:grid-cols-[1.2fr_.8fr]">
             <div className="max-w-3xl">
