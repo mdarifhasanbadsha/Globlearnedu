@@ -34,7 +34,7 @@ class MainActivity : Activity() {
         )
         window.statusBarColor = Color.rgb(7, 26, 53)
         window.navigationBarColor = Color.rgb(7, 26, 53)
-        window.decorView.systemUiVisibility = 0
+        hideSystemBars()
 
         val root = FrameLayout(this).apply { setBackgroundColor(Color.rgb(7, 26, 53)) }
         webView = WebView(this).apply {
@@ -140,15 +140,37 @@ class MainActivity : Activity() {
             .show()
     }
 
+    private fun hideSystemBars() {
+        @Suppress("DEPRECATION")
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            )
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemBars()
+    }
+
     override fun onPause() {
+        // Notify the existing website's interruption handler when Android backgrounds this app.
+        if (::webView.isInitialized) {
+            webView.evaluateJavascript(
+                "window.dispatchEvent(new Event('blur'));document.dispatchEvent(new Event('visibilitychange'));",
+                null
+            )
+            webView.onPause()
+        }
         super.onPause()
-        // WebView's page-level exam recovery remains responsible for saving answers.
-        webView.onPause()
     }
 
     override fun onResume() {
         super.onResume()
-        webView.onResume()
+        if (::webView.isInitialized) webView.onResume()
+        hideSystemBars()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
