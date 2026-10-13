@@ -1,6 +1,7 @@
 package com.globlearnedu.cscago
 
 import android.content.Intent
+import android.os.SystemClock
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
@@ -239,6 +240,7 @@ fun NativeExamScreen(
     var started by remember(exam) { mutableStateOf(false) }
     var current by remember(exam) { mutableStateOf(0) }
     var remaining by remember(exam) { mutableStateOf(exam.durationMinutes.coerceAtLeast(1) * 60) }
+    var deadlineElapsedMs by remember(exam) { mutableStateOf(0L) }
     var awayCount by remember(exam) { mutableStateOf(0) }
     var showSubmitConfirm by remember { mutableStateOf(false) }
     var showExitConfirm by remember { mutableStateOf(false) }
@@ -278,13 +280,17 @@ fun NativeExamScreen(
 
     BackHandler(enabled = true) { showExitConfirm = true }
 
-    LaunchedEffect(started, exam) {
-        if (!started) return@LaunchedEffect
-        while (remaining > 0) {
-            delay(1000)
-            remaining = (remaining - 1).coerceAtLeast(0)
+    LaunchedEffect(started, exam, deadlineElapsedMs) {
+        if (!started || deadlineElapsedMs <= 0L) return@LaunchedEffect
+        while (true) {
+            // Monotonic deadline avoids clock drift when Android delays coroutine wake-ups.
+            val secondsLeft = ((deadlineElapsedMs - SystemClock.elapsedRealtime() + 999L) / 1000L)
+                .coerceAtLeast(0L).toInt()
+            remaining = secondsLeft
+            if (secondsLeft == 0) break
+            delay(250)
         }
-        if (remaining == 0 && !timerFinished) {
+        if (!latestTimerFinished) {
             timerFinished = true
             latestSubmit(latestAnswers, latestAway, latestStart)
         }
@@ -326,7 +332,13 @@ fun NativeExamScreen(
                 }
             }
             item {
-                Button(onClick = { remaining = exam.durationMinutes.coerceAtLeast(1) * 60; startedAt = Instant.now().toString(); started = true }, modifier = Modifier.fillMaxWidth().height(51.dp), colors = ButtonDefaults.buttonColors(containerColor = MT_RED), shape = RoundedCornerShape(13.dp)) { Text("Start test", fontWeight = FontWeight.Bold) }
+                Button(onClick = {
+                    remaining = exam.durationMinutes.coerceAtLeast(1) * 60
+                    startedAt = Instant.now().toString()
+                    deadlineElapsedMs = SystemClock.elapsedRealtime() + exam.durationMinutes.coerceAtLeast(1) * 60_000L
+                    timerFinished = false
+                    started = true
+                }, modifier = Modifier.fillMaxWidth().height(51.dp), colors = ButtonDefaults.buttonColors(containerColor = MT_RED), shape = RoundedCornerShape(13.dp)) { Text("Start test", fontWeight = FontWeight.Bold) }
                 TextButton(onClick = onExit, modifier = Modifier.fillMaxWidth()) { Text("Cancel", color = MT_MUTED) }
             }
         }
