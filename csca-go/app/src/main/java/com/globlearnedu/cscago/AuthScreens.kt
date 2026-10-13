@@ -1,5 +1,6 @@
 package com.globlearnedu.cscago
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -86,6 +87,13 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
     var acceptedTerms by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    BackHandler(enabled = screen != "login") {
+        when (screen) {
+            "otp" -> { screen = "signup"; otp = ""; error = null; notice = null }
+            "signup" -> { screen = "login"; error = null; notice = null }
+        }
+    }
+
     fun requestCode() {
         error = null
         notice = null
@@ -153,7 +161,7 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
                             modifier = Modifier.fillMaxWidth(), singleLine = true,
                             label = { Text("Email or phone number") },
                             placeholder = { Text("you@example.com or +880…") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                         )
                         OutlinedTextField(
                             value = loginPassword, onValueChange = { loginPassword = it; error = null },
@@ -293,7 +301,7 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
                             colors = ButtonDefaults.buttonColors(containerColor = AuthRed),
                             shape = RoundedCornerShape(14.dp)
                         ) { AuthButtonLabel(if (loading) "Verifying…" else "Verify email and create account") }
-                        OutlinedButton(onClick = { requestCode() }, enabled = !loading, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = { otp = ""; requestCode() }, enabled = !loading, modifier = Modifier.fillMaxWidth()) {
                             Text("Send a new code", color = AuthRed)
                         }
                         Text("For security, incorrect attempts are limited. A new code can be requested after the resend cooldown.", color = AuthMuted, fontSize = 11.sp, lineHeight = 16.sp)
