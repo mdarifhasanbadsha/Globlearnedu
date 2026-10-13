@@ -108,7 +108,7 @@ export async function GET(req:NextRequest){try{
  if(p.get("action")==="existing"){
   await ensureTable();const s=p.get("subject")||"",n=Number(p.get("test")||0),rawPhone=p.get("phone")||"",email=(p.get("email")||"").trim().toLowerCase();
   if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!isValidPhone(rawPhone)||!isValidEmail(email))return NextResponse.json({error:"Enter a valid international mobile number and a valid email address."},{status:400});
-  const phone=normalizePhone(rawPhone);const key=mockKey(s,n);const r=await db.execute(sql`SELECT candidate_name,phone,candidate_email,score,total_marks,question_count,away_count,result_token AS token,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} AND (phone=${phone} OR lower(candidate_email)=${email}) ORDER BY submitted_at DESC LIMIT 1`);
+  const phone=normalizePhone(rawPhone);const key=mockKey(s,n);const r=await db.execute(sql`SELECT candidate_name,phone,candidate_email,score,total_marks,question_count,away_count,result_token AS token,submitted_at FROM csca_mocktest_attempts WHERE exam_key=${key} AND phone=${phone} AND lower(candidate_email)=${email} ORDER BY submitted_at DESC LIMIT 1`);
   const row=firstRow(r);return NextResponse.json(row?{taken:true,...row}:{taken:false},{headers:{"Cache-Control":"no-store"}});
  }
  if(p.get("admin")==="1"){
