@@ -1114,12 +1114,35 @@ private fun ProfileStat(icon: ImageVector, title: String, value: String) {
 
 @Composable
 private fun ProfileImage(profileUri: String?, modifier: Modifier = Modifier) {
-    if (profileUri == null) return
     val context = LocalContext.current
-    val bitmap = remember(profileUri) {
-        try {
-            context.contentResolver.openInputStream(Uri.parse(profileUri))?.use { BitmapFactory.decodeStream(it)?.asImageBitmap() }
-        } catch (_: Exception) { null }
+    val bitmap by androidx.compose.runtime.produceState<androidx.compose.ui.graphics.ImageBitmap?>(
+        initialValue = null,
+        key1 = profileUri
+    ) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                if (profileUri.isNullOrBlank()) null
+                else {
+                    val stream = if (profileUri.startsWith("https://") || profileUri.startsWith("http://")) {
+                        URL(profileUri).openConnection().apply {
+                            connectTimeout = 8000
+                            readTimeout = 10000
+                        }.getInputStream()
+                    } else {
+                        context.contentResolver.openInputStream(Uri.parse(profileUri))
+                    }
+                    stream?.use { BitmapFactory.decodeStream(it)?.asImageBitmap() }
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
-    if (bitmap != null) Image(bitmap = bitmap, contentDescription = "Student profile picture", modifier = modifier, contentScale = ContentScale.Crop)
+    if (bitmap != null) {
+        Image(bitmap = bitmap!!, contentDescription = "Student profile picture", modifier = modifier, contentScale = ContentScale.Crop)
+    } else {
+        Box(modifier, contentAlignment = Alignment.Center) {
+            Icon(Icons.Default.AccountCircle, contentDescription = "Student profile placeholder", tint = Blue, modifier = Modifier.fillMaxSize(0.88f))
+        }
+    }
 }
