@@ -51,7 +51,7 @@ data class MockCandidate(
 
 object MockTestApi {
     suspend fun loadAvailability(): List<PublicMockSummary> = withContext(Dispatchers.IO) {
-        val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest?availability=1")
+        val url = URL("${ApiConfig.MOCK_TEST_URL}?availability=1")
         val connection = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 12000
@@ -90,7 +90,7 @@ object MockTestApi {
                 "&test=" + testNumber +
                 "&phone=" + java.net.URLEncoder.encode(phone, "UTF-8") +
                 "&email=" + java.net.URLEncoder.encode(email, "UTF-8")
-            val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest?${query}")
+            val url = URL("${ApiConfig.MOCK_TEST_URL}?${query}")
             val connection = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 connectTimeout = 12000
@@ -118,7 +118,7 @@ object MockTestApi {
         }
 
     suspend fun loadExam(subject: String, testNumber: Int): PublicMockExam? = withContext(Dispatchers.IO) {
-        val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest?exam=1&subject=$subject&test=$testNumber")
+        val url = URL("${ApiConfig.MOCK_TEST_URL}?exam=1&subject=$subject&test=$testNumber")
         val connection = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 12000
@@ -174,7 +174,7 @@ object MockTestApi {
         awayCount: Int,
         startedAt: String
     ): JSONObject = withContext(Dispatchers.IO) {
-        val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest")
+        val url = URL(ApiConfig.MOCK_TEST_URL)
         val payload = JSONObject()
             .put("action", "submit")
             .put("subject", exam.subject)
