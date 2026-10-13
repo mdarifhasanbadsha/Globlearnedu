@@ -70,6 +70,8 @@ async function ensureMobileTables() {
   await db.execute(sql.raw(sqlCreateSessionsTable));
   await db.execute(sql.raw(sqlSessionIndex));
   await db.execute(sql.raw(sqlOtpExpiryIndex));
+  // Terms acceptance is recorded during mobile registration; create its table before OTP completion.
+  await db.execute(sql.raw(sqlCreateTermsTable));
 }
 const sqlCreateOtpTable = `
 CREATE TABLE IF NOT EXISTS csca_go_registration_otps (
