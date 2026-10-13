@@ -1,27 +1,45 @@
-# CSCA Go — Native Android App (Initial implementation)
+# CSCA Go — Native Android App
 
-This is a separate Android project under `csca-go/`. It does not change the existing website pages, styles, routes, database schema, or web exam implementation.
+CSCA Go is a separate native Android project in `csca-go/`. Mobile UI changes stay on `feature/csca-go-native`; the GL Education website's visible pages and styles are not redesigned by this project.
 
-## Current prototype screens
-- Animated native homepage and bottom navigation
-- CSCA information hub: purpose, formats, subject categories, registration checklist, dates/results guidance, preparation roadmap
-- Online exam environment and rules: room/desk setup, primary computer, secondary camera position, connectivity, permitted items, check-in, candidate conduct, technical issues and consequences
-- Study Materials with five subject categories and previous-year-question placeholders
-- Free CSCA preparation course and premium course catalog placeholders
-- Mock test screen, homework screen, student profile and local profile photo selection
-- Study in China information banner
-- Build workflow for a debug APK
+## Connected functionality
 
-## Accuracy notes
-Exam delivery rules and equipment requirements can change by session and delivery mode. The guide is an orientation summary, not a substitute for the current official CSCA registration portal, admission ticket, candidate declaration or handbook. The current official instructions take precedence.
+- Native sign-in and registration screens.
+- Mobile authentication API at `/api/csca-go/auth`, reusing the existing `users` table and bcrypt password hashes.
+- Email OTP for new CSCA Go registration, OTP expiry/attempt limits, server-side rate limiting, and hashed bearer sessions.
+- Encrypted Android storage for the mobile session token.
+- Display-name update and profile-image upload through `/api/csca-go/profile`.
+- Live released mock-test list and question payload from the existing `/api/csca/mocktest` API.
+- Server-side answer scoring and saving through the existing mock-test submission endpoint.
+- Native question navigator, timer, mark-for-review controls, and practice interruption telemetry.
+- CSCA information screens and Android system back navigation.
 
-## Integration status
-This initial version deliberately does **not** fabricate live student data, scores, course enrollment, homework, or exam availability. The current backend and API contracts must be audited before connecting accounts and data. `ApiConfig.kt` is an explicit integration boundary; `API_BASE_URL` is null until an approved API is identified or implemented. Never put database passwords or service-role credentials in an APK.
+## Known incomplete items (not live yet)
 
-The profile name and image currently stay on the device. Account-wide photo sync, login/OTP/password recovery, live course enrollment, homework submissions, exam sessions and result analytics require the secure backend integration phase.
+- **Courses and enrollment:** free and premium course cards are placeholders. The app does not yet read a live course catalog or enroll a student.
+- **Homework:** account-linked assignment listing, submissions, grades and homework history are not integrated natively.
+- **Progress dashboard:** profile totals, score averages and trends are not yet pulled from an authenticated progress endpoint.
+- **Official syllabus:** subject detail pages still need the full, reviewed, current official syllabus text/documents.
+- **Previous-year papers:** placeholders only until GL Education supplies approved papers. Original practice papers must not be labeled as official past papers.
+- **Online-exam infographic:** the image supplied in chat has not yet been added as an Android asset. The guide currently shows text instructions.
+- **Study in China:** the homepage banner currently opens an information dialog, not the planned full native information hub.
+- **Branding:** launcher icon is temporary until the CSCA Go logo is supplied.
+
+## Mock-test limitations
+
+Mock-test questions and results use the existing website API and are scored by the server. The current website API identifies public practice attempts using candidate name, phone and email; the flow is not yet a fully authenticated, account-bound attempt API. Answers are held in app memory until submission, so a force-stop or process death can lose an unfinished attempt. Do not use this practice flow as a substitute for the official CSCA exam client.
+
+## Authentication and privacy notes
+
+- No database credentials or server secrets are packaged in the APK.
+- Mobile bearer tokens are stored using Android encrypted shared preferences; the server stores a token hash and supports revocation/expiry.
+- Registration email delivery must be tested with a real inbox in the deployed environment; passing a build/type-check does not prove that email delivery or every live flow works.
+- Phone matching is conservative: use the number format associated with the existing account, preferably with its international calling code.
 
 ## Build
-The repository workflow `.github/workflows/csca-go-apk.yml` builds a debug APK on changes under `csca-go/`. Open the GitHub Actions run and download the `csca-go-debug-apk` artifact.
 
-## Branding
-The current icon is a placeholder. Replace it after the CSCA Go / GL Education logo is supplied.
+The workflow `.github/workflows/csca-go-apk.yml` builds a debug APK when app files change. Open the latest successful run, then download the `csca-go-debug-apk` artifact. Debug APKs are for testing, not production distribution.
+
+## Official CSCA information
+
+Exam dates, subject requirements, formats and home-exam setup can change. Check the current official registration portal, candidate handbook, admission ticket and session notices before acting on guidance shown in this app.
