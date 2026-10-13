@@ -66,7 +66,7 @@ object SessionStore {
 }
 
 object MobileAuthApi {
-    private const val ENDPOINT = "https://globlearnedu.com/api/csca-go/auth"
+    private const val ENDPOINT = ApiConfig.MOBILE_AUTH_URL
 
     suspend fun requestOtp(
         firstName: String,
@@ -105,7 +105,7 @@ object MobileAuthApi {
 
     suspend fun updateDisplayName(token: String, displayName: String): MobileUser = withContext(Dispatchers.IO) {
         val payload = JSONObject().put("displayName", displayName.trim())
-        val connection = (URL("https://globlearnedu.com/api/csca-go/profile").openConnection() as HttpURLConnection).apply {
+        val connection = (URL(ApiConfig.MOBILE_PROFILE_URL).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = 15000
             readTimeout = 20000
