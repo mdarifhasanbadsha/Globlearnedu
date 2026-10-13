@@ -276,6 +276,8 @@ export async function POST(request: NextRequest) {
       `);
       if (!firstRow(challenge)) return json({ error: "Please wait a minute before requesting another code." }, 429);
 
+      // Count the OTP request before contacting the mail provider, including failed sends.
+      await recordRateAttempt("otp", email);
       const emailResult = await sendEmail({
         to: email,
         subject: "Your CSCA Go verification code",
@@ -287,7 +289,6 @@ export async function POST(request: NextRequest) {
         await db.execute(sql`DELETE FROM csca_go_registration_otps WHERE email = ${email} AND otp_hash = ${otpHash}`);
         return json({ error: "We couldn't send your verification email. Please check your address and try again shortly." }, 502);
       }
-      await recordRateAttempt("otp", email);
       return json({ success: true, message: "Verification code sent.", email, expiresInSeconds: OTP_MINUTES * 60, resendAfterSeconds: OTP_RESEND_SECONDS });
     }
 
