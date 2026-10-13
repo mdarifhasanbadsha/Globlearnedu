@@ -153,8 +153,8 @@ private val subjects = listOf(
     Subject("Mathematics", "Official syllabus and topic guide", Icons.Default.FactCheck),
     Subject("Physics", "Concepts, formulas and topic guide", Icons.Default.Science),
     Subject("Chemistry", "Topics and learning resources", Icons.Default.AutoStories),
-    Subject("Chinese for Humanities · 文科中文", "Chinese-language test for humanities tracks", Icons.Default.Language),
-    Subject("Chinese for STEM · 理科中文", "Chinese-language test for science tracks", Icons.Default.Language)
+    Subject("Professional Chinese (Humanities) · 文科中文", "Official Chinese-language test category for humanities tracks", Icons.Default.Language),
+    Subject("Professional Chinese (Science) · 理科中文", "Official Chinese-language test category for science tracks", Icons.Default.Language)
 )
 
 class MainActivity : ComponentActivity() {
@@ -221,7 +221,6 @@ private fun CSCAApp() {
 
     BackHandler(enabled = authLoaded && sessionToken != null && authUser != null && activeExam == null) {
         when {
-            activeExam != null -> Unit
             submissionResult != null -> submissionResult = null
             selectedSubject != null -> selectedSubject = null
             showSetupGuide -> showSetupGuide = false
@@ -653,7 +652,14 @@ private fun LearnScreen(onInfo: (String) -> Unit, onHomework: () -> Unit) {
                 "CSCA Chemistry Master Course" to "Core concepts, topic practice and revision.",
                 "CSCA Chinese Preparation" to "Language preparation for the relevant CSCA Chinese category."
             )) { course ->
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(18.dp), border = BorderStroke(1.dp, Color(0xFFE6EBF3))) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable {
+                        onInfo("${course.first}: course details, price, and enrollment are not connected to the live course catalog yet. This card is informational only; no enrollment or payment is made.")
+                    },
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(18.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE6EBF3))
+                ) {
                     Row(Modifier.padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(Color(0xFFF1EDFF)), contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.WorkspacePremium, null, tint = Color(0xFF7557BC), modifier = Modifier.size(25.dp))
@@ -983,9 +989,17 @@ private fun ExamHubScreen(onBack: () -> Unit, onSetup: () -> Unit, onOfficial: (
             "Mathematics — review the official Mathematics syllabus and the requirements of your intended university.",
             "Physics — required for some science, engineering and related programs according to university policy.",
             "Chemistry — required for some majors according to university policy.",
-            "Chinese for Humanities (文科中文) — Chinese-language test category for humanities-oriented tracks.",
-            "Chinese for STEM (理科中文) — Chinese-language test category for science-oriented tracks.",
-            "The exact combination of subjects, language, timing and score use should be checked in the current official syllabus and university requirements."
+            "Professional Chinese (Humanities) — 文科中文; Chinese-language test category for humanities-oriented tracks.",
+            "Professional Chinese (Science) — 理科中文; Chinese-language test category for science-oriented tracks.",
+            "The exact combination of subjects, language and score use should be checked in the current official syllabus and university requirements."
+        )) }
+        item { GuideCard("CSCA test structure at a glance", listOf(
+            "Professional Chinese (Humanities) / 文科中文: Chinese language, 90 minutes, 80 multiple-choice questions, score range 0–100.",
+            "Professional Chinese (Science) / 理科中文: Chinese language, 90 minutes, 80 multiple-choice questions, score range 0–100.",
+            "Mathematics: Chinese or English; 60 minutes, 48 multiple-choice questions, score range 0–100.",
+            "Physics: Chinese or English; 60 minutes, 48 multiple-choice questions, score range 0–100.",
+            "Chemistry: Chinese or English; 60 minutes, 48 multiple-choice questions, score range 0–100.",
+            "This overview is based on the official CSCA exam introduction. Check current session guidance and target university requirements before registering."
         )) }
         item { GuideCard("Registration checklist", listOf(
             "Use the official registration website and a long-term accessible email address.",
