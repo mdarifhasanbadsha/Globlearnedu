@@ -3,6 +3,13 @@ package com.globlearnedu.cscago
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.ComponentActivity
+import android.view.WindowManager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -243,6 +250,31 @@ fun NativeExamScreen(
     val latestAnswers by rememberUpdatedState(answers.toList())
     val latestAway by rememberUpdatedState(awayCount)
     val latestStart by rememberUpdatedState(startedAt)
+    val latestStarted by rememberUpdatedState(started)
+    val latestTimerFinished by rememberUpdatedState(timerFinished)
+    val latestAwayCount by rememberUpdatedState(awayCount)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val activity = LocalContext.current as? ComponentActivity
+
+    // Protect question content from ordinary Android screenshots while an attempt is active.
+    SideEffect {
+        if (started) activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        else activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+    DisposableEffect(activity) {
+        onDispose { activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
+    }
+
+    // Count app-background events honestly; these are practice telemetry, not official proctoring.
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE && latestStarted && !latestTimerFinished) {
+                awayCount = (latestAwayCount + 1).coerceAtMost(1000)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     BackHandler(enabled = true) { showExitConfirm = true }
 
@@ -338,7 +370,7 @@ fun NativeExamScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("QUESTION ${current + 1}", color = MT_RED, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
                             Spacer(Modifier.weight(1f))
-                            Text("${q.marks} mark(s)", color = MT_MUTED, fontSize = 10.sp)
+                            Text("${"%.2f".format(q.marks)} mark(s)", color = MT_MUTED, fontSize = 10.sp)
                         }
                         Text(q.prompt, color = MT_NAVY, fontSize = 16.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold)
                         Divider(color = Color(0xFFE8EDF4))
@@ -425,9 +457,9 @@ fun NativeResultScreen(result: JSONObject, onBack: () -> Unit, onViewWebResult: 
             Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(17.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     ResultLine("Question count", questions.toString())
-                    ResultLine("Recorded screen departures", away.toString())
+                    ResultLine("App-background events during practice", away.toString())
                     ResultLine("Saved to GL Education website", "Yes")
-                    Text("This is a GL Education practice result, not an official CSCA score. The website server calculated and saved it.", color = MT_MUTED, fontSize = 12.sp, lineHeight = 18.sp)
+                    Text("This is a GL Education practice result, not an official CSCA score. The website server calculated and saved it. App-background events are recorded as practice telemetry and do not prove misconduct.", color = MT_MUTED, fontSize = 12.sp, lineHeight = 18.sp)
                 }
             }
         }
