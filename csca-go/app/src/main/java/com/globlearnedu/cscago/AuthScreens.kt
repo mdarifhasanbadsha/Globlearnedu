@@ -256,7 +256,24 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(checked = acceptedTerms, onCheckedChange = { acceptedTerms = it; error = null })
                             Column(Modifier.weight(1f)) {
-                                Text("I accept the Terms of Service and Privacy Policy", color = AuthNavy, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                                Text("I agree to GL Education's terms and privacy policy:", color = AuthNavy, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    TextButton(
+                                        onClick = {
+                                            try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://globlearnedu.com/terms"))) }
+                                            catch (_: Exception) { error = "Open globlearnedu.com/terms in your browser." }
+                                        },
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) { Text("Terms of Service", color = AuthRed, fontSize = 11.sp) }
+                                    Text("and", color = AuthMuted, fontSize = 11.sp)
+                                    TextButton(
+                                        onClick = {
+                                            try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://globlearnedu.com/privacy"))) }
+                                            catch (_: Exception) { error = "Open globlearnedu.com/privacy in your browser." }
+                                        },
+                                        contentPadding = PaddingValues(start = 4.dp, end = 0.dp, top = 0.dp, bottom = 0.dp)
+                                    ) { Text("Privacy Policy", color = AuthRed, fontSize = 11.sp) }
+                                }
                                 Text("Required to create a CSCA Go account.", color = AuthMuted, fontSize = 10.sp)
                             }
                         }
