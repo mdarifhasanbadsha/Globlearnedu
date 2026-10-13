@@ -114,6 +114,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 private val Navy = Color(0xFF132746)
 private val Blue = Color(0xFF2E67B1)
@@ -182,6 +183,10 @@ private fun CSCAApp() {
     var authLoaded by remember { mutableStateOf(false) }
     var sessionToken by remember { mutableStateOf<String?>(null) }
     var authUser by remember { mutableStateOf<MobileUser?>(null) }
+    var activeExam by remember { mutableStateOf<PublicMockExam?>(null) }
+    var examCandidate by remember { mutableStateOf<MockCandidate?>(null) }
+    var examSubmitting by remember { mutableStateOf(false) }
+    var submissionResult by remember { mutableStateOf<JSONObject?>(null) }
     val authScope = rememberCoroutineScope()
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -200,6 +205,8 @@ private fun CSCAApp() {
 
     BackHandler(enabled = authLoaded && sessionToken != null && authUser != null) {
         when {
+            activeExam != null -> Unit
+            submissionResult != null -> submissionResult = null
             selectedSubject != null -> selectedSubject = null
             showSetupGuide -> showSetupGuide = false
             showExamHub -> showExamHub = false
@@ -249,14 +256,16 @@ private fun CSCAApp() {
         containerColor = Canvas,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
-                Tab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { selectedTab = tab; selectedSubject = null; showExamHub = false; showSetupGuide = false },
-                        icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label, fontSize = 10.sp, maxLines = 1) }
-                    )
+            if (activeExam == null && submissionResult == null) {
+                NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
+                    Tab.entries.forEach { tab ->
+                        NavigationBarItem(
+                            selected = selectedTab == tab,
+                            onClick = { selectedTab = tab; selectedSubject = null; showExamHub = false; showSetupGuide = false },
+                            icon = { Icon(tab.icon, contentDescription = tab.label) },
+                            label = { Text(tab.label, fontSize = 10.sp, maxLines = 1) }
+                        )
+                    }
                 }
             }
         }
@@ -283,7 +292,12 @@ private fun CSCAApp() {
                     )
                     tab == Tab.Learn -> LearnScreen(onInfo = { infoDialog = it }, onHomework = { infoDialog = "Homework integration will be connected after the website backend/API audit. This screen is designed to show released assignments for courses the student has enrolled in, including due dates, submissions, marks and feedback." })
                     tab == Tab.Materials -> MaterialsScreen(onSubject = { selectedSubject = it }, onPrevious = { infoDialog = "Previous-year question papers will appear here when you upload them. Until then, the app will clearly mark this section as coming soon and will not label practice questions as official past papers." })
-                    tab == Tab.Tests -> TestsScreen(onInfo = { infoDialog = it }, onExamHub = { showExamHub = true })
+                    tab == Tab.Tests -> ConnectedTestsScreen(
+                        user = authUser!!,
+                        onStartExam = { exam, candidate -> activeExam = exam; examCandidate = candidate; submissionResult = null },
+                        onExamGuide = { showExamHub = true },
+                        onInfo = { infoDialog = it }
+                    )
                     else -> ProfileScreen(
                         profileUri = profileUri,
                         studentName = studentName,
