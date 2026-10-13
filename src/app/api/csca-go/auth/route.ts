@@ -184,7 +184,6 @@ async function createMobileSession(userId: string) {
 async function authenticatedUser(request: NextRequest) {
   const token = bearerToken(request);
   if (!token || token.length < 40) return null;
-  const { sql } = await import("drizzle-orm");
   const result = await db.execute(sql`
     SELECT u.id, u.email, u.first_name, u.last_name, u.name, u.phone, u.country, u.image,
            u.email_verified, u.role
@@ -246,7 +245,6 @@ export async function POST(request: NextRequest) {
       const [existingEmail] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
       if (existingEmail) return json({ error: "An account with this email already exists. Please sign in instead." }, 409);
 
-      const { sql } = await import("drizzle-orm");
       const existingPhone = await db.execute(sql`
         SELECT id FROM users
         WHERE regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g') IN (${phoneOptions[0]}, ${phoneOptions[1]}, ${phoneOptions[2]}, ${phoneOptions[3]})
@@ -298,7 +296,6 @@ export async function POST(request: NextRequest) {
       const email = normalizeEmail(body.email);
       const otp = String(body.otp ?? "").trim();
       if (!validEmail(email) || !/^\d{6}$/.test(otp)) return json({ error: "Enter the email address and six-digit verification code." }, 400);
-      const { sql } = await import("drizzle-orm");
       const result = await db.execute(sql`SELECT email, first_name, last_name, phone, country, password_hash, otp_hash, attempts, expires_at, (expires_at > now()) AS is_valid FROM csca_go_registration_otps WHERE email = ${email} LIMIT 1`);
       const challenge = firstRow(result);
       if (!challenge) return json({ error: "This verification code is no longer available. Request a new one." }, 400);
@@ -404,7 +401,6 @@ export async function POST(request: NextRequest) {
     if (action === "logout") {
       const token = bearerToken(request);
       if (token) {
-        const { sql } = await import("drizzle-orm");
         await db.execute(sql`UPDATE csca_go_mobile_sessions SET revoked_at = now() WHERE token_hash = ${hashToken(token)} AND revoked_at IS NULL`);
       }
       return json({ success: true });
