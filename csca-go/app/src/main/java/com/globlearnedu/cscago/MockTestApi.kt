@@ -21,8 +21,26 @@ data class PublicMockExam(
     val durationMinutes: Int,
     val totalMarks: Double,
     val questionCount: Int,
-    val instructions: String,
+    val instructions: List<String>,
     val questions: List<PublicQuestion>
+)
+
+data class PublicMockSummary(
+    val subject: String,
+    val testNumber: Int,
+    val title: String,
+    val durationMinutes: Int,
+    val totalMarks: Double,
+    val questionCount: Int
+)
+
+data class PriorMockAttempt(
+    val taken: Boolean,
+    val candidateName: String = "",
+    val score: Double = 0.0,
+    val totalMarks: Double = 0.0,
+    val awayCount: Int = 0,
+    val token: String = ""
 )
 
 data class MockCandidate(
@@ -32,6 +50,73 @@ data class MockCandidate(
 )
 
 object MockTestApi {
+    suspend fun loadAvailability(): List<PublicMockSummary> = withContext(Dispatchers.IO) {
+        val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest?availability=1")
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 12000
+            readTimeout = 20000
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("Cache-Control", "no-cache")
+        }
+        try {
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            if (status !in 200..299) throw IllegalStateException("Unable to load available mock tests (HTTP $status).")
+            val root = JSONObject(body)
+            val array = root.optJSONArray("tests") ?: JSONArray()
+            buildList {
+                for (i in 0 until array.length()) {
+                    val item = array.getJSONObject(i)
+                    add(PublicMockSummary(
+                        subject = item.optString("subject"),
+                        testNumber = item.optInt("testNumber"),
+                        title = item.optString("title"),
+                        durationMinutes = item.optInt("durationMinutes"),
+                        totalMarks = item.optDouble("totalMarks"),
+                        questionCount = item.optInt("questionCount")
+                    ))
+                }
+            }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    suspend fun checkPreviousAttempt(subject: String, testNumber: Int, phone: String, email: String): PriorMockAttempt =
+        withContext(Dispatchers.IO) {
+            val query = "action=existing&subject=" + java.net.URLEncoder.encode(subject, "UTF-8") +
+                "&test=" + testNumber +
+                "&phone=" + java.net.URLEncoder.encode(phone, "UTF-8") +
+                "&email=" + java.net.URLEncoder.encode(email, "UTF-8")
+            val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest?\$query")
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 12000
+                readTimeout = 20000
+                setRequestProperty("Accept", "application/json")
+                setRequestProperty("Cache-Control", "no-cache")
+            }
+            try {
+                val status = connection.responseCode
+                val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+                val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                val result = if (body.isBlank()) JSONObject() else JSONObject(body)
+                if (status !in 200..299) throw IllegalStateException(result.optString("error", "Unable to check your earlier attempt."))
+                PriorMockAttempt(
+                    taken = result.optBoolean("taken", false),
+                    candidateName = result.optString("candidate_name"),
+                    score = result.optDouble("score", 0.0),
+                    totalMarks = result.optDouble("total_marks", 0.0),
+                    awayCount = result.optInt("away_count", 0),
+                    token = result.optString("token")
+                )
+            } finally {
+                connection.disconnect()
+            }
+        }
+
     suspend fun loadExam(subject: String, testNumber: Int): PublicMockExam? = withContext(Dispatchers.IO) {
         val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest?exam=1&subject=$subject&test=$testNumber")
         val connection = (url.openConnection() as HttpURLConnection).apply {
@@ -72,7 +157,9 @@ object MockTestApi {
                 durationMinutes = exam.optInt("durationMinutes", 60),
                 totalMarks = exam.optDouble("totalMarks", questions.sumOf { it.marks }.toDouble()),
                 questionCount = exam.optInt("questionCount", questions.size),
-                instructions = exam.optString("instructions", "Choose the best answer for each question."),
+                instructions = exam.optJSONArray("instructions")?.let { array ->
+                    buildList { for (i in 0 until array.length()) add(array.optString(i, "")) }
+                }?.filter { it.isNotBlank() } ?: listOf("Choose the best answer for each question."),
                 questions = questions
             )
         } finally {
