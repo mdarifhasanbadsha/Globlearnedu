@@ -39,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private val AuthNavy = Color(0xFF172A46)
@@ -80,11 +82,19 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    var country by remember { mutableStateOf("Bangladesh") }
+    var country by remember { mutableStateOf("") }
     var signupPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
+    var resendCooldown by remember { mutableStateOf(0) }
     var showPassword by remember { mutableStateOf(false) }
+
+    LaunchedEffect(resendCooldown) {
+        if (resendCooldown > 0) {
+            delay(1000)
+            resendCooldown = (resendCooldown - 1).coerceAtLeast(0)
+        }
+    }
     var acceptedTerms by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -114,7 +124,8 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
         loading = true
         scope.launch {
             try {
-                MobileAuthApi.requestOtp(firstName, lastName, email, phone, country, signupPassword, acceptedTerms)
+                val response = MobileAuthApi.requestOtp(firstName, lastName, email, phone, country, signupPassword, acceptedTerms)
+                resendCooldown = response.optInt("resendAfterSeconds", 60).coerceAtLeast(1)
                 screen = "otp"
                 notice = "A six-digit verification code has been sent to ${email.trim()}."
             } catch (e: Exception) {
@@ -162,7 +173,7 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
                             modifier = Modifier.fillMaxWidth(), singleLine = true,
                             label = { Text("Email or phone number") },
                             placeholder = { Text("you@example.com or +880…") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                            keyboardOptions = KeyboardOptions(keyboardType = if (identifier.contains("@")) KeyboardType.Email else KeyboardType.Phone)
                         )
                         OutlinedTextField(
                             value = loginPassword, onValueChange = { loginPassword = it; error = null },
@@ -230,7 +241,7 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
                         }
                         OutlinedTextField(email, { email = it; error = null }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text("Email address") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email))
                         OutlinedTextField(phone, { phone = it; error = null }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text("Phone number (include country code)") }, placeholder = { Text("+8801XXXXXXXXX") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone))
-                        OutlinedTextField(country, { country = it; error = null }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text("Country") })
+                        OutlinedTextField(country, { country = it; error = null }, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text("Country") }, placeholder = { Text("Enter your country") })
                         OutlinedTextField(
                             signupPassword, { signupPassword = it; error = null }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                             label = { Text("Set password") }, visualTransformation = PasswordVisualTransformation(),
@@ -302,8 +313,12 @@ fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
                             colors = ButtonDefaults.buttonColors(containerColor = AuthRed),
                             shape = RoundedCornerShape(14.dp)
                         ) { AuthButtonLabel(if (loading) "Verifying…" else "Verify email and create account") }
-                        OutlinedButton(onClick = { otp = ""; requestCode() }, enabled = !loading, modifier = Modifier.fillMaxWidth()) {
-                            Text("Send a new code", color = AuthRed)
+                        OutlinedButton(
+                            onClick = { otp = ""; requestCode() },
+                            enabled = !loading && resendCooldown == 0,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (resendCooldown > 0) "Resend code in ${resendCooldown}s" else "Send a new code", color = AuthRed)
                         }
                         Text("For security, incorrect attempts are limited. A new code can be requested after the resend cooldown.", color = AuthMuted, fontSize = 11.sp, lineHeight = 16.sp)
                     }
