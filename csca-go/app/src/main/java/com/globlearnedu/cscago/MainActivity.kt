@@ -349,7 +349,7 @@ private fun CSCAApp() {
                     tab == Tab.Tests -> ConnectedTestsScreen(
                         user = authUser!!,
                         onStartExam = { exam, candidate -> activeExam = exam; examCandidate = candidate; submissionResult = null },
-                        onExamGuide = { showExamHub = true },
+                        onExamGuide = { selectedTab = Tab.Home; showSetupGuide = false; showExamHub = true },
                         onInfo = { infoDialog = it }
                     )
                     else -> ProfileScreen(
