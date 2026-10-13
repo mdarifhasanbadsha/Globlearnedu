@@ -113,7 +113,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URL
 import org.json.JSONObject
 
 private val Navy = Color(0xFF132746)
@@ -190,12 +193,20 @@ private fun CSCAApp() {
     val authScope = rememberCoroutineScope()
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
+        val prefs = context.getSharedPreferences("csca_go_profile", 0)
+        profileUri = prefs.getString("photo_uri", null)
+        studentName = prefs.getString("student_name", "New student") ?: "New student"
+
         val savedToken = SessionStore.read(context)
         if (!savedToken.isNullOrBlank()) {
             try {
-                authUser = MobileAuthApi.me(savedToken)
+                val loadedUser = MobileAuthApi.me(savedToken)
+                authUser = loadedUser
                 sessionToken = savedToken
-                if (authUser?.name?.isNotBlank() == true) studentName = authUser!!.name
+                studentName = loadedUser.name.ifBlank { loadedUser.firstName.ifBlank { "Student" } }
+                if (!loadedUser.image.isNullOrBlank()) profileUri = loadedUser.image
+                prefs.edit().putString("student_name", studentName).apply()
+                if (!loadedUser.image.isNullOrBlank()) prefs.edit().putString("photo_uri", loadedUser.image).apply()
             } catch (_: Exception) {
                 SessionStore.clear(context)
             }
@@ -221,13 +232,21 @@ private fun CSCAApp() {
         if (uri != null) {
             try { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
             profileUri = uri.toString()
-            context.getSharedPreferences("csca_go_profile", 0).edit().putString("photo_uri", profileUri).apply()
+            val token = sessionToken
+            if (!token.isNullOrBlank()) {
+                authScope.launch {
+                    try {
+                        val updated = MobileAuthApi.uploadProfilePhoto(context, token, uri)
+                        authUser = updated
+                        profileUri = updated.image
+                        context.getSharedPreferences("csca_go_profile", 0).edit().putString("photo_uri", updated.image).apply()
+                        infoDialog = "Your profile picture has been saved to your GL Education account."
+                    } catch (e: Exception) {
+                        infoDialog = e.message ?: "The photo is visible on this device, but upload failed. Please try again."
+                    }
+                }
+            }
         }
-    }
-
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        profileUri = context.getSharedPreferences("csca_go_profile", 0).getString("photo_uri", null)
-        studentName = context.getSharedPreferences("csca_go_profile", 0).getString("student_name", "New student") ?: "New student"
     }
 
     if (!authLoaded) {
