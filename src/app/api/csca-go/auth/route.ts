@@ -73,6 +73,8 @@ async function isRateLimited(action: string, identifier: string, maxAttempts: nu
 }
 async function recordRateAttempt(action: string, identifier: string) {
   const keyHash = rateKey(action, identifier);
+  // Keep the rate-limit table bounded; only recent attempts affect enforcement.
+  await db.execute(sql`DELETE FROM csca_go_mobile_rate_limits WHERE created_at < now() - interval '1 day'`);
   await db.execute(sql`INSERT INTO csca_go_mobile_rate_limits(action, key_hash) VALUES (${action}, ${keyHash})`);
 }
 async function clearRateAttempts(action: string, identifier: string) {
@@ -118,6 +120,7 @@ async function ensureMobileTables() {
   await db.execute(sql.raw(sqlCreateTermsTable));
   await db.execute(sql.raw(sqlCreateRateLimitsTable));
   await db.execute(sql.raw(sqlRateLimitsIndex));
+  await db.execute(sql.raw(sqlRateLimitsExpiryIndex));
 }
 const sqlCreateOtpTable = `
 CREATE TABLE IF NOT EXISTS csca_go_registration_otps (
@@ -153,6 +156,7 @@ CREATE TABLE IF NOT EXISTS csca_go_mobile_rate_limits (
   created_at timestamptz NOT NULL DEFAULT now()
 )`;
 const sqlRateLimitsIndex = `CREATE INDEX IF NOT EXISTS csca_go_mobile_rate_limits_lookup_idx ON csca_go_mobile_rate_limits(action, key_hash, created_at DESC)`;
+const sqlRateLimitsExpiryIndex = `CREATE INDEX IF NOT EXISTS csca_go_mobile_rate_limits_expiry_idx ON csca_go_mobile_rate_limits(created_at)`;
 
 const sqlCreateTermsTable = `
 CREATE TABLE IF NOT EXISTS csca_go_terms_acceptances (
@@ -217,6 +221,8 @@ export async function POST(request: NextRequest) {
     const action = String(body.action ?? "");
 
     if (action === "requestOtp") {
+      // Expired, abandoned registrations contain only hashed OTP/password material; purge them before accepting more.
+      await db.execute(sql`DELETE FROM csca_go_registration_otps WHERE expires_at < now()`);
       const firstName = String(body.firstName ?? "").trim().slice(0, 100);
       const lastName = String(body.lastName ?? "").trim().slice(0, 100);
       const email = normalizeEmail(body.email);
@@ -356,7 +362,7 @@ export async function POST(request: NextRequest) {
       const identifier = String(body.identifier ?? "").trim();
       const password = String(body.password ?? "");
       if (!identifier || !password) return json({ error: "Enter your email or phone number and password." }, 400);
-      const rateIdentifier = identifier.includes("@") ? normalizeEmail(identifier) : phoneVariants(identifier).join(":");
+      const rateIdentifier = identifier.includes("@") ? normalizeEmail(identifier) : Array.from(new Set(phoneVariants(identifier))).sort().join(":");
       if (await isRateLimited("login", rateIdentifier, 10, 900)) return json({ error: "Too many unsuccessful sign-in attempts. Wait 15 minutes and try again." }, 429);
       let user: any = null;
       if (identifier.includes("@")) {
