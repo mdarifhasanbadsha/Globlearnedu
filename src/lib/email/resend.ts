@@ -19,6 +19,8 @@ export interface EmailOptions {
   replyTo?: string;
   templateName?: string;
   applicationId?: string;
+  /** Redact bodies containing verification codes, reset links, or other secrets from email_logs. */
+  sensitive?: boolean;
 }
 
 export async function sendEmail(options: EmailOptions) {
@@ -62,7 +64,7 @@ export async function sendEmail(options: EmailOptions) {
       db.insert(emailLogs).values({
         recipientEmail: recipient,
         subject: options.subject,
-        body: options.html.substring(0, 5000),
+        body: options.sensitive ? "[redacted: sensitive email body]" : options.html.substring(0, 5000),
         templateName: options.templateName ?? null,
         applicationId: options.applicationId ?? null,
         status: sendSuccess ? "sent" : "failed",
