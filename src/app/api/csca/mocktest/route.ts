@@ -49,6 +49,16 @@ function publicExam(e:NonNullable<ReturnType<typeof getMockExam>>){
 
 export async function GET(req:NextRequest){try{
  const {searchParams:p}=new URL(req.url);
+ if(p.get("availability")==="1"){
+  const tests:any[]=[];
+  for(const [subject,numbers] of Object.entries(RELEASED_MOCKS)){
+   for(const number of numbers){
+    const exam=getMockExam(subject+"-"+number);
+    if(exam)tests.push({subject:exam.subject,testNumber:exam.testNumber,title:exam.title,durationMinutes:exam.durationMinutes,totalMarks:exam.totalMarks,questionCount:exam.questions.length});
+   }
+  }
+  return NextResponse.json({tests},{headers:{"Cache-Control":"no-store"}});
+ }
  if(p.get("exam")==="1"){
   const s=p.get("subject")||"",n=Number(p.get("test")||0);
   if(!isValidMockSubject(s)||!Number.isInteger(n)||n<1||n>20||!RELEASED_MOCKS[s].includes(n))return NextResponse.json({released:false},{status:404,headers:{"Cache-Control":"no-store"}});
