@@ -40,6 +40,8 @@ data class MobileUser(
 
 data class AuthResult(val accessToken: String, val user: MobileUser)
 
+class MobileApiException(val statusCode: Int, message: String) : IllegalStateException(message)
+
 object SessionStore {
     private const val PREFS = "csca_go_secure_session"
     private const val TOKEN_KEY = "access_token"
@@ -196,7 +198,10 @@ object MobileAuthApi {
             val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
             val result = if (body.isBlank()) JSONObject() else JSONObject(body)
             if (status !in 200..299) {
-                throw IllegalStateException(result.optString("error").ifBlank { "Request failed (HTTP $status). Please try again." })
+                throw MobileApiException(
+                    statusCode = status,
+                    message = result.optString("error").ifBlank { "Request failed (HTTP $status). Please try again." }
+                )
             }
             return result
         } catch (e: IllegalStateException) {
