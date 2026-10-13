@@ -42,14 +42,13 @@ function phoneVariants(value: unknown): [string, string, string, string] {
   } else if (digits.startsWith("01") && digits.length === 11) {
     values.add("880" + digits.slice(1));
     values.add(digits.slice(1));
-  } else if (digits.startsWith("1") && digits.length === 10) {
-    values.add("0" + digits);
-    values.add("880" + digits);
   } else if (digits.startsWith("86") && digits.length === 13) {
+    // Chinese E.164 mobile number: also compare the national mobile part.
     values.add(digits.slice(2));
-  } else if (digits.startsWith("1") && digits.length === 11) {
-    values.add("86" + digits);
   }
+  // Do not guess a country from a generic leading "1": NANP and other countries
+  // can share similar national-number lengths. Phone login must not cross-match
+  // unrelated numbers; callers should use the number format saved to their account.
   const list = Array.from(values).filter(Boolean).slice(0, 4);
   while (list.length < 4) list.push(list[list.length - 1] ?? digits);
   return [list[0], list[1], list[2], list[3]];
