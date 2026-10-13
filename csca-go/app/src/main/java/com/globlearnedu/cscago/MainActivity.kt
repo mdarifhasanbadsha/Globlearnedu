@@ -375,7 +375,7 @@ private fun CSCAApp() {
                 val (setup, subject) = nested2
                 when {
                     tab == Tab.Home && setup -> OnlineSetupScreen(onBack = { showSetupGuide = false })
-                    tab == Tab.Home && hub -> ExamHubScreen(onBack = { showExamHub = false }, onSetup = { showSetupGuide = true }, onOfficial = { openUrl(context, ApiConfig.OFFICIAL_CSCA_URL) })
+                    tab == Tab.Home && hub -> ExamHubScreen(onBack = { showExamHub = false }, onSetup = { showSetupGuide = true }, onOfficial = { openUrl(context, ApiConfig.OFFICIAL_CSCA_EXAM_INFO_URL) }, onSchedule = { openUrl(context, ApiConfig.OFFICIAL_CSCA_SCHEDULE_URL) })
                     tab == Tab.Materials && subject != null -> SubjectDetailScreen(subject!!, onBack = { selectedSubject = null })
                     tab == Tab.Home -> HomeScreen(
                         studentName = studentName,
@@ -968,7 +968,7 @@ private fun Bullet(text: String) {
 }
 
 @Composable
-private fun ExamHubScreen(onBack: () -> Unit, onSetup: () -> Unit, onOfficial: () -> Unit) {
+private fun ExamHubScreen(onBack: () -> Unit, onSetup: () -> Unit, onOfficial: () -> Unit, onSchedule: () -> Unit) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(13.dp)) {
         item {
             Text("CSCA Exam Guide", color = Navy, fontSize = 27.sp, fontWeight = FontWeight.Bold)
@@ -1004,7 +1004,7 @@ private fun ExamHubScreen(onBack: () -> Unit, onSetup: () -> Unit, onOfficial: (
                     Divider(color = Color(0xFFE8EDF4))
                     Text("December 19–20, 2026 · January 23–24, 2027 · March 13–14, 2027 · April 24–25, 2027 · June 26–27, 2027", color = Ink, fontSize = 12.sp, lineHeight = 18.sp)
                     Text("Schedules and registration windows can change. Verify the session, location/format and deadline in the official portal before booking.", color = Muted, fontSize = 11.sp)
-                    OutlinedButton(onClick = onOfficial, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = onSchedule, modifier = Modifier.fillMaxWidth()) {
                         Text("Verify dates on csca.cn")
                         Spacer(Modifier.width(6.dp))
                         Icon(Icons.Default.ArrowForward, null, modifier = Modifier.size(16.dp))
