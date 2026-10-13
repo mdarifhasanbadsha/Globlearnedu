@@ -32,8 +32,52 @@ function normalizeEmail(value: unknown) {
 function normalizePhone(value: unknown) {
   return String(value ?? "").replace(/[^0-9]/g, "");
 }
+function phoneVariants(value: unknown): [string, string, string, string] {
+  const digits = normalizePhone(value);
+  const values = new Set<string>([digits]);
+  if (digits.startsWith("00")) values.add(digits.slice(2));
+  if (digits.startsWith("880") && digits.length >= 12) {
+    values.add("0" + digits.slice(3));
+    values.add(digits.slice(3));
+  } else if (digits.startsWith("01") && digits.length === 11) {
+    values.add("880" + digits.slice(1));
+    values.add(digits.slice(1));
+  } else if (digits.startsWith("1") && digits.length === 10) {
+    values.add("0" + digits);
+    values.add("880" + digits);
+  } else if (digits.startsWith("86") && digits.length === 13) {
+    values.add(digits.slice(2));
+  } else if (digits.startsWith("1") && digits.length === 11) {
+    values.add("86" + digits);
+  }
+  const list = Array.from(values).filter(Boolean).slice(0, 4);
+  while (list.length < 4) list.push(list[list.length - 1] ?? digits);
+  return [list[0], list[1], list[2], list[3]];
+}
 function hashToken(value: string) {
   return crypto.createHash("sha256").update(value).digest("hex");
+}
+function rateKey(action: string, identifier: string) {
+  const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+  if (!secret) throw new Error("The authentication secret is not configured.");
+  return crypto.createHmac("sha256", secret).update(action + ":" + identifier.trim().toLowerCase()).digest("hex");
+}
+async function isRateLimited(action: string, identifier: string, maxAttempts: number, windowSeconds: number) {
+  const keyHash = rateKey(action, identifier);
+  const result = await db.execute(sql`
+    SELECT COUNT(*)::int AS count FROM csca_go_mobile_rate_limits
+    WHERE action = ${action} AND key_hash = ${keyHash}
+      AND created_at > now() - (${windowSeconds} * interval '1 second')
+  `);
+  return Number(firstRow(result)?.count ?? 0) >= maxAttempts;
+}
+async function recordRateAttempt(action: string, identifier: string) {
+  const keyHash = rateKey(action, identifier);
+  await db.execute(sql`INSERT INTO csca_go_mobile_rate_limits(action, key_hash) VALUES (${action}, ${keyHash})`);
+}
+async function clearRateAttempts(action: string, identifier: string) {
+  const keyHash = rateKey(action, identifier);
+  await db.execute(sql`DELETE FROM csca_go_mobile_rate_limits WHERE action = ${action} AND key_hash = ${keyHash}`);
 }
 function hashOtp(email: string, otp: string) {
   const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
@@ -72,6 +116,8 @@ async function ensureMobileTables() {
   await db.execute(sql.raw(sqlOtpExpiryIndex));
   // Terms acceptance is recorded during mobile registration; create its table before OTP completion.
   await db.execute(sql.raw(sqlCreateTermsTable));
+  await db.execute(sql.raw(sqlCreateRateLimitsTable));
+  await db.execute(sql.raw(sqlRateLimitsIndex));
 }
 const sqlCreateOtpTable = `
 CREATE TABLE IF NOT EXISTS csca_go_registration_otps (
@@ -99,6 +145,15 @@ CREATE TABLE IF NOT EXISTS csca_go_mobile_sessions (
 )`;
 const sqlSessionIndex = `CREATE INDEX IF NOT EXISTS csca_go_mobile_sessions_user_idx ON csca_go_mobile_sessions(user_id, expires_at)`;
 const sqlOtpExpiryIndex = `CREATE INDEX IF NOT EXISTS csca_go_registration_otps_expiry_idx ON csca_go_registration_otps(expires_at)`;
+const sqlCreateRateLimitsTable = `
+CREATE TABLE IF NOT EXISTS csca_go_mobile_rate_limits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  action varchar(24) NOT NULL,
+  key_hash varchar(64) NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+)`;
+const sqlRateLimitsIndex = `CREATE INDEX IF NOT EXISTS csca_go_mobile_rate_limits_lookup_idx ON csca_go_mobile_rate_limits(action, key_hash, created_at DESC)`;
+
 const sqlCreateTermsTable = `
 CREATE TABLE IF NOT EXISTS csca_go_terms_acceptances (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -167,6 +222,7 @@ export async function POST(request: NextRequest) {
       const email = normalizeEmail(body.email);
       const rawPhone = String(body.phone ?? "").trim().slice(0, 30);
       const phoneDigits = normalizePhone(rawPhone);
+      const phoneOptions = phoneVariants(rawPhone);
       const country = String(body.country ?? "").trim().slice(0, 100);
       const password = String(body.password ?? "");
       const acceptedTerms = body.acceptedTerms === true;
@@ -177,6 +233,7 @@ export async function POST(request: NextRequest) {
         return json({ error: "Complete your name, email, phone number, country and password." }, 400);
       }
       if (!validEmail(email)) return json({ error: "Enter a valid email address." }, 400);
+      if (await isRateLimited("otp", email, 5, 3600)) return json({ error: "Too many verification codes requested for this email. Please try again later." }, 429);
       if (phoneDigits.length < 7 || phoneDigits.length > 15) return json({ error: "Enter a valid phone number including country code." }, 400);
       if (pError) return json({ error: pError }, 400);
 
@@ -186,7 +243,7 @@ export async function POST(request: NextRequest) {
       const { sql } = await import("drizzle-orm");
       const existingPhone = await db.execute(sql`
         SELECT id FROM users
-        WHERE regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g') = ${phoneDigits}
+        WHERE regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g') IN (${phoneOptions[0]}, ${phoneOptions[1]}, ${phoneOptions[2]}, ${phoneOptions[3]})
         LIMIT 1
       `);
       if (firstRow(existingPhone)) return json({ error: "This phone number is already linked to an account. Sign in with that account or use a different number." }, 409);
@@ -227,6 +284,7 @@ export async function POST(request: NextRequest) {
         await db.execute(sql`DELETE FROM csca_go_registration_otps WHERE email = ${email} AND otp_hash = ${otpHash}`);
         return json({ error: "We couldn't send your verification email. Please check your address and try again shortly." }, 502);
       }
+      await recordRateAttempt("otp", email);
       return json({ success: true, message: "Verification code sent.", email, expiresInSeconds: OTP_MINUTES * 60, resendAfterSeconds: OTP_RESEND_SECONDS });
     }
 
@@ -259,10 +317,10 @@ export async function POST(request: NextRequest) {
         await db.execute(sql`DELETE FROM csca_go_registration_otps WHERE email = ${email}`);
         return json({ error: "An account with this email already exists. Please sign in." }, 409);
       }
-      const phoneDigits = normalizePhone(challenge.phone);
+      const phoneOptions = phoneVariants(challenge.phone);
       const existingPhone = await db.execute(sql`
         SELECT id FROM users
-        WHERE regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g') = ${phoneDigits}
+        WHERE regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g') IN (${phoneOptions[0]}, ${phoneOptions[1]}, ${phoneOptions[2]}, ${phoneOptions[3]})
         LIMIT 1
       `);
       if (firstRow(existingPhone)) return json({ error: "This phone number is already linked to an account. Contact support if this is your number." }, 409);
@@ -298,6 +356,8 @@ export async function POST(request: NextRequest) {
       const identifier = String(body.identifier ?? "").trim();
       const password = String(body.password ?? "");
       if (!identifier || !password) return json({ error: "Enter your email or phone number and password." }, 400);
+      const rateIdentifier = identifier.includes("@") ? normalizeEmail(identifier) : phoneVariants(identifier).join(":");
+      if (await isRateLimited("login", rateIdentifier, 10, 900)) return json({ error: "Too many unsuccessful sign-in attempts. Wait 15 minutes and try again." }, 429);
       let user: any = null;
       if (identifier.includes("@")) {
         const email = normalizeEmail(identifier);
@@ -307,11 +367,11 @@ export async function POST(request: NextRequest) {
       } else {
         const digits = normalizePhone(identifier);
         if (digits.length < 7 || digits.length > 15) return json({ error: "Enter a valid email or international phone number." }, 400);
-        const { sql } = await import("drizzle-orm");
+        const phoneOptions = phoneVariants(identifier);
         const result = await db.execute(sql`
           SELECT id, email, password_hash, first_name, last_name, name, phone, country, image, email_verified, role, is_active
           FROM users
-          WHERE regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g') = ${digits}
+          WHERE regexp_replace(coalesce(phone, ''), '[^0-9]', '', 'g') IN (${phoneOptions[0]}, ${phoneOptions[1]}, ${phoneOptions[2]}, ${phoneOptions[3]})
           LIMIT 2
         `);
         const matches = rowsOf(result);
@@ -326,9 +386,11 @@ export async function POST(request: NextRequest) {
         }
       }
       if (!user || !user.passwordHash || !user.isActive || !(await bcrypt.compare(password, String(user.passwordHash)))) {
+        await recordRateAttempt("login", rateIdentifier);
         return json({ error: "Invalid email/phone number or password." }, 401);
       }
       if (String(user.role) !== "student") return json({ error: "CSCA Go student login is available for student accounts." }, 403);
+      await clearRateAttempts("login", rateIdentifier);
       const session = await createMobileSession(String(user.id));
       return json({ success: true, accessToken: session.accessToken, expiresInSeconds: session.expiresInSeconds, user: userPayload(user) });
     }
