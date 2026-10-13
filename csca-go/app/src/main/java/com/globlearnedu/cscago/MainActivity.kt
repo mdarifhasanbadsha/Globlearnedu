@@ -219,7 +219,7 @@ private fun CSCAApp() {
         authLoaded = true
     }
 
-    BackHandler(enabled = authLoaded && sessionToken != null && authUser != null) {
+    BackHandler(enabled = authLoaded && sessionToken != null && authUser != null && activeExam == null) {
         when {
             activeExam != null -> Unit
             submissionResult != null -> submissionResult = null
