@@ -1,6 +1,7 @@
 package com.globlearnedu.cscago
 
 import android.content.Context
+import android.net.Uri
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import kotlinx.coroutines.Dispatchers
@@ -97,6 +98,73 @@ object MobileAuthApi {
     suspend fun me(token: String): MobileUser = withContext(Dispatchers.IO) {
         val response = request("GET", null, token)
         MobileUser.fromJson(response.getJSONObject("user"))
+    }
+
+
+    suspend fun updateDisplayName(token: String, displayName: String): MobileUser = withContext(Dispatchers.IO) {
+        val payload = JSONObject().put("displayName", displayName.trim())
+        val connection = (URL("https://globlearnedu.com/api/csca-go/profile").openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 15000
+            readTimeout = 20000
+            doOutput = true
+            setRequestProperty("Authorization", "Bearer $token")
+            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("Cache-Control", "no-store")
+        }
+        try {
+            connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            val result = if (body.isBlank()) JSONObject() else JSONObject(body)
+            if (status !in 200..299) throw IllegalStateException(result.optString("error", "Could not save your display name."))
+            MobileUser.fromJson(result.getJSONObject("user"))
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    suspend fun uploadProfilePhoto(context: Context, token: String, uri: Uri): MobileUser = withContext(Dispatchers.IO) {
+        val type = context.contentResolver.getType(uri)?.lowercase()
+            ?: throw IllegalStateException("Could not identify this image. Choose a JPG, PNG or WebP file.")
+        if (type !in setOf("image/jpeg", "image/png", "image/webp")) {
+            throw IllegalStateException("Choose a JPG, PNG or WebP image.")
+        }
+        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+            ?: throw IllegalStateException("Could not read the selected image.")
+        if (bytes.isEmpty() || bytes.size > 3 * 1024 * 1024) {
+            throw IllegalStateException("Profile images must be 3 MB or smaller.")
+        }
+        val extension = when (type) { "image/jpeg" -> "jpg"; "image/png" -> "png"; else -> "webp" }
+        val boundary = "CSCAgoBoundary" + System.currentTimeMillis().toString()
+        val head = "--$boundary\r\n" +
+            "Content-Disposition: form-data; name=\"avatar\"; filename=\"profile.$extension\"\r\n" +
+            "Content-Type: $type\r\n\r\n"
+        val tail = "\r\n--$boundary--\r\n"
+        val payload = head.toByteArray(Charsets.UTF_8) + bytes + tail.toByteArray(Charsets.UTF_8)
+        val connection = (URL("https://globlearnedu.com/api/csca-go/profile").openConnection() as HttpURLConnection).apply {
+            requestMethod = "PUT"
+            connectTimeout = 20000
+            readTimeout = 30000
+            doOutput = true
+            setRequestProperty("Authorization", "Bearer $token")
+            setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("Cache-Control", "no-store")
+        }
+        try {
+            connection.outputStream.use { it.write(payload) }
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            val result = if (body.isBlank()) JSONObject() else JSONObject(body)
+            if (status !in 200..299) throw IllegalStateException(result.optString("error", "Could not upload your profile image."))
+            MobileUser.fromJson(result.getJSONObject("user"))
+        } finally {
+            connection.disconnect()
+        }
     }
 
     suspend fun logout(token: String) {
