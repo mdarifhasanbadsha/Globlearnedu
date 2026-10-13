@@ -69,6 +69,15 @@ private val AuthMuted = Color(0xFF697A91)
 fun AuthScreen(onAuthenticated: (String, MobileUser) -> Unit) {
     val scope = rememberCoroutineScope()
     var screen by remember { mutableStateOf("login") }
+
+    // Android system back steps through authentication screens instead of dismissing the app.
+    BackHandler(enabled = screen != "login") {
+        when (screen) {
+            "otp" -> { screen = "signup"; error = null; notice = null }
+            "signup" -> { screen = "login"; error = null; notice = null }
+            else -> { screen = "login"; error = null; notice = null }
+        }
+    }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf<String?>(null) }
