@@ -220,6 +220,7 @@ export async function POST(request: NextRequest) {
         to: email,
         subject: "Your CSCA Go verification code",
         templateName: "csca-go-email-otp",
+        sensitive: true,
         html: `<!doctype html><html><body style="margin:0;background:#f5f7fb;font-family:Arial,sans-serif;color:#182943"><div style="max-width:540px;margin:24px auto;background:#fff;border-radius:18px;padding:32px"><p style="color:#c8102e;font-weight:800;letter-spacing:2px">CSCA GO · GL EDUCATION</p><h1 style="font-size:24px">Verify your email</h1><p>Hello ${firstName.replace(/[&<>"]/g, "")},</p><p>Enter this one-time verification code in CSCA Go to finish creating your student account.</p><div style="margin:24px 0;padding:18px;text-align:center;background:#fff0f2;border-radius:12px;font-size:32px;font-weight:800;letter-spacing:8px;color:#c8102e">${otp}</div><p>This code expires in 10 minutes. Do not share it with anyone.</p><p style="font-size:12px;color:#64748b">If you did not request this code, you can ignore this email.</p></div></body></html>`,
       });
       if (!emailResult.success) {
