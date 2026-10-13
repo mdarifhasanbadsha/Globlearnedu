@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FactCheck
@@ -184,6 +185,8 @@ private fun CSCAApp() {
     var infoDialog by remember { mutableStateOf<String?>(null) }
     var showExitConfirm by remember { mutableStateOf(false) }
     var authLoaded by remember { mutableStateOf(false) }
+    var authInitError by remember { mutableStateOf<String?>(null) }
+    var authRetryCount by remember { mutableStateOf(0) }
     var sessionToken by remember { mutableStateOf<String?>(null) }
     var authUser by remember { mutableStateOf<MobileUser?>(null) }
     var activeExam by remember { mutableStateOf<PublicMockExam?>(null) }
@@ -192,17 +195,20 @@ private fun CSCAApp() {
     var submissionResult by remember { mutableStateOf<JSONObject?>(null) }
     val authScope = rememberCoroutineScope()
 
-    androidx.compose.runtime.LaunchedEffect(Unit) {
+    androidx.compose.runtime.LaunchedEffect(authRetryCount) {
+        authLoaded = false
+        authInitError = null
         val prefs = context.getSharedPreferences("csca_go_profile", 0)
         profileUri = prefs.getString("photo_uri", null)
         studentName = prefs.getString("student_name", "New student") ?: "New student"
 
         val savedToken = SessionStore.read(context)
         if (!savedToken.isNullOrBlank()) {
+            // Retain the token while validating: a transient network error must not log the student out.
+            sessionToken = savedToken
             try {
                 val loadedUser = MobileAuthApi.me(savedToken)
                 authUser = loadedUser
-                sessionToken = savedToken
                 studentName = loadedUser.name.ifBlank { loadedUser.firstName.ifBlank { "Student" } }
                 // Server profile is authoritative: never show a previously signed-in student's local photo.
                 profileUri = loadedUser.image
@@ -212,9 +218,20 @@ private fun CSCAApp() {
                 } else {
                     prefs.edit().remove("photo_uri").apply()
                 }
-            } catch (_: Exception) {
-                SessionStore.clear(context)
+            } catch (e: MobileApiException) {
+                if (e.statusCode in 401..403) {
+                    SessionStore.clear(context)
+                    sessionToken = null
+                    authUser = null
+                } else {
+                    authInitError = e.message ?: "Unable to verify your session right now."
+                }
+            } catch (e: Exception) {
+                authInitError = e.message ?: "Unable to contact GL Education. Check your internet connection and retry."
             }
+        } else {
+            sessionToken = null
+            authUser = null
         }
         authLoaded = true
     }
@@ -258,6 +275,26 @@ private fun CSCAApp() {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 androidx.compose.material3.CircularProgressIndicator(color = Red)
                 Text("Connecting to GL Education…", color = Muted, fontSize = 13.sp)
+            }
+        }
+        return
+    }
+
+    if (authInitError != null && !sessionToken.isNullOrBlank() && authUser == null) {
+        Box(Modifier.fillMaxSize().background(Canvas).padding(24.dp), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(Icons.Default.CloudOff, contentDescription = null, tint = Red, modifier = Modifier.size(44.dp))
+                Text("Can't reconnect to your account", color = Navy, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                Text(authInitError ?: "Please check your connection and try again.", color = Muted, fontSize = 13.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                Button(onClick = { authRetryCount += 1 }, colors = ButtonDefaults.buttonColors(containerColor = Red), modifier = Modifier.fillMaxWidth()) {
+                    Text("Retry connection")
+                }
+                TextButton(onClick = {
+                    SessionStore.clear(context)
+                    sessionToken = null
+                    authUser = null
+                    authInitError = null
+                }) { Text("Sign in another account", color = Red) }
             }
         }
         return
