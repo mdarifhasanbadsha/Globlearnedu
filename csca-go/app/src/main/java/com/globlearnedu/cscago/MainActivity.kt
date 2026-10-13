@@ -372,6 +372,20 @@ private fun CSCAApp() {
                         onNameChange = {
                             studentName = it
                             context.getSharedPreferences("csca_go_profile", 0).edit().putString("student_name", it).apply()
+                            val token = sessionToken
+                            if (!token.isNullOrBlank()) {
+                                authScope.launch {
+                                    try {
+                                        val updated = MobileAuthApi.updateDisplayName(token, it)
+                                        authUser = updated
+                                        studentName = updated.name.ifBlank { updated.firstName }
+                                        context.getSharedPreferences("csca_go_profile", 0).edit().putString("student_name", studentName).apply()
+                                        infoDialog = "Your display name has been saved to your GL Education account."
+                                    } catch (e: Exception) {
+                                        infoDialog = e.message ?: "The display name changed locally but could not be synced to your account."
+                                    }
+                                }
+                            }
                         },
                         onInfo = { infoDialog = it }
                     )
@@ -438,7 +452,6 @@ private fun HomeScreen(
                 }
                 Box(Modifier.size(52.dp).clip(CircleShape).background(Color.White).clickable(onClick = onProfile), contentAlignment = Alignment.Center) {
                     ProfileImage(profileUri = profileUri, modifier = Modifier.fillMaxSize())
-                    if (profileUri == null) Icon(Icons.Default.AccountCircle, contentDescription = "Profile", tint = Blue, modifier = Modifier.size(42.dp))
                 }
             }
         }
@@ -1020,7 +1033,6 @@ private fun ProfileScreen(
                 Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Box(Modifier.size(108.dp).clip(CircleShape).background(Color(0xFFEAF2FE)), contentAlignment = Alignment.Center) {
                         ProfileImage(profileUri = profileUri, modifier = Modifier.fillMaxSize())
-                        if (profileUri == null) Icon(Icons.Default.AccountCircle, null, tint = Blue, modifier = Modifier.size(96.dp))
                     }
                     Text(studentName, color = Navy, fontSize = 21.sp, fontWeight = FontWeight.Bold)
                     Text("CSCA Go student profile", color = Muted, fontSize = 12.sp)
@@ -1029,7 +1041,7 @@ private fun ProfileScreen(
                         Spacer(Modifier.width(8.dp))
                         Text(if (profileUri == null) "Add profile picture" else "Change profile picture")
                     }
-                    Text("Your photo is stored on this device in this prototype. Account photo sync will be enabled after secure profile API integration.", color = Muted, fontSize = 11.sp)
+                    Text("Your profile photo and display name sync to your GL Education account when the server confirms the update.", color = Muted, fontSize = 11.sp)
                 }
             }
         }
