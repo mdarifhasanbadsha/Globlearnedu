@@ -182,7 +182,7 @@ fun ConnectedTestsScreen(
                         Spacer(Modifier.width(11.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(test.title, color = MT_NAVY, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text("${test.questionCount} questions · ${test.durationMinutes} min · ${test.totalMarks.toInt()} marks", color = MT_MUTED, fontSize = 11.sp)
+                            Text("${test.questionCount} questions · ${test.durationMinutes} min · ${"%.2f".format(test.totalMarks)} marks", color = MT_MUTED, fontSize = 11.sp)
                             Text("LIVE FROM WEBSITE", color = Color(0xFF14856A), fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
                         }
                         Button(onClick = { begin(test) }, enabled = opening == null, colors = ButtonDefaults.buttonColors(containerColor = MT_RED), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
@@ -303,7 +303,7 @@ fun NativeExamScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                     ExamPill(Icons.Default.Timer, "${exam.durationMinutes} min")
                     ExamPill(Icons.Default.Assignment, "${exam.questionCount} questions")
-                    ExamPill(Icons.Default.CheckCircle, "${exam.totalMarks.toInt()} marks")
+                    ExamPill(Icons.Default.CheckCircle, "${"%.2f".format(exam.totalMarks)} marks")
                 }
             }
             item {
