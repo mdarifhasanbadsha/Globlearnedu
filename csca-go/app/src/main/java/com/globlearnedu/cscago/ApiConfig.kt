@@ -1,19 +1,19 @@
 package com.globlearnedu.cscago
 
 /**
- * Integration boundary for the existing Globlearnedu platform.
+ * Public service URLs used by the native app.
  *
- * Keep the public website UI and routes unchanged. Do not place database credentials,
- * service-role keys, or private API secrets in the Android client.
- *
- * Before enabling live data, audit the current API/auth schema and implement a server-side
- * adapter. Never infer endpoints from page URLs or access the database directly from Android.
+ * These URLs expose only public API routes. Never package database credentials,
+ * mail-provider keys, API tokens, or other server-only secrets in the APK.
+ * Account operations use a bearer session issued by the CSCA Go auth API.
  */
 object ApiConfig {
     const val WEBSITE_BASE_URL = "https://globlearnedu.com"
-    const val OFFICIAL_CSCA_URL = "https://csca.cn/"
-    const val OFFICIAL_CSCA_SCHEDULE_URL = "https://csca.cn/"
+    const val MOBILE_AUTH_URL = "https://globlearnedu.com/api/csca-go/auth"
+    const val MOBILE_PROFILE_URL = "https://globlearnedu.com/api/csca-go/profile"
+    const val MOCK_TEST_URL = "https://globlearnedu.com/api/csca/mocktest"
 
-    // Intentionally null until the backend audit confirms a stable, authorized API contract.
-    val API_BASE_URL: String? = null
+    const val OFFICIAL_CSCA_URL = "https://csca.cn/"
+    const val OFFICIAL_CSCA_SCHEDULE_URL = "https://csca.cn/registration/notice/jjwk"
+    const val OFFICIAL_CSCA_EXAM_INFO_URL = "https://csca.cn/about/examintro"
 }
