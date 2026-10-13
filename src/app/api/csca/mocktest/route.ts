@@ -22,8 +22,17 @@ const normalizePhone=(v:string)=>{
  if(/^1[3-9]\d{8}$/.test(d))return "880"+d;
  return d;
 };
-const adminToken=()=>crypto.createHmac("sha256","GL-EDU-CSCA-ADMIN").update("csca-homework-admin").digest("hex");
-const validAdmin=(r:NextRequest)=>r.headers.get("x-csca-admin-token")===adminToken();
+const adminToken=()=>{
+ const secret=process.env.CSCA_ADMIN_API_SECRET||process.env.NEXTAUTH_SECRET||process.env.AUTH_SECRET;
+ if(!secret||secret.length<32)return "";
+ return crypto.createHmac("sha256",secret).update("csca-homework-admin").digest("hex");
+};
+const validAdmin=(r:NextRequest)=>{
+ const expected=adminToken(),supplied=r.headers.get("x-csca-admin-token")||"";
+ if(!expected||!supplied)return false;
+ const a=Buffer.from(expected),b=Buffer.from(supplied);
+ return a.length===b.length&&crypto.timingSafeEqual(a,b);
+};
 
 async function ensureTable(){
  await db.execute(sql`CREATE TABLE IF NOT EXISTS csca_mocktest_attempts(
