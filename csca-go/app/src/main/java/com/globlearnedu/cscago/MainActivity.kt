@@ -204,9 +204,14 @@ private fun CSCAApp() {
                 authUser = loadedUser
                 sessionToken = savedToken
                 studentName = loadedUser.name.ifBlank { loadedUser.firstName.ifBlank { "Student" } }
-                if (!loadedUser.image.isNullOrBlank()) profileUri = loadedUser.image
+                // Server profile is authoritative: never show a previously signed-in student's local photo.
+                profileUri = loadedUser.image
                 prefs.edit().putString("student_name", studentName).apply()
-                if (!loadedUser.image.isNullOrBlank()) prefs.edit().putString("photo_uri", loadedUser.image).apply()
+                if (!loadedUser.image.isNullOrBlank()) {
+                    prefs.edit().putString("photo_uri", loadedUser.image).apply()
+                } else {
+                    prefs.edit().remove("photo_uri").apply()
+                }
             } catch (_: Exception) {
                 SessionStore.clear(context)
             }
@@ -265,8 +270,11 @@ private fun CSCAApp() {
             sessionToken = token
             authUser = user
             studentName = user.name.ifBlank { user.firstName.ifBlank { "Student" } }
-            context.getSharedPreferences("csca_go_profile", 0).edit()
-                .putString("student_name", studentName).apply()
+            profileUri = user.image
+            context.getSharedPreferences("csca_go_profile", 0).edit().apply {
+                putString("student_name", studentName)
+                if (!user.image.isNullOrBlank()) putString("photo_uri", user.image) else remove("photo_uri")
+            }
         })
         return
     }
@@ -362,6 +370,13 @@ private fun CSCAApp() {
                                 SessionStore.clear(context)
                                 sessionToken = null
                                 authUser = null
+                                profileUri = null
+                                studentName = "New student"
+                                context.getSharedPreferences("csca_go_profile", 0).edit()
+                                    .remove("photo_uri").remove("student_name").apply()
+                                submissionResult = null
+                                activeExam = null
+                                examCandidate = null
                                 selectedTab = Tab.Home
                                 selectedSubject = null
                                 showExamHub = false
