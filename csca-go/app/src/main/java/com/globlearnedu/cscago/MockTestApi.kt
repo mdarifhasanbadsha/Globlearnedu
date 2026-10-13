@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 data class PublicQuestion(
     val prompt: String,
     val options: List<String>,
-    val marks: Int
+    val marks: Double
 )
 
 data class PublicMockExam(
@@ -90,7 +90,7 @@ object MockTestApi {
                 "&test=" + testNumber +
                 "&phone=" + java.net.URLEncoder.encode(phone, "UTF-8") +
                 "&email=" + java.net.URLEncoder.encode(email, "UTF-8")
-            val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest?\$query")
+            val url = URL("${ApiConfig.WEBSITE_BASE_URL}/api/csca/mocktest?${query}")
             val connection = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 connectTimeout = 12000
@@ -146,7 +146,7 @@ object MockTestApi {
                     add(PublicQuestion(
                         prompt = q.optString("prompt", "Question ${i + 1}"),
                         options = options,
-                        marks = q.optInt("marks", 1)
+                        marks = q.optDouble("marks", 1.0)
                     ))
                 }
             }
@@ -155,7 +155,7 @@ object MockTestApi {
                 testNumber = exam.optInt("testNumber", testNumber),
                 title = exam.optString("title", "${subject.replaceFirstChar { it.uppercase() }} Mock Test $testNumber"),
                 durationMinutes = exam.optInt("durationMinutes", 60),
-                totalMarks = exam.optDouble("totalMarks", questions.sumOf { it.marks }.toDouble()),
+                totalMarks = exam.optDouble("totalMarks", questions.sumOf { it.marks }),
                 questionCount = exam.optInt("questionCount", questions.size),
                 instructions = exam.optJSONArray("instructions")?.let { array ->
                     buildList { for (i in 0 until array.length()) add(array.optString(i, "")) }
