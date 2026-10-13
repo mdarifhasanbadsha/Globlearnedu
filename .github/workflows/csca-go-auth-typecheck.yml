@@ -1,0 +1,26 @@
+name: Validate CSCA Go Auth API
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "src/app/api/csca-go/auth/**"
+      - ".github/workflows/csca-go-auth-typecheck.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm install
+      - name: Type-check website and API
+        run: npx tsc --noEmit
