@@ -271,6 +271,41 @@ private fun CSCAApp() {
         }
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
+            when {
+                activeExam != null && examCandidate != null -> NativeExamScreen(
+                    exam = activeExam!!,
+                    candidate = examCandidate!!,
+                    isSubmitting = examSubmitting,
+                    onExit = { activeExam = null; examCandidate = null },
+                    onSubmit = { answers, awayCount, startedAt ->
+                        if (!examSubmitting) {
+                            examSubmitting = true
+                            authScope.launch {
+                                try {
+                                    val saved = MockTestApi.submit(activeExam!!, examCandidate!!, answers, awayCount, startedAt)
+                                    submissionResult = saved
+                                    activeExam = null
+                                    examCandidate = null
+                                    selectedTab = Tab.Tests
+                                } catch (e: Exception) {
+                                    infoDialog = e.message ?: "The result could not be submitted. Your exam screen remains open; check the connection and retry."
+                                } finally {
+                                    examSubmitting = false
+                                }
+                            }
+                        }
+                    }
+                )
+                submissionResult != null -> NativeResultScreen(
+                    result = submissionResult!!,
+                    onBack = { submissionResult = null; selectedTab = Tab.Tests },
+                    onViewWebResult = {
+                        val token = submissionResult?.optString("token").orEmpty()
+                        if (token.isNotBlank()) openUrl(context, "${ApiConfig.WEBSITE_BASE_URL}/csca/mocktest/result/$token")
+                        else infoDialog = "The result was saved, but the website did not return a result link."
+                    }
+                )
+                else -> {
             AnimatedContent(targetState = selectedTab to (showExamHub to (showSetupGuide to selectedSubject)), label = "screen-transition") { state ->
                 val (tab, nested) = state
                 val (hub, nested2) = nested
@@ -321,6 +356,8 @@ private fun CSCAApp() {
                         },
                         onInfo = { infoDialog = it }
                     )
+                }
+            }
                 }
             }
         }
