@@ -335,6 +335,37 @@ export default function CscaPage() {
         </div>
       </section>
 
+      <section id="csca-learning-hub" className="border-y border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-16">
+          <div className="max-w-4xl">
+            <p className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">CSCA learning hub</p>
+            <h2 className="mt-2 text-3xl font-black md:text-4xl">CSCA Exam Explained: Subjects, Preparation and Free Practice</h2>
+            <p className="mt-5 leading-8 text-slate-600">The China Scholastic Competency Assessment (CSCA) is an academic assessment connected with undergraduate admission pathways for international students who plan to study in China. Before preparing, check the requirements for your target university and major: relevant subjects, syllabus, registration steps and how a score is considered can depend on current official guidance and the university's admission rules.</p>
+            <p className="mt-4 leading-8 text-slate-600">A practical preparation plan starts with the current official syllabus, separates required subjects into topics, and combines concept review with timed practice. GL Education's CSCA-style mock tests and homework can support that practice. They are independent study resources, not official CSCA exam papers or score reports; use the official CSCA portal for registration, current notices and authoritative exam information.</p>
+            <p className="mt-4 leading-8 text-slate-600">Students often search for answers such as “What is the CSCA exam?”, “Is a free CSCA mock test available online?” and “Where can I practise CSCA Mathematics?” The guides below answer these questions in more detail and link back to the live practice page.</p>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              {title:"What Is the CSCA Exam?",desc:"Purpose, undergraduate admission context and why applicants should check university-specific requirements.",href:"/blog/what-is-csca-exam-2026-guide",label:"Read the CSCA overview"},
+              {title:"Where to Take a Free CSCA Mock Test",desc:"Learn what is available online and how to distinguish independent practice from official exam material.",href:"/blog/where-to-take-free-csca-mock-test",label:"Find free practice"},
+              {title:"Is a Free CSCA Mock Test Available?",desc:"What free practice can tell you, how to use results and what they cannot replace.",href:"/blog/is-free-csca-mock-test-available-online",label:"Read the free-test guide"},
+              {title:"CSCA Syllabus and Subjects",desc:"Plan around Mathematics, Physics, Chemistry and Chinese-language assessment areas using official documents.",href:"/blog/csca-exam-syllabus-and-subjects",label:"Explore subject guidance"},
+              {title:"Prepare for CSCA Mathematics",desc:"Turn syllabus topics and mock-test results into a practical revision routine.",href:"/blog/how-to-prepare-csca-mathematics",label:"Build a maths study plan"},
+              {title:"Free CSCA Mock Test Online",desc:"Check released subjects and start an available practice paper.",href:"/csca/mocktest",label:"Open the mock-test page"}
+            ].map(item => (
+              <article key={item.href} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md">
+                <h3 className="text-lg font-black text-[#0A1628]">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{item.desc}</p>
+                <Link href={item.href} className="mt-4 inline-flex items-center gap-2 text-sm font-black text-[#C8102E] underline underline-offset-4">{item.label}<ArrowRight className="h-4 w-4" /></Link>
+              </article>
+            ))}
+          </div>
+          <div className="mt-7 rounded-2xl border border-blue-100 bg-blue-50 p-5 text-sm leading-7 text-slate-700">
+            <b>Official sources:</b> Check the <a href="https://csca.cn/about/examintro" target="_blank" rel="noopener noreferrer" className="font-bold text-[#1B3A6B] underline">CSCA exam introduction</a> for current exam information and the <a href="https://csca.cn/" target="_blank" rel="noopener noreferrer" className="font-bold text-[#1B3A6B] underline">official CSCA website</a> for announcements and registration. Also confirm requirements with your intended university.
+          </div>
+        </div>
+      </section>
+
       <section id="faq" className="mx-auto max-w-7xl px-5 py-16 md:px-8">
         <div className="max-w-3xl"><span className="text-xs font-black uppercase tracking-[.18em] text-[#C8102E]">FAQ</span><h2 className="mt-2 text-3xl font-black">CSCA questions students ask</h2></div>
         <div className="mt-7 space-y-3">{faqs.map(([q,a]) => <details key={q} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><summary className="flex cursor-pointer list-none items-center justify-between gap-5 font-black">{q}<ChevronRight className="h-5 w-5 transition group-open:rotate-90" /></summary><p className="mt-4 max-w-4xl text-sm leading-7 text-slate-600">{a}</p></details>)}</div>
