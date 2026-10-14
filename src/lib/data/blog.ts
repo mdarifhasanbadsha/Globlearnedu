@@ -4,7 +4,8 @@ export type ContentBlock =
   | { type: "h3"; text: string }
   | { type: "ul"; items: string[] }
   | { type: "callout"; text: string; variant?: "info" | "tip" | "warning" }
-  | { type: "table"; headers: string[]; rows: string[][] };
+  | { type: "table"; headers: string[]; rows: string[][] }
+  | { type: "resourceLinks"; heading: string; links: { label: string; url: string; external?: boolean }[] };
 
 export interface BlogPost {
   slug: string;
@@ -884,7 +885,682 @@ export const blogPosts: BlogPost[] = [
         text: "Globlearn Education guides you from program selection to graduation — not just the application. We advise on which degree programs have the strongest recognition in your home country, which universities best match your academic profile and budget, and how to build a Chinese career network from your first year.",
       },
     ],
+  },,
+  {
+    "slug": "what-is-csca-exam-2026-guide",
+    "title": "What Is the CSCA Exam? A Complete 2026–2027 Guide for International Students",
+    "excerpt": "Learn what the China Scholastic Competency Assessment is, who may need it, how subject and university requirements work, why it matters for undergraduate study in China, and where to verify official information.",
+    "author": "Globlearn Education Team",
+    "authorRole": "CSCA Preparation & Study in China Guides",
+    "date": "2026-10-15",
+    "readTime": "8 min read",
+    "category": "Admissions",
+    "tags": [
+      "CSCA Exam",
+      "China Scholastic Competency Assessment",
+      "Study in China",
+      "Undergraduate Admission"
+    ],
+    "featured": true,
+    "content": [
+      {
+        "type": "paragraph",
+        "text": "If you are planning to apply for a bachelor's degree in China, you may have seen the term CSCA on university admission pages or in study-abroad discussions. CSCA stands for China Scholastic Competency Assessment. It is an academic assessment connected with pathways for international students applying to undergraduate study in China. The subjects and procedures relevant to an applicant should always be confirmed through the official CSCA portal and each target university."
+      },
+      {
+        "type": "h2",
+        "text": "What is the purpose of the CSCA exam?"
+      },
+      {
+        "type": "paragraph",
+        "text": "The CSCA is intended to help assess academic foundations relevant to undergraduate study. An academic assessment can give universities another reference point when reviewing applicants, but how a score is used may differ by institution, programme, intake and admission route. Do not assume that one universal score rule applies to every university."
+      },
+      {
+        "type": "h2",
+        "text": "Why is CSCA important for students who want to study in China?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Understanding the CSCA early can help avoid last-minute surprises. The subject combination may affect which learning materials you need, how much time you should reserve for preparation and which admission requirements you must check. If you plan to compete for a scholarship or apply to a selective programme, careful preparation and a clear understanding of the university's rules are especially important. A CSCA score does not automatically guarantee admission or a scholarship."
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Check the requirements for every university and undergraduate programme on your shortlist.",
+          "Confirm which CSCA subjects and language option, if relevant, are required for your intended major.",
+          "Review the official syllabus and exam announcements before making a study plan.",
+          "Practise relevant concepts under timed conditions, then use your results to identify topics for revision.",
+          "Keep official registration, independent practice and university application tasks separate in your calendar."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Which subjects are included?"
+      },
+      {
+        "type": "paragraph",
+        "text": "CSCA subject areas described by the official materials include Chinese-language assessments and core academic subjects such as Mathematics, Physics and Chemistry. The subjects an applicant needs depend on their programme and its requirements; not every student should automatically prepare for every subject. Read the latest official introduction and syllabus, then compare them with the requirements of the universities you plan to apply to."
+      },
+      {
+        "type": "h2",
+        "text": "How should you prepare for CSCA?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Start with requirements, not guesswork. Make a list of target universities and majors, record the subjects each one requests, and use the applicable syllabus to split preparation into manageable topics. Study concepts first, practise representative questions and then use timed practice to build pacing. After each practice set, review incorrect answers and correct answers that you guessed. A score alone is less useful than knowing why you lost marks and what you will revise next."
+      },
+      {
+        "type": "paragraph",
+        "text": "GL Education publishes independent preparation resources, including a CSCA exam guide, a free practice-test area and homework activities. These are learning tools, not official CSCA services. A practice score can help you understand your preparation, but it is not an official examination result, transcript or admission decision."
+      },
+      {
+        "type": "callout",
+        "variant": "warning",
+        "text": "CSCA schedules, registration steps, subject requirements and fees can change. Verify current instructions with the official CSCA website and your target university before making an application decision."
+      },
+      {
+        "type": "h2",
+        "text": "Frequently asked questions about CSCA"
+      },
+      {
+        "type": "h3",
+        "text": "Is CSCA the same as a university entrance test?"
+      },
+      {
+        "type": "paragraph",
+        "text": "It is an academic assessment used within relevant international undergraduate admission pathways. Its exact relationship to an institution's admission process depends on that university's current rules. Read the official admission notice rather than assuming CSCA replaces every other requirement."
+      },
+      {
+        "type": "h3",
+        "text": "Can a free online mock test give me an official CSCA score?"
+      },
+      {
+        "type": "paragraph",
+        "text": "No. Independent online practice tests are for preparation. An official result can only come from the official exam process under the applicable rules."
+      },
+      {
+        "type": "h3",
+        "text": "Where can I check official dates and registration?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Use current official CSCA notices. Do not rely on an old social post or a third-party calendar as the final source for registration deadlines."
+      },
+      {
+        "type": "resourceLinks",
+        "heading": "CSCA guide, practice and official sources",
+        "links": [
+          {
+            "label": "Read the GL Education CSCA Exam Guide",
+            "url": "/csca"
+          },
+          {
+            "label": "Explore free CSCA-style practice tests",
+            "url": "/csca/mocktest"
+          },
+          {
+            "label": "Read: CSCA syllabus and subjects explained",
+            "url": "/blog/csca-exam-syllabus-and-subjects"
+          },
+          {
+            "label": "Official CSCA exam introduction",
+            "url": "https://csca.cn/about/examintro",
+            "external": true
+          },
+          {
+            "label": "Official CSCA website and notices",
+            "url": "https://csca.cn/",
+            "external": true
+          }
+        ]
+      }
+    ]
   },
+  {
+    "slug": "where-to-take-free-csca-mock-test",
+    "title": "Where Can You Take a CSCA Mock Test for Free? Online Practice Options Explained",
+    "excerpt": "Looking for a free CSCA mock test online? Learn how to choose useful practice, what GL Education currently offers, and how to distinguish independent CSCA-style questions from official exam materials.",
+    "author": "Globlearn Education Team",
+    "authorRole": "CSCA Preparation & Study in China Guides",
+    "date": "2026-10-15",
+    "readTime": "7 min read",
+    "category": "Study Tips",
+    "tags": [
+      "Free CSCA Mock Test",
+      "CSCA Practice Questions",
+      "Online Mock Exam",
+      "CSCA Mathematics"
+    ],
+    "featured": false,
+    "content": [
+      {
+        "type": "paragraph",
+        "text": "Students searching for a CSCA mock test often want questions for their subject, a realistic time limit and a clear result after submission. Free practice can help reveal weak topics before the official exam, but it is important to know whether a website provides independent practice questions or official exam materials."
+      },
+      {
+        "type": "h2",
+        "text": "Where can you take a free CSCA mock test online?"
+      },
+      {
+        "type": "paragraph",
+        "text": "You can use the GL Education CSCA Mock Test page to attempt released CSCA-style practice papers at no charge. The page lists Mathematics, Physics and Chemistry categories and shows which tests are actually available. Start with a released set rather than a placeholder or a page advertising tests that have not been published yet."
+      },
+      {
+        "type": "paragraph",
+        "text": "The mock-test collection is released subject by subject. Check the live availability counts on the page because planned test slots do not mean every test is ready. The released Mathematics paper is designed around a timed 48-question format, with a score shown after submission. Always read the page instructions before you begin."
+      },
+      {
+        "type": "h2",
+        "text": "Is there a free, official CSCA mock test?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Be careful with the word 'real'. GL Education provides independent CSCA-style practice questions. They are not the official CSCA examination, official past papers, leaked questions or an exam service run by the CSCA organiser. A free practice result is not an official CSCA score and cannot be used as proof of an official result for admission."
+      },
+      {
+        "type": "paragraph",
+        "text": "For official exam announcements, registration instructions, syllabus documents and any materials released by the exam organiser, use the official CSCA website. If a third-party page claims that its questions are official, verify that claim against the official source before relying on it."
+      },
+      {
+        "type": "h2",
+        "text": "What should a useful CSCA mock test include?"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "A clearly named subject and a syllabus you can compare with official materials.",
+          "A visible time limit and understandable instructions before starting.",
+          "A complete question set, not a sample page presented as a full mock exam.",
+          "A result or answer review that helps you identify topics to revisit.",
+          "A clear explanation that the practice is independent and does not provide an official score report."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "How to take a free CSCA practice test effectively"
+      },
+      {
+        "type": "paragraph",
+        "text": "Choose a quiet study period and use a device with a stable internet connection. Read the instructions before starting, keep an eye on the timer and answer independently. Avoid opening unrelated tabs or repeatedly refreshing a timed test. Once you finish, write down the concepts you missed and make a revision plan before trying another set."
+      },
+      {
+        "type": "paragraph",
+        "text": "A single mock score should not be treated as a prediction of admission. It is a snapshot of your performance on that practice paper. The best value comes from combining timed attempts with syllabus-based study and tracking whether the same kinds of mistakes become less frequent."
+      },
+      {
+        "type": "h2",
+        "text": "Free practice test vs. official CSCA exam"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "Question",
+          "GL Education practice",
+          "Official CSCA process"
+        ],
+        "rows": [
+          [
+            "Can I practise online for free?",
+            "Released practice tests on this site are free to attempt.",
+            "Check the current official service and published fees."
+          ],
+          [
+            "Are the questions official?",
+            "No. They are independent practice questions.",
+            "Official papers and exam sittings are controlled by the official organiser."
+          ],
+          [
+            "Does the result count as my CSCA score?",
+            "No. It is a practice result.",
+            "An official result comes from the official exam process."
+          ],
+          [
+            "Where should I verify dates?",
+            "Use this site as a preparation guide.",
+            "Use official CSCA notices and your target university."
+          ]
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "What to do after your mock test"
+      },
+      {
+        "type": "paragraph",
+        "text": "Use your result as a study aid. Identify the subject areas where you lost marks, revisit the corresponding syllabus points and practise the underlying skills. Students preparing a Chinese university application should separately check admission requirements, required documents and application dates; a mock test does not complete a university application."
+      },
+      {
+        "type": "callout",
+        "variant": "info",
+        "text": "GL Education offers free independent CSCA-style practice. The official CSCA portal is the source for official examination information and registration. Never present a practice result as an official CSCA score."
+      },
+      {
+        "type": "resourceLinks",
+        "heading": "Open the practice page and verify official information",
+        "links": [
+          {
+            "label": "Open GL Education's Free CSCA Mock Test page",
+            "url": "/csca/mocktest"
+          },
+          {
+            "label": "Read the CSCA exam overview",
+            "url": "/blog/what-is-csca-exam-2026-guide"
+          },
+          {
+            "label": "Try the released Mathematics practice paper",
+            "url": "/csca/mocktest/mathematics/1"
+          },
+          {
+            "label": "Official CSCA exam introduction",
+            "url": "https://csca.cn/about/examintro",
+            "external": true
+          },
+          {
+            "label": "Official CSCA website and notices",
+            "url": "https://csca.cn/",
+            "external": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "is-free-csca-mock-test-available-online",
+    "title": "Is a Free CSCA Mock Test Available Online? What Students Should Know",
+    "excerpt": "Yes—independent CSCA-style practice may be available for free. Learn what to check before starting, how results should be interpreted, and where to find official CSCA information.",
+    "author": "Globlearn Education Team",
+    "authorRole": "CSCA Preparation & Study in China Guides",
+    "date": "2026-10-15",
+    "readTime": "6 min read",
+    "category": "Study Tips",
+    "tags": [
+      "Is CSCA Mock Test Free",
+      "Free Online CSCA Practice",
+      "CSCA Exam Preparation"
+    ],
+    "featured": false,
+    "content": [
+      {
+        "type": "paragraph",
+        "text": "Yes, students can find free online CSCA-style practice. GL Education provides released practice tests through its CSCA Mock Test area, with availability shown on the page. The important question is not only whether a test is free, but whether it is complete, timed, relevant to your subject and honestly described."
+      },
+      {
+        "type": "h2",
+        "text": "What does 'free CSCA mock test' mean?"
+      },
+      {
+        "type": "paragraph",
+        "text": "A free mock test lets you attempt practice questions without paying a test fee. It may help you understand question styles, manage time and review readiness. It does not become an official CSCA examination simply because a page uses the words 'CSCA mock test'. The exam organiser, registration system and official result process are separate from independent learning websites."
+      },
+      {
+        "type": "h2",
+        "text": "How to access free CSCA practice on GL Education"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Open the CSCA Mock Test page and check the subject release counts.",
+          "Choose a subject with a released test. If a test is marked coming soon, it is not ready to attempt.",
+          "Read the instructions and time limit before starting.",
+          "Enter the details requested by the site and complete the paper independently.",
+          "Submit your answers and use the displayed result to plan revision."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Can free practice replace official registration?"
+      },
+      {
+        "type": "paragraph",
+        "text": "No. Completing a free practice test does not register you for the official CSCA exam, reserve an exam slot or issue an official score report. Check the official CSCA website for current exam dates, registration steps, fees and candidate instructions. Also check target universities because admission requirements may vary by programme and intake."
+      },
+      {
+        "type": "h2",
+        "text": "How do you know whether a practice site is trustworthy?"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "It identifies who publishes the practice questions.",
+          "It distinguishes official material from independently written questions.",
+          "It displays test availability, timing and the result process before you begin.",
+          "It does not promise guaranteed admission, scholarships or an official score through a third-party quiz.",
+          "It links to official notices so candidates can verify deadlines and requirements."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "How should you use your result?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Review more than the final percentage. Note where you were slow, which topics you misunderstood and whether you made avoidable reading or calculation mistakes. Revisit the syllabus, practise the underlying skill and attempt another released paper when available. Do not compare unrelated practice scores as if they were formally equated official results."
+      },
+      {
+        "type": "h2",
+        "text": "Who can benefit from free practice?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Free practice may be useful for students learning about CSCA, applicants who want to find gaps in a core subject and candidates who need to practise under a timer. It can establish a baseline before a structured study plan. Students should still confirm subject selection with official CSCA information and their target universities."
+      },
+      {
+        "type": "callout",
+        "variant": "warning",
+        "text": "Do not rely on a third-party mock test for official dates, registration status, syllabus changes or an admission decision. Verify these details at the source."
+      },
+      {
+        "type": "resourceLinks",
+        "heading": "Free CSCA practice and official links",
+        "links": [
+          {
+            "label": "Take a released free CSCA-style mock test",
+            "url": "/csca/mocktest"
+          },
+          {
+            "label": "Read the complete CSCA exam guide",
+            "url": "/csca"
+          },
+          {
+            "label": "Where to take a free CSCA mock test: detailed guide",
+            "url": "/blog/where-to-take-free-csca-mock-test"
+          },
+          {
+            "label": "Official CSCA exam introduction",
+            "url": "https://csca.cn/about/examintro",
+            "external": true
+          },
+          {
+            "label": "Official CSCA website and notices",
+            "url": "https://csca.cn/",
+            "external": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "csca-exam-syllabus-and-subjects",
+    "title": "CSCA Exam Syllabus and Subjects: Mathematics, Physics, Chemistry and Chinese",
+    "excerpt": "Learn how to choose the relevant CSCA subjects for your intended major, find official syllabus documents, and organise a preparation plan around Mathematics, Physics, Chemistry and Chinese-language assessments.",
+    "author": "Globlearn Education Team",
+    "authorRole": "CSCA Preparation & Study in China Guides",
+    "date": "2026-10-15",
+    "readTime": "8 min read",
+    "category": "Study Tips",
+    "tags": [
+      "CSCA Syllabus",
+      "CSCA Subjects",
+      "CSCA Mathematics",
+      "CSCA Physics",
+      "CSCA Chemistry"
+    ],
+    "featured": false,
+    "content": [
+      {
+        "type": "paragraph",
+        "text": "Before beginning CSCA preparation, confirm which subject or subjects apply to your intended undergraduate programme. The syllabus tells you what to study, but university admission requirements determine which syllabus matters to you. This guide explains how to approach the main subject areas and where to verify the current official documents."
+      },
+      {
+        "type": "h2",
+        "text": "Start with your target university and major"
+      },
+      {
+        "type": "paragraph",
+        "text": "Do not assume that every applicant sits every CSCA subject. Make a shortlist of universities and programmes, read their current international undergraduate admission notices, and record which subjects they require or recommend. Where instructions are unclear, contact the university's admissions office or follow official CSCA guidance instead of choosing a subject based only on a social media post."
+      },
+      {
+        "type": "h2",
+        "text": "Mathematics"
+      },
+      {
+        "type": "paragraph",
+        "text": "Mathematics preparation rewards a strong grasp of algebraic manipulation, functions, geometry, analytic methods, sequences, probability and statistics where covered by the official syllabus. Build a checklist from the official Mathematics document. For each topic, review definitions and core methods, work through examples without looking at the answer, then practise mixed questions under a time limit."
+      },
+      {
+        "type": "h2",
+        "text": "Physics"
+      },
+      {
+        "type": "paragraph",
+        "text": "Organise Physics notes by the areas named in the current syllabus. These may include mechanics, electricity and magnetism, thermodynamics, optics and modern physics. Focus on conceptual understanding as well as calculations: record the meaning of each formula, the units involved and the conditions under which it applies. Confirm the exact topic list against the official syllabus before using a third-party summary."
+      },
+      {
+        "type": "h2",
+        "text": "Chemistry"
+      },
+      {
+        "type": "paragraph",
+        "text": "A structured Chemistry plan can separate foundational concepts and calculations, properties and reactions of substances, chemical laws and theories, and experimental or practical applications where they appear in the official document. Keep a concise record of definitions, reaction patterns and calculation steps. Use practice questions to test whether you can apply a concept to a new problem rather than only recall a memorised line."
+      },
+      {
+        "type": "h2",
+        "text": "Chinese-language subject areas"
+      },
+      {
+        "type": "paragraph",
+        "text": "The official CSCA materials also describe Chinese-language assessment areas. Read the latest subject descriptions to determine which language assessment is relevant to your pathway. Do not infer the exact paper, duration or question count from an outdated source; use the current official announcement and syllabus document."
+      },
+      {
+        "type": "h2",
+        "text": "How to turn a syllabus into a study plan"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Copy official syllabus headings into a checklist and record the document's version or publication date.",
+          "Mark each topic as not started, learning, practising or reviewed.",
+          "Schedule short sessions for weaker topics instead of repeatedly studying only familiar material.",
+          "Mix questions from different topics after learning the basics.",
+          "Take timed practice tests when available and analyse errors after each attempt.",
+          "Recheck official announcements and target university requirements before registration or application."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Using online CSCA mock tests alongside the syllabus"
+      },
+      {
+        "type": "paragraph",
+        "text": "An independent mock test helps you practise pacing and identify gaps, but it may not cover every topic in the official syllabus. Use it as one checkpoint rather than your only source of preparation. If a site marks a subject or test as not released, treat that status literally; an available sample is not necessarily a complete test series."
+      },
+      {
+        "type": "paragraph",
+        "text": "GL Education's mock-test area displays which Mathematics, Physics and Chemistry practice sets are currently available. The released tests are independent practice materials, not official papers. Compare your study notes with the official syllabus and use practice results to choose what to revise next."
+      },
+      {
+        "type": "callout",
+        "variant": "info",
+        "text": "Official syllabus documents and exam announcements can be updated. The CSCA website and the target university's current admission notice take precedence over third-party summaries."
+      },
+      {
+        "type": "resourceLinks",
+        "heading": "Syllabus, official information and practice",
+        "links": [
+          {
+            "label": "Official CSCA exam introduction",
+            "url": "https://csca.cn/about/examintro",
+            "external": true
+          },
+          {
+            "label": "Official CSCA website and notices",
+            "url": "https://csca.cn/",
+            "external": true
+          },
+          {
+            "label": "Read the GL Education CSCA exam guide",
+            "url": "/csca"
+          },
+          {
+            "label": "Check available CSCA mock tests",
+            "url": "/csca/mocktest"
+          },
+          {
+            "label": "Read: How to prepare for CSCA Mathematics",
+            "url": "/blog/how-to-prepare-csca-mathematics"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "how-to-prepare-csca-mathematics",
+    "title": "How to Prepare for CSCA Mathematics: Syllabus, Practice and Timed Mock Tests",
+    "excerpt": "Build a practical CSCA Mathematics study plan using the official syllabus, topic-based revision and free independent practice tests. Learn how to interpret a mock result without confusing it with an official score.",
+    "author": "Globlearn Education Team",
+    "authorRole": "CSCA Preparation & Study in China Guides",
+    "date": "2026-10-15",
+    "readTime": "7 min read",
+    "category": "Study Tips",
+    "tags": [
+      "CSCA Mathematics Preparation",
+      "CSCA Math Mock Test",
+      "Free CSCA Practice"
+    ],
+    "featured": false,
+    "content": [
+      {
+        "type": "paragraph",
+        "text": "A useful CSCA Mathematics plan begins with the current official syllabus and ends with a review of what practice results show. Completing many questions is not enough if the same concepts remain unclear. Break preparation into manageable topics, learn the methods, practise accuracy and then work on speed."
+      },
+      {
+        "type": "h2",
+        "text": "Step 1: Get the official syllabus"
+      },
+      {
+        "type": "paragraph",
+        "text": "Before starting a timetable, obtain the latest Mathematics syllabus from the official CSCA website. Use it as your checklist and note the source document's version or date. Third-party topic lists and practice papers can help, but should not replace official material if the scope changes."
+      },
+      {
+        "type": "h2",
+        "text": "Step 2: Study by topic before mixing questions"
+      },
+      {
+        "type": "paragraph",
+        "text": "Start with topics you find difficult. Review the concept and worked examples, then solve a small set without checking answers after every question. Record why each mistake happened: missing concept, incorrect algebra, misreading, weak time management or an avoidable calculation error. This turns practice into a repeatable process."
+      },
+      {
+        "type": "h2",
+        "text": "Step 3: Practise under timed conditions"
+      },
+      {
+        "type": "paragraph",
+        "text": "Timed mock tests help you practise pacing, focus and question navigation. GL Education has a released Mathematics practice test in its CSCA Mock Test area; check the page for current availability and instructions. The released practice format shown on the site uses 48 questions, a 60-minute timer and a score out of 100 marks. Official exam requirements must still be checked against current official materials."
+      },
+      {
+        "type": "h2",
+        "text": "Step 4: Review your result, not only the score"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "List the syllabus topics linked to incorrect answers.",
+          "Review correct answers where you guessed or took too long.",
+          "Redo selected questions later without looking at the solution.",
+          "Track whether the same error type appears across sessions.",
+          "Choose the next study topic from evidence, not habit."
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "A simple weekly preparation routine"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "Session",
+          "Focus",
+          "What to record"
+        ],
+        "rows": [
+          [
+            "Session 1",
+            "Review a syllabus topic",
+            "Definitions, methods and examples"
+          ],
+          [
+            "Session 2",
+            "Solve topic-based questions",
+            "Errors and questions to revisit"
+          ],
+          [
+            "Session 3",
+            "Practise a mixed set",
+            "Accuracy and time spent"
+          ],
+          [
+            "Session 4",
+            "Attempt a timed mock when available",
+            "Score, pace and weak topics"
+          ],
+          [
+            "Session 5",
+            "Review mistakes and retest",
+            "What improved and what needs more work"
+          ]
+        ]
+      },
+      {
+        "type": "h2",
+        "text": "Are free CSCA Mathematics mock tests official?"
+      },
+      {
+        "type": "paragraph",
+        "text": "No. GL Education's Mathematics test is an independent practice paper designed to help students prepare. It is not an official CSCA paper, released past paper or official score report. Use official CSCA channels for registration, dates and official materials, and use practice tests to guide revision."
+      },
+      {
+        "type": "h2",
+        "text": "Common mistakes to avoid"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Starting practice without checking the syllabus that applies to your intended programme.",
+          "Using unofficial question sets as the only study source.",
+          "Treating one practice score as a guaranteed predictor of admission or scholarship outcomes.",
+          "Ignoring explanations for questions answered correctly by guessing.",
+          "Spending all study time on familiar topics instead of addressing weak areas."
+        ]
+      },
+      {
+        "type": "callout",
+        "variant": "tip",
+        "text": "Keep an error log. For each missed question, record the topic, why your answer was wrong, the correct method and when you will try it again."
+      },
+      {
+        "type": "resourceLinks",
+        "heading": "Continue CSCA Mathematics preparation",
+        "links": [
+          {
+            "label": "Try the released CSCA Mathematics practice test",
+            "url": "/csca/mocktest/mathematics/1"
+          },
+          {
+            "label": "Browse all available CSCA mock tests",
+            "url": "/csca/mocktest"
+          },
+          {
+            "label": "Read the CSCA syllabus and subjects guide",
+            "url": "/blog/csca-exam-syllabus-and-subjects"
+          },
+          {
+            "label": "Read the full CSCA exam guide",
+            "url": "/csca"
+          },
+          {
+            "label": "Official CSCA exam introduction",
+            "url": "https://csca.cn/about/examintro",
+            "external": true
+          },
+          {
+            "label": "Official CSCA website and notices",
+            "url": "https://csca.cn/",
+            "external": true
+          }
+        ]
+      }
+    ]
+  }
 ];
 
 export const blogCategories = [
