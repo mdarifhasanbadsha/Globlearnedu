@@ -885,7 +885,7 @@ export const blogPosts: BlogPost[] = [
         text: "Globlearn Education guides you from program selection to graduation — not just the application. We advise on which degree programs have the strongest recognition in your home country, which universities best match your academic profile and budget, and how to build a Chinese career network from your first year.",
       },
     ],
-  },,
+  },
   {
     "slug": "what-is-csca-exam-2026-guide",
     "title": "What Is the CSCA Exam? A Complete 2026–2027 Guide for International Students",
