@@ -1566,7 +1566,6 @@ export const blogPosts: BlogPost[] = [
 export const blogCategories = [
   "All",
   "Admissions",
-  "Study Tips",
   "Scholarships",
   "MBBS",
   "Universities",
