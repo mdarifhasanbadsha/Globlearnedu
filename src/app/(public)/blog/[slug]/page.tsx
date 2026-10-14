@@ -138,7 +138,26 @@ export async function generateMetadata({
 
   const staticPost = getPostBySlug(slug);
   if (!staticPost) return { title: "Article Not Found" };
-  return { title: `${staticPost.title} | Blog`, description: staticPost.excerpt };
+  const canonical = `https://globlearnedu.com/blog/${staticPost.slug}`;
+  return {
+    title: `${staticPost.title} | Blog`,
+    description: staticPost.excerpt,
+    alternates: { canonical },
+    openGraph: {
+      type: "article",
+      url: canonical,
+      title: staticPost.title,
+      description: staticPost.excerpt,
+      siteName: "Globlearn Education",
+      publishedTime: staticPost.date,
+      authors: [staticPost.author],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: staticPost.title,
+      description: staticPost.excerpt,
+    },
+  };
 }
 
 export default async function BlogPostPage({
@@ -281,6 +300,22 @@ export default async function BlogPostPage({
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: post.title,
+            description: post.excerpt,
+            datePublished: post.date,
+            author: { "@type": "Organization", name: post.author },
+            publisher: { "@type": "Organization", name: "Globlearn Education", url: "https://globlearnedu.com/" },
+            mainEntityOfPage: { "@type": "WebPage", "@id": `https://globlearnedu.com/blog/${post.slug}` },
+            inLanguage: "en",
+          }),
+        }}
+      />
       {/* Hero */}
       <section className="py-16 px-4" style={{ backgroundColor: "#1B3A6B" }}>
         <div className="max-w-3xl mx-auto">
