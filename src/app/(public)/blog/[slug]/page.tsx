@@ -66,6 +66,27 @@ function renderBlock(block: ContentBlock, idx: number) {
         </div>
       );
     }
+    case "resourceLinks":
+      return (
+        <section key={idx} className="rounded-2xl border border-gray-200 bg-gray-50 p-5 md:p-6 mb-8">
+          <h2 className="text-xl font-black text-[#1B3A6B] mb-4">{block.heading}</h2>
+          <ul className="space-y-3">
+            {block.links.map(link => (
+              <li key={link.url}>
+                {link.url.startsWith("/") ? (
+                  <Link href={link.url} className="inline-flex items-start gap-2 font-semibold text-[#C8102E] underline decoration-[#C8102E]/30 underline-offset-4 hover:text-[#1B3A6B]">
+                    <span>{link.label}</span><span aria-hidden="true">→</span>
+                  </Link>
+                ) : (
+                  <a href={link.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-2 font-semibold text-[#1B3A6B] underline decoration-[#1B3A6B]/30 underline-offset-4 hover:text-[#C8102E]">
+                    <span>{link.label}</span><span aria-hidden="true">↗</span>
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      );
     case "table":
       return (
         <div key={idx} className="overflow-x-auto rounded-xl border border-gray-200 mb-6">
