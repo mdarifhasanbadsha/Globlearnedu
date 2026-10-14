@@ -44,6 +44,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   const blogSlugs = [
+    "what-is-csca-exam-2026-guide",
+    "where-to-take-free-csca-mock-test",
+    "is-free-csca-mock-test-available-online",
+    "csca-exam-syllabus-and-subjects",
+    "how-to-prepare-csca-mathematics",
     "mbbs-in-china-2026-complete-guide",
     "csc-scholarship-2027-complete-guide",
     "china-student-visa-x1-guide-2026",
