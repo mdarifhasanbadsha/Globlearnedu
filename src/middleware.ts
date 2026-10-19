@@ -57,6 +57,13 @@ const protectedMiddleware = auth((req) => {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
+  if (
+    (pathname === "/business" || pathname.startsWith("/business/")) &&
+    !["admin", "staff"].includes(role)
+  ) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   if (pathname.startsWith("/partner/") && !["partner", "admin"].includes(role)) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
