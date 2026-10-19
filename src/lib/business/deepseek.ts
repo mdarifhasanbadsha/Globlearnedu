@@ -5,9 +5,13 @@
 
 export const DEEPSEEK_DEFAULT_MODEL = "deepseek-chat";
 
+export type DeepSeekContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
 export interface DeepSeekMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | DeepSeekContentPart[];
 }
 
 export interface DeepSeekResult {
@@ -85,7 +89,7 @@ export async function deepseekChat(opts: CallOptions): Promise<DeepSeekResult> {
       body: JSON.stringify({
         model: getModel(),
         messages: opts.messages,
-        max_tokens: Math.min(opts.maxTokens ?? 600, 2000),
+        max_tokens: Math.min(opts.maxTokens ?? 600, 16000),
         temperature: opts.temperature ?? 0.3,
         stream: false,
       }),

@@ -8,6 +8,9 @@ export const dynamic = "force-dynamic";
 const nav = [
   { href: "/business", label: "Overview" },
   { href: "/business/inbox", label: "Inbox" },
+  { href: "/business/leads", label: "Leads" },
+  { href: "/business/knowledge", label: "Knowledge" },
+  { href: "/business/connections", label: "Connections" },
   { href: "/business/setup", label: "Setup" },
 ];
 

@@ -24,6 +24,11 @@ export const bizConversations = pgTable(
     // AI ownership is independent of conversation status (spec F17).
     aiState: varchar("ai_state", { length: 20 }).notNull().default("active"),
     assignedStaffId: uuid("assigned_staff_id"),
+    // Added by 0003 — channel origin and handoff tracking.
+    channel: varchar("channel", { length: 30 }).notNull().default("website"),
+    leadId: uuid("lead_id"),
+    handoffAt: timestamp("handoff_at"),
+    visitorName: varchar("visitor_name", { length: 200 }),
     lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
