@@ -19,14 +19,22 @@ interface Entry {
   level: string | null;
   tuitionAmount: number | null;
   tuitionCurrency: string | null;
+  tuitionPeriod: string | null;
+  hostelAmount: number | null;
+  hostelPeriod: string | null;
+  applicationFee: number | null;
+  insuranceFee: number | null;
+  intakeText: string | null;
   intakeMonths: unknown;
   applicationDeadline: string | null;
+  sourcePage: number | null;
   status: string;
 }
 
-function money(amount: number | null, currency: string | null) {
+function money(amount: number | null, currency: string | null, period?: string | null) {
   if (amount == null) return "—";
-  return `${amount.toLocaleString()} ${currency ?? ""}`.trim();
+  const base = `${amount.toLocaleString()} ${currency ?? ""}`.trim();
+  return period ? `${base} / ${period}` : base;
 }
 
 export default function KnowledgeClient() {
@@ -209,8 +217,17 @@ export default function KnowledgeClient() {
                     {e.level ? <span className="text-slate-500"> · {e.level}</span> : null}
                   </div>
                   <div className="text-xs text-slate-500 mt-0.5">
-                    Tuition {money(e.tuitionAmount, e.tuitionCurrency)} · Deadline{" "}
-                    {e.applicationDeadline ?? "—"}
+                    Tuition {money(e.tuitionAmount, e.tuitionCurrency, e.tuitionPeriod)}
+                    {e.hostelAmount != null && (
+                      <> · Hostel {money(e.hostelAmount, e.tuitionCurrency, e.hostelPeriod)}</>
+                    )}
+                    {e.applicationFee != null && <> · App fee {money(e.applicationFee, e.tuitionCurrency)}</>}
+                    {e.insuranceFee != null && <> · Insurance {money(e.insuranceFee, e.tuitionCurrency)}</>}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {e.intakeText ? `Intake ${e.intakeText}` : null}
+                    {e.applicationDeadline ? ` · Deadline ${e.applicationDeadline}` : null}
+                    {e.sourcePage ? ` · p.${e.sourcePage}` : null}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

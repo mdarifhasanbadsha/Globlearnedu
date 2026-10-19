@@ -16,8 +16,17 @@ export interface KnowledgeFact {
   level: string | null;
   tuitionAmount: number | null;
   tuitionCurrency: string | null;
+  tuitionPeriod: string | null;
+  hostelAmount: number | null;
+  hostelPeriod: string | null;
+  applicationFee: number | null;
+  insuranceFee: number | null;
+  intakeText: string | null;
   intakeMonths: unknown;
   applicationDeadline: string | null;
+  tVisaAfterOneSemester: boolean | null;
+  languageToDegree: string | null;
+  feePaymentNote: string | null;
   requirements: unknown;
 }
 
@@ -35,8 +44,17 @@ export async function loadApprovedKnowledge(
       level: bizKnowledgeEntries.level,
       tuitionAmount: bizKnowledgeEntries.tuitionAmount,
       tuitionCurrency: bizKnowledgeEntries.tuitionCurrency,
+      tuitionPeriod: bizKnowledgeEntries.tuitionPeriod,
+      hostelAmount: bizKnowledgeEntries.hostelAmount,
+      hostelPeriod: bizKnowledgeEntries.hostelPeriod,
+      applicationFee: bizKnowledgeEntries.applicationFee,
+      insuranceFee: bizKnowledgeEntries.insuranceFee,
+      intakeText: bizKnowledgeEntries.intakeText,
       intakeMonths: bizKnowledgeEntries.intakeMonths,
       applicationDeadline: bizKnowledgeEntries.applicationDeadline,
+      tVisaAfterOneSemester: bizKnowledgeEntries.tVisaAfterOneSemester,
+      languageToDegree: bizKnowledgeEntries.languageToDegree,
+      feePaymentNote: bizKnowledgeEntries.feePaymentNote,
       requirements: bizKnowledgeEntries.requirements,
     })
     .from(bizKnowledgeEntries)
@@ -77,19 +95,44 @@ export async function loadApprovedKnowledge(
   return scored.map((s) => s.r);
 }
 
+function periodLabel(period: string | null): string {
+  if (period === "semester") return "per semester";
+  if (period === "year") return "per year";
+  if (period === "month") return "per month";
+  return "(period not stated on the brochure — do not assume one)";
+}
+
 function formatFact(f: KnowledgeFact, i: number): string {
   const lines = [`[${i + 1}]`];
   if (f.universityName) lines.push(`University: ${f.universityName}`);
   if (f.city) lines.push(`City: ${f.city}`);
   if (f.programName) lines.push(`Program: ${f.programName}`);
   if (f.level) lines.push(`Level: ${f.level}`);
+
   if (f.tuitionAmount != null) {
-    lines.push(`Tuition: ${f.tuitionAmount} ${f.tuitionCurrency ?? ""}`.trim());
+    lines.push(
+      `Tuition: ${f.tuitionAmount} ${f.tuitionCurrency ?? "CNY"} ${periodLabel(f.tuitionPeriod)}`
+    );
   }
-  if (Array.isArray(f.intakeMonths) && f.intakeMonths.length > 0) {
+  if (f.hostelAmount != null) {
+    lines.push(
+      `Hostel: ${f.hostelAmount} ${f.tuitionCurrency ?? "CNY"} ${periodLabel(f.hostelPeriod)}`
+    );
+  }
+  if (f.applicationFee != null) lines.push(`Application fee: ${f.applicationFee} ${f.tuitionCurrency ?? "CNY"}`);
+  if (f.insuranceFee != null) lines.push(`Insurance fee: ${f.insuranceFee} ${f.tuitionCurrency ?? "CNY"}`);
+
+  if (f.intakeText) lines.push(`Intake: ${f.intakeText}`);
+  else if (Array.isArray(f.intakeMonths) && f.intakeMonths.length > 0) {
     lines.push(`Intakes: ${(f.intakeMonths as string[]).join(", ")}`);
   }
-  if (f.applicationDeadline) lines.push(`Deadline: ${f.applicationDeadline}`);
+  if (f.applicationDeadline) lines.push(`Application deadline: ${f.applicationDeadline}`);
+  if (f.tVisaAfterOneSemester != null) {
+    lines.push(`T-visa available after 1 semester: ${f.tVisaAfterOneSemester ? "yes" : "no"}`);
+  }
+  if (f.languageToDegree) lines.push(`Language to degree progression: ${f.languageToDegree}`);
+  if (f.feePaymentNote) lines.push(`Payment note: ${f.feePaymentNote}`);
+
   const req = f.requirements;
   if (req && typeof req === "object" && Object.keys(req as object).length > 0) {
     lines.push(`Requirements: ${JSON.stringify(req)}`);
@@ -112,6 +155,14 @@ GROUNDING — this is strict
 - Never guarantee: admission, scholarship approval, visa approval, or a specific start date.
 - Visa matters are guidance only; the Chinese Embassy decides.
 - Never quote a tuition figure without stating the currency exactly as given.
+
+MONEY RULE — this is critical
+- ALWAYS state the billing period with every amount: "4,000 CNY per semester", "8,000 CNY per year",
+  "800 CNY per month". Omitting the period is a serious error: 4,000 per SEMESTER is 8,000 per year.
+- Never convert a per-semester figure into a per-year one yourself unless you clearly label it as a
+  calculation AND state the per-semester figure first.
+- Report hostel, application and insurance fees as SEPARATE amounts. Never add them to tuition.
+- If a period is marked "(period not stated)" do not guess — say the period needs confirming.
 
 COUNSELING FLOW
 - Collect, one question at a time, in a natural order: degree level -> subject area ->
