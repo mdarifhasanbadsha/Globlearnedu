@@ -32,6 +32,8 @@ interface CallOptions {
   temperature?: number;
   timeoutMs?: number;
   signal?: AbortSignal;
+  /** Force the model to emit a single JSON object. */
+  jsonMode?: boolean;
 }
 
 function getKey(): string | null {
@@ -92,6 +94,7 @@ export async function deepseekChat(opts: CallOptions): Promise<DeepSeekResult> {
         max_tokens: Math.min(opts.maxTokens ?? 600, 16000),
         temperature: opts.temperature ?? 0.3,
         stream: false,
+        ...(opts.jsonMode ? { response_format: { type: "json_object" } } : {}),
       }),
       signal: controller.signal,
       // Cache-free: authentication differs per call.

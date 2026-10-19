@@ -129,7 +129,12 @@ export async function POST(req: Request) {
   });
 
   // Generous ceiling: the model emits reasoning tokens before the JSON reply.
-  const result = await deepseekChat({ messages, maxTokens: 3000, timeoutMs: 30_000 });
+  const result = await deepseekChat({
+    messages,
+    maxTokens: 3000,
+    timeoutMs: 30_000,
+    jsonMode: true,
+  });
 
   const started = Date.now();
   let reply: string | null = null;
@@ -137,7 +142,7 @@ export async function POST(req: Request) {
   let extracted: Record<string, unknown> = {};
 
   if (result.ok && result.content) {
-    const parsed = parseCounselingReply(result.content);
+    const parsed = parseCounselingReply(result.content, message);
     reply = parsed.reply;
     wantsHandoff = parsed.wantsHumanHandoff;
     extracted = sanitizeExtracted(parsed.extracted);

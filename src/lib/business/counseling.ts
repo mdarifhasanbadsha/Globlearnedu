@@ -151,9 +151,17 @@ export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[
 KNOWLEDGE (verified, owner-approved — the ONLY source of program facts):
 ${knowledgeBlock}${contextBlock}
 
-Return JSON only, no markdown fences:
+Respond with a single JSON object only, no markdown fences and no prose outside it:
 {"reply": "<your reply to the student>", "wants_human_handoff": false, "extracted": {"full_name": "", "phone": "", "email": "", "degree_level": "", "subject_interest": "", "gpa_value": null, "gpa_scale": null, "budget_amount": null, "budget_currency": "", "intake_target": "", "language_test": "", "nationality": ""}}
-Omit fields the student has not clearly provided. Never guess a phone number or name.`;
+
+EXTRACTION RULE — important:
+- Fill "extracted" from everything the student has told you in this conversation so far,
+  not just the latest message. If they said "3.8 out of 4" earlier, keep gpa_value 3.8 and
+  gpa_scale 4 in every later response.
+- Never drop a value you already reported. Ask at most one question in "reply", but return
+  ALL known fields each time.
+- Omit fields the student has not clearly provided. Never guess a phone number or name.
+- Only set gpa_value/gpa_scale together. Only set budget_amount when a currency is clear.`;
 
   const convo: DeepSeekMessage[] = history.slice(-16).map((m) => ({
     role: (m.direction === "out" ? "assistant" : "user") as "assistant" | "user",
@@ -173,16 +181,31 @@ export interface ParsedReply {
   extracted: Record<string, unknown>;
 }
 
+/** Regex fallback: "3.8 out of 4", "GPA 4.5/5", "CGPA: 3.2 on a 4 point scale". */
+function regexGpa(text: string): { gpa_value?: number; gpa_scale?: number } {
+  const m =
+    text.match(/(?:gpa|cgpa|grade)[^\d]{0,12}(\d{1,2}(?:\.\d{1,2})?)\s*(?:out of|\/|on|from)\s*(\d{1,2}(?:\.\d{1,2})?)/i) ??
+    text.match(/(\d\.\d{1,2})\s*(?:out of|\/)\s*(\d(?:\.\d)?)/i);
+  if (!m) return {};
+  const value = Number(m[1]);
+  const scale = Number(m[2]);
+  if (!Number.isFinite(value) || !Number.isFinite(scale)) return {};
+  if (value < 0 || scale <= 0 || value > scale) return {};
+  return { gpa_value: value, gpa_scale: scale };
+}
+
 /** Parse the model's JSON, tolerating fences or stray prose. */
-export function parseCounselingReply(raw: string): ParsedReply {
+export function parseCounselingReply(raw: string, studentText = ""): ParsedReply {
   const cleaned = raw.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
 
+  const regexFields = regexGpa(studentText);
+
   const fallback: ParsedReply = {
-    reply: raw.trim(),
-    wantsHumanHandoff: /human|counselor|agent|staff/i.test(raw) && /follow ?up|connect/i.test(raw),
-    extracted: {},
+    reply: cleaned.trim(),
+    wantsHumanHandoff: /human|counselor|agent|staff/i.test(cleaned) && /follow ?up|connect/i.test(cleaned),
+    extracted: regexFields,
   };
 
   if (start === -1 || end === -1 || end <= start) return fallback;
@@ -191,11 +214,21 @@ export function parseCounselingReply(raw: string): ParsedReply {
     const obj = JSON.parse(cleaned.slice(start, end + 1));
     const reply = typeof obj.reply === "string" ? obj.reply.trim() : "";
     if (reply.length === 0) return fallback;
+
+    const extracted =
+      obj.extracted && typeof obj.extracted === "object" ? { ...obj.extracted } : {};
+
+    // Deterministic backstop: if the model omitted a clearly-stated GPA,
+    // recover it from the student's own words rather than losing the data.
+    if (extracted.gpa_value == null && regexFields.gpa_value != null) {
+      extracted.gpa_value = regexFields.gpa_value;
+      extracted.gpa_scale = regexFields.gpa_scale;
+    }
+
     return {
       reply,
       wantsHumanHandoff: obj.wants_human_handoff === true,
-      extracted:
-        obj.extracted && typeof obj.extracted === "object" ? obj.extracted : {},
+      extracted,
     };
   } catch {
     return fallback;
@@ -246,7 +279,7 @@ export function sanitizeExtracted(input: Record<string, unknown>): Record<string
     out.gpa_scale = gpaScale;
   }
 
-  const budget = num(input.budget_amount, 0, 100_000_000);
+  const budget = num(input.budget_amount, 1, 100_000_000);
   if (budget != null) out.budget_amount = budget;
 
   return out;
