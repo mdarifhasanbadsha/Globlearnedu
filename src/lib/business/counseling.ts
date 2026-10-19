@@ -203,10 +203,12 @@ export interface BuildPromptArgs {
   latestMessage: string;
   knowledge: KnowledgeFact[];
   leadContext?: Record<string, unknown> | null;
+  /** House style distilled from real staff conversations. */
+  styleGuide?: string | null;
 }
 
 export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[] {
-  const { history, latestMessage, knowledge, leadContext } = args;
+  const { history, latestMessage, knowledge, leadContext, styleGuide } = args;
 
   const knowledgeBlock =
     knowledge.length > 0
@@ -218,7 +220,10 @@ export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[
       ? `\n\nKNOWN ABOUT THIS STUDENT (already confirmed):\n${JSON.stringify(leadContext, null, 1)}`
       : "";
 
-  const system = `${BASE_RULES}
+  // The style guide is the difference between "an AI" and "our team".
+  const styleBlock = styleGuide ? `\n\n${styleGuide}` : "";
+
+  const system = `${BASE_RULES}${styleBlock}
 
 KNOWLEDGE (verified, owner-approved — the ONLY source of program facts):
 ${knowledgeBlock}${contextBlock}

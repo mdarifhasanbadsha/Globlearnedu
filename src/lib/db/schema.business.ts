@@ -52,6 +52,11 @@ export const bizMessages = pgTable(
     authorId: uuid("author_id"),
     body: text("body").notNull(),
     meta: jsonb("meta"),
+    // Added by 0006 — imported media, transcripts and provider ids.
+    mediaUrl: text("media_url"),
+    mediaKind: varchar("media_kind", { length: 20 }),
+    transcript: text("transcript"),
+    externalId: varchar("external_id", { length: 200 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [

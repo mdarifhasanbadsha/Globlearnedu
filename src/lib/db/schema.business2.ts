@@ -185,3 +185,46 @@ export const bizRateLimits = pgTable(
   },
   (t) => [uniqueIndex("biz_rate_bucket_idx").on(t.bucketKey, t.windowStart)]
 );
+
+// ── HOUSE STYLE (learned from real conversations) ────────────
+export const bizStyleGuides = pgTable(
+  "biz_style_guides",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id").notNull(),
+    summary: text("summary"),
+    tone: jsonb("tone").default([]),
+    greetingPatterns: jsonb("greeting_patterns").default([]),
+    pricingPhrases: jsonb("pricing_phrases").default([]),
+    followupPhrases: jsonb("followup_phrases").default([]),
+    avoidPhrases: jsonb("avoid_phrases").default([]),
+    languageMix: text("language_mix"),
+    sampleCount: integer("sample_count").notNull().default(0),
+    status: varchar("status", { length: 20 }).notNull().default("draft"),
+    approvedBy: uuid("approved_by"),
+    approvedAt: timestamp("approved_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("biz_style_guides_biz_idx").on(t.businessId, t.status, t.updatedAt)]
+);
+
+export const bizImportRuns = pgTable(
+  "biz_import_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id").notNull(),
+    channel: varchar("channel", { length: 30 }).notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("running"),
+    conversationsSeen: integer("conversations_seen").notNull().default(0),
+    conversationsCreated: integer("conversations_created").notNull().default(0),
+    messagesImported: integer("messages_imported").notNull().default(0),
+    messagesSkipped: integer("messages_skipped").notNull().default(0),
+    voiceFound: integer("voice_found").notNull().default(0),
+    voiceTranscribed: integer("voice_transcribed").notNull().default(0),
+    error: text("error"),
+    startedAt: timestamp("started_at").notNull().defaultNow(),
+    finishedAt: timestamp("finished_at"),
+  },
+  (t) => [index("biz_import_runs_biz_idx").on(t.businessId, t.startedAt)]
+);

@@ -12,3 +12,4 @@ yarn-error.log*
 *.log
 data/*.json
 scratch_pages
+scratch_voice/

@@ -11,6 +11,7 @@ import {
   sanitizeExtracted,
 } from "@/lib/business/counseling";
 import { isRateLimited, newGuestToken, isValidGuestToken } from "@/lib/business/chat-guard";
+import { loadActiveStyleGuide, formatStyleGuide } from "@/lib/business/style";
 import { eq, and, asc } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -122,10 +123,14 @@ export async function POST(req: Request) {
 
   const knowledge = await loadApprovedKnowledge(businessId, message);
 
+  // Learn-from-history layer: our approved house style, if published.
+  const style = await loadActiveStyleGuide(businessId);
+
   const messages = buildCounselingMessages({
     history: history.slice(0, -1),
     latestMessage: message,
     knowledge,
+    styleGuide: style ? formatStyleGuide(style) : null,
   });
 
   // Generous ceiling: the model emits reasoning tokens before the JSON reply.
