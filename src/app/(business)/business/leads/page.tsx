@@ -82,7 +82,9 @@ export default async function LeadsPage() {
                 {leads.map((l) => (
                   <tr key={l.id} className="hover:bg-slate-50">
                     <td className="px-3 py-2 font-medium text-[#1B3A6B] whitespace-nowrap">
-                      {l.fullName ?? <span className="text-slate-400">Unknown</span>}
+                      <Link href={`/business/leads/${l.id}`} className="hover:underline">
+                        {l.fullName ?? <span className="text-slate-400">Unknown</span>}
+                      </Link>
                     </td>
                     <td className="px-3 py-2 text-slate-700 whitespace-nowrap">
                       {l.phone ?? l.email ?? <span className="text-slate-400">—</span>}

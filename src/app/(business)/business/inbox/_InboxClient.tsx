@@ -46,6 +46,42 @@ export default function InboxClient({
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const current = conversations.find((c) => c.id === selected) ?? null;
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState<Conversation[] | null>(null);
+
+  async function runSearch(value: string) {
+    setQuery(value);
+    const q = value.trim();
+    if (q.length < 2) {
+      setResults(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/business/search?q=${encodeURIComponent(q)}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      // Search results carry a slightly different shape; normalise.
+      setResults(
+        (json.results ?? []).map((r: any) => ({
+          id: r.id,
+          visitorId: r.visitorId,
+          status: r.status,
+          aiState: r.aiState,
+          lastMessageAt: r.lastMessageAt,
+        }))
+      );
+    } catch {
+      setResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  const listed = results ?? conversations;
 
   const loadMessages = useCallback(async (id: string) => {
     setLoading(true);
@@ -161,14 +197,29 @@ export default function InboxClient({
 
       <div className="grid md:grid-cols-[280px_1fr] gap-4">
         <aside className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-3 py-2 border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Conversations ({conversations.length})
+          <div className="px-3 py-2 border-b border-slate-200">
+            <input
+              value={query}
+              onChange={(e) => void runSearch(e.target.value)}
+              placeholder="Search name, phone or message…"
+              aria-label="Search conversations"
+              className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-[#29ABE2]"
+            />
+            <div className="text-[11px] text-slate-500 mt-1">
+              {searching
+                ? "Searching…"
+                : results
+                  ? `${results.length} result(s)`
+                  : `${conversations.length} conversation(s)`}
+            </div>
           </div>
-          {conversations.length === 0 ? (
-            <p className="p-4 text-sm text-slate-500">No conversations yet.</p>
+          {listed.length === 0 ? (
+            <p className="p-4 text-sm text-slate-500">
+              {results ? "No matches." : "No conversations yet."}
+            </p>
           ) : (
             <ul className="max-h-[60vh] overflow-y-auto divide-y divide-slate-100">
-              {conversations.map((c) => {
+              {listed.map((c) => {
                 const badge = AI_LABEL[c.aiState] ?? AI_LABEL.active;
                 return (
                   <li key={c.id}>

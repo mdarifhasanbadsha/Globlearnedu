@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { bizKnowledgeEntries } from "@/lib/db/schema.business2";
 import { getBusinessId } from "@/lib/business/config";
 import { requireBusinessUser } from "@/lib/business/guard";
+import { checkEntry } from "@/lib/business/sanity";
 import { and, eq, inArray } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -63,18 +64,48 @@ export async function PATCH(req: Request) {
     const patch: Record<string, unknown> = { updatedAt: new Date() };
 
     // Only allow known, safe fields to be patched.
-    if (typeof f.universityName === "string") patch.universityName = f.universityName.slice(0, 255);
-    if (typeof f.city === "string") patch.city = f.city.slice(0, 100);
-    if (typeof f.programName === "string") patch.programName = f.programName.slice(0, 255);
-    if (typeof f.level === "string") patch.level = f.level.slice(0, 50);
-    if (typeof f.duration === "string") patch.duration = f.duration.slice(0, 50);
-    if (typeof f.teachingLanguage === "string") patch.teachingLanguage = f.teachingLanguage.slice(0, 50);
-    if (typeof f.applicationDeadline === "string") patch.applicationDeadline = f.applicationDeadline.slice(0, 60);
-    if (typeof f.tuitionCurrency === "string") patch.tuitionCurrency = f.tuitionCurrency.toUpperCase().slice(0, 8);
-    if (f.tuitionAmount === null) patch.tuitionAmount = null;
-    else if (typeof f.tuitionAmount === "number" && Number.isFinite(f.tuitionAmount) && f.tuitionAmount >= 0) {
-      patch.tuitionAmount = Math.round(f.tuitionAmount);
+    const strFields: [string, number][] = [
+      ["universityName", 255],
+      ["universityNameCn", 255],
+      ["city", 100],
+      ["province", 100],
+      ["universityType", 50],
+      ["programName", 255],
+      ["level", 50],
+      ["duration", 50],
+      ["teachingLanguage", 50],
+      ["applicationDeadline", 60],
+      ["intakeText", 100],
+      ["languageToDegree", 100],
+      ["feePaymentNote", 2000],
+      ["notes", 2000],
+    ];
+    for (const [key, max] of strFields) {
+      if (typeof f[key] === "string") patch[key] = f[key].slice(0, max);
     }
+
+    if (typeof f.tuitionCurrency === "string") {
+      patch.tuitionCurrency = f.tuitionCurrency.toUpperCase().slice(0, 8);
+    }
+
+    const periodFields = ["tuitionPeriod", "hostelPeriod"];
+    for (const key of periodFields) {
+      if (f[key] === null || f[key] === "") patch[key] = null;
+      else if (["semester", "year", "month"].includes(f[key])) patch[key] = f[key];
+    }
+
+    const intFields = ["tuitionAmount", "hostelAmount", "applicationFee", "insuranceFee"];
+    for (const key of intFields) {
+      if (f[key] === null || f[key] === "") patch[key] = null;
+      else if (typeof f[key] === "number" && Number.isFinite(f[key]) && f[key] >= 0) {
+        patch[key] = Math.round(f[key]);
+      }
+    }
+
+    if (typeof f.tVisaAfterOneSemester === "boolean") {
+      patch.tVisaAfterOneSemester = f.tVisaAfterOneSemester;
+    }
+
     if (Array.isArray(f.intakeMonths)) {
       patch.intakeMonths = f.intakeMonths.filter((m: unknown) => typeof m === "string").slice(0, 12);
     }
@@ -85,7 +116,24 @@ export async function PATCH(req: Request) {
     patch.approvedAt = null;
 
     await db.update(bizKnowledgeEntries).set(patch).where(scope);
-    return NextResponse.json({ ok: true, updated: ids.length, status: "draft" });
+
+    // Surface issues so the editor can warn before the owner approves.
+    const [row] = await db
+      .select()
+      .from(bizKnowledgeEntries)
+      .where(scope)
+      .limit(1);
+
+    const issues = row
+      ? checkEntry({
+          intakeText: row.intakeText,
+          applicationDeadline: row.applicationDeadline,
+          tuitionAmount: row.tuitionAmount,
+          tuitionPeriod: row.tuitionPeriod,
+        })
+      : [];
+
+    return NextResponse.json({ ok: true, updated: ids.length, status: "draft", issues });
   }
 
   return NextResponse.json(

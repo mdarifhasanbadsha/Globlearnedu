@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { bizKnowledgeSources, bizKnowledgeEntries } from "@/lib/db/schema.business2";
 import { getBusinessId } from "@/lib/business/config";
 import { requireBusinessUser } from "@/lib/business/guard";
+import { checkEntry } from "@/lib/business/sanity";
 import { deepseekChat, isDeepSeekConfigured } from "@/lib/business/deepseek";
 import { parseExtraction, buildVisionMessages } from "@/lib/business/knowledge";
 import { desc, eq } from "drizzle-orm";
@@ -59,6 +60,12 @@ export async function GET() {
       applicationDeadline: e.applicationDeadline,
       sourcePage: e.sourcePage,
       status: e.status,
+      issues: checkEntry({
+        intakeText: e.intakeText,
+        applicationDeadline: e.applicationDeadline,
+        tuitionAmount: e.tuitionAmount,
+        tuitionPeriod: e.tuitionPeriod,
+      }).map((i) => i.message),
     })),
   });
 }
