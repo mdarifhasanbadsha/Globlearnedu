@@ -4,6 +4,7 @@ import { bizKnowledgeSources, bizKnowledgeEntries } from "@/lib/db/schema.busine
 import { getBusinessId } from "@/lib/business/config";
 import { requireBusinessUser } from "@/lib/business/guard";
 import { checkEntry } from "@/lib/business/sanity";
+import { correctDeadline } from "@/lib/business/deadline-fix";
 import { deepseekChat, isDeepSeekConfigured } from "@/lib/business/deepseek";
 import { parseExtraction, buildVisionMessages } from "@/lib/business/knowledge";
 import { desc, eq } from "drizzle-orm";
@@ -172,38 +173,49 @@ export async function POST(req: Request) {
     });
   }
 
-  const rows = extracted.programs.map((p) => ({
-    businessId,
-    sourceId: source.id,
-    universityName: extracted.university_name,
-    universityNameCn: extracted.university_name_cn,
-    city: extracted.city,
-    province: extracted.province,
-    universityType: extracted.university_type,
-    programName: p.program_name,
-    level: p.level,
-    duration: p.duration,
-    teachingLanguage: p.teaching_language,
-    tuitionAmount: p.tuition_amount,
-    tuitionCurrency: p.tuition_currency,
-    tuitionPeriod: p.tuition_period,
-    hostelAmount: p.hostel_amount,
-    hostelPeriod: p.hostel_period,
-    applicationFee: p.application_fee,
-    insuranceFee: p.insurance_fee,
-    intakeText: p.intake_text,
-    intakeMonths: p.intake_months ?? [],
-    applicationDeadline: p.application_deadline,
-    tVisaAfterOneSemester: p.t_visa_after_one_semester,
-    languageToDegree: p.language_to_degree,
-    feePaymentNote: p.fee_payment_note,
-    requirements: p.requirements ?? {},
-    notes: p.notes,
-    brochureName: title.slice(0, 255),
-    sourcePage: null,
-    confidence: "extracted",
-    status: "draft",
-  }));
+  const rows = extracted.programs.map((p) => {
+    // Brochures in circulation are often printed for a previous year.
+    // Roll any stale deadline forward so we never store a past date.
+    const fix = correctDeadline(p.application_deadline ?? null);
+
+    return {
+      businessId,
+      sourceId: source.id,
+      universityName: extracted.university_name,
+      universityNameCn: extracted.university_name_cn,
+      city: extracted.city,
+      province: extracted.province,
+      universityType: extracted.university_type,
+      programName: p.program_name,
+      level: p.level,
+      duration: p.duration,
+      teachingLanguage: p.teaching_language,
+      tuitionAmount: p.tuition_amount,
+      tuitionCurrency: p.tuition_currency,
+      tuitionPeriod: p.tuition_period,
+      combinedFeeAmount: p.combined_fee_amount,
+      combinedFeePeriod: p.combined_fee_period,
+      combinedFeeIncludes: p.combined_fee_includes,
+      hostelAmount: p.hostel_amount,
+      hostelPeriod: p.hostel_period,
+      applicationFee: p.application_fee,
+      insuranceFee: p.insurance_fee,
+      intakeText: p.intake_text,
+      intakeMonths: p.intake_months ?? [],
+      applicationDeadline: fix.corrected || null,
+      tVisaAfterOneSemester: p.t_visa_after_one_semester,
+      languageToDegree: p.language_to_degree,
+      feePaymentNote: p.fee_payment_note,
+      feeNoteRaw: fix.changed ? `${fix.original} (printed on brochure)` : null,
+      requirements: p.requirements ?? {},
+      notes: p.notes,
+      brochureName: title.slice(0, 255),
+      sourcePage: null,
+      confidence: "extracted",
+      dataCompleteness: "partial",
+      status: "draft",
+    };
+  });
 
   const inserted = await db
     .insert(bizKnowledgeEntries)

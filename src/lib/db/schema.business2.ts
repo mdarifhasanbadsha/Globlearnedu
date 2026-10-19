@@ -48,6 +48,12 @@ export const bizKnowledgeEntries = pgTable(
     province: varchar("province", { length: 100 }),
     universityType: varchar("university_type", { length: 50 }),
     tuitionPeriod: varchar("tuition_period", { length: 20 }),
+    // Added by 0005 — brochures that bundle tuition + hostel into one figure.
+    combinedFeeAmount: integer("combined_fee_amount"),
+    combinedFeePeriod: varchar("combined_fee_period", { length: 20 }),
+    combinedFeeIncludes: varchar("combined_fee_includes", { length: 100 }),
+    feeNoteRaw: text("fee_note_raw"),
+    dataCompleteness: varchar("data_completeness", { length: 20 }).notNull().default("partial"),
     hostelAmount: integer("hostel_amount"),
     hostelPeriod: varchar("hostel_period", { length: 20 }),
     applicationFee: integer("application_fee"),

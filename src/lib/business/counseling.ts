@@ -17,6 +17,9 @@ export interface KnowledgeFact {
   tuitionAmount: number | null;
   tuitionCurrency: string | null;
   tuitionPeriod: string | null;
+  combinedFeeAmount: number | null;
+  combinedFeePeriod: string | null;
+  combinedFeeIncludes: string | null;
   hostelAmount: number | null;
   hostelPeriod: string | null;
   applicationFee: number | null;
@@ -45,6 +48,9 @@ export async function loadApprovedKnowledge(
       tuitionAmount: bizKnowledgeEntries.tuitionAmount,
       tuitionCurrency: bizKnowledgeEntries.tuitionCurrency,
       tuitionPeriod: bizKnowledgeEntries.tuitionPeriod,
+      combinedFeeAmount: bizKnowledgeEntries.combinedFeeAmount,
+      combinedFeePeriod: bizKnowledgeEntries.combinedFeePeriod,
+      combinedFeeIncludes: bizKnowledgeEntries.combinedFeeIncludes,
       hostelAmount: bizKnowledgeEntries.hostelAmount,
       hostelPeriod: bizKnowledgeEntries.hostelPeriod,
       applicationFee: bizKnowledgeEntries.applicationFee,
@@ -114,6 +120,12 @@ function formatFact(f: KnowledgeFact, i: number): string {
       `Tuition: ${f.tuitionAmount} ${f.tuitionCurrency ?? "CNY"} ${periodLabel(f.tuitionPeriod)}`
     );
   }
+  if (f.combinedFeeAmount != null) {
+    lines.push(
+      `Combined fee: ${f.combinedFeeAmount} ${f.tuitionCurrency ?? "CNY"} ${periodLabel(f.combinedFeePeriod)}` +
+        (f.combinedFeeIncludes ? ` (covers ${f.combinedFeeIncludes})` : "")
+    );
+  }
   if (f.hostelAmount != null) {
     lines.push(
       `Hostel: ${f.hostelAmount} ${f.tuitionCurrency ?? "CNY"} ${periodLabel(f.hostelPeriod)}`
@@ -121,6 +133,15 @@ function formatFact(f: KnowledgeFact, i: number): string {
   }
   if (f.applicationFee != null) lines.push(`Application fee: ${f.applicationFee} ${f.tuitionCurrency ?? "CNY"}`);
   if (f.insuranceFee != null) lines.push(`Insurance fee: ${f.insuranceFee} ${f.tuitionCurrency ?? "CNY"}`);
+
+  // Be explicit about gaps so the model says "not confirmed" rather than "free".
+  const missing: string[] = [];
+  if (f.tuitionAmount == null && f.combinedFeeAmount == null) missing.push("tuition");
+  if (f.hostelAmount == null && f.combinedFeeAmount == null) missing.push("hostel");
+  if (f.applicationFee == null) missing.push("application fee");
+  if (missing.length > 0) {
+    lines.push(`NOT YET CONFIRMED for this program: ${missing.join(", ")}`);
+  }
 
   if (f.intakeText) lines.push(`Intake: ${f.intakeText}`);
   else if (Array.isArray(f.intakeMonths) && f.intakeMonths.length > 0) {

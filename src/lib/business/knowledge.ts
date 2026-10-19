@@ -23,6 +23,9 @@ Return JSON only, no markdown fences:
       "tuition_amount": null,
       "tuition_currency": "CNY",
       "tuition_period": "semester|year|month|",
+      "combined_fee_amount": null,
+      "combined_fee_period": "semester|year|month|",
+      "combined_fee_includes": "",
       "hostel_amount": null,
       "hostel_period": "semester|year|month|",
       "application_fee": null,
@@ -48,6 +51,11 @@ Rules:
 - Copy intake and deadline text verbatim into intake_text / application_deadline, including the year.
   Do not reformat dates.
 - Include hostel, application and insurance fees as separate numbers WITHOUT adding them to tuition.
+- If the brochure shows ONE figure covering both tuition and hostel together, put it in
+  combined_fee_amount / combined_fee_period and set combined_fee_includes to what it covers
+  (e.g. "tuition + hostel"). Leave tuition_amount and hostel_amount null in that case.
+- Brochures differ: some split tuition and hostel, some bundle them, some omit the application
+  fee. Copy what is printed and leave the rest null. Never fill a gap by guessing.
 - If a value is not visible on the page, use null or "" — never guess.
 - Put anything you are unsure about in "uncertain" so a human can check it.
 - Do not invent programs, scholarships, deadlines or requirements.`;
@@ -60,6 +68,9 @@ export interface ExtractedProgram {
   tuition_amount?: number | null;
   tuition_currency?: string | null;
   tuition_period?: string | null;
+  combined_fee_amount?: number | null;
+  combined_fee_period?: string | null;
+  combined_fee_includes?: string | null;
   hostel_amount?: number | null;
   hostel_period?: string | null;
   application_fee?: number | null;
@@ -138,6 +149,9 @@ export function parseExtraction(raw: string): ExtractionResult {
           tuition_amount: int(p?.tuition_amount),
           tuition_currency: str(p?.tuition_currency)?.toUpperCase().slice(0, 8) ?? null,
           tuition_period: period(p?.tuition_period),
+          combined_fee_amount: int(p?.combined_fee_amount),
+          combined_fee_period: period(p?.combined_fee_period),
+          combined_fee_includes: str(p?.combined_fee_includes),
           hostel_amount: int(p?.hostel_amount),
           hostel_period: period(p?.hostel_period),
           application_fee: int(p?.application_fee),
