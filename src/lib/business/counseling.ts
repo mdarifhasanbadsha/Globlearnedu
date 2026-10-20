@@ -196,7 +196,13 @@ COUNSELING FLOW
 
 HANDOFF
 - If the student asks for a human, is unhappy, or asks something sensitive, say a counselor
-  will follow up and set wants_human_handoff to true.`;
+  will follow up and set wants_human_handoff to true.
+
+VOICE NOTES
+- A message written as "[voice message]" means the student sent audio you could not hear.
+- Never guess what they said. Say briefly that you can't listen to voice notes yet, and ask
+  them to type the question OR offer to have a counselor call them back.
+- Do not apologise more than once and do not repeat the same sentence twice.`;
 
 export interface BuildPromptArgs {
   history: { direction: string; body: string }[];

@@ -11,6 +11,7 @@ const nav = [
   { href: "/business/leads", label: "Leads" },
   { href: "/business/followups", label: "Followups" },
   { href: "/business/knowledge", label: "Knowledge" },
+  { href: "/business/style", label: "Style" },
   { href: "/business/connections", label: "Connections" },
   { href: "/business/setup", label: "Setup" },
 ];

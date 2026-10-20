@@ -12,6 +12,7 @@
 import { db } from "@/lib/db";
 import { bizConversations, bizMessages } from "@/lib/db/schema.business";
 import { getBusinessId } from "@/lib/business/config";
+import { VOICE_PLACEHOLDER } from "@/lib/business/voice";
 import { and, eq, desc } from "drizzle-orm";
 
 interface MetaMessage {
@@ -133,21 +134,38 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
 
         const convId = await conversationForPsid(businessId, psid);
 
+        // Attachment-first: a voice note has no text, so we must not store
+        // an empty body and must not let the AI invent what was said.
+        const audio = msg.attachments?.find((a) => {
+          const url = a.payload?.url ?? "";
+          return /audio|voice/i.test(a.type ?? "") || /audioclip/i.test(url);
+        });
+
         let body = msg.text ?? "";
-        if (!body && msg.attachments?.length) {
-          const kinds = msg.attachments
-            .map((a) => a.type ?? "attachment")
-            .join(", ");
+        let mediaUrl: string | null = null;
+        let mediaKind: string | null = null;
+
+        if (audio) {
+          mediaKind = "audio";
+          mediaUrl = audio.payload?.url ?? null;
+          // No ASR provider wired for live traffic yet: store an explicit
+          // placeholder that the AI is instructed to recognise.
+          if (!body) body = VOICE_PLACEHOLDER;
+        } else if (!body && msg.attachments?.length) {
+          const kinds = msg.attachments.map((a) => a.type ?? "attachment").join(", ");
           body = `[${kinds}]`;
         }
+
         if (!body) continue;
 
-        await storeMessage({
+        await db.insert(bizMessages).values({
           businessId,
           conversationId: convId,
           direction: "in",
           authorKind: "student",
           body,
+          mediaUrl,
+          mediaKind,
           meta: { source: "messenger", mid: msg.mid ?? null },
         });
 
