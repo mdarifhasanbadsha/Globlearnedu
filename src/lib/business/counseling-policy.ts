@@ -37,6 +37,28 @@ export const EMPTY_PRAISE = [
 ];
 
 /**
+ * Never imply the listed universities are exclusive to this student.
+ * Examples come from our database; the team shortlists more options.
+ */
+export const EXCLUSIVITY_PHRASES = [
+  "শুধু আপনার জন্য",
+  "আপনার জন্যই",
+  "আপনার জন্য খুঁজে বের করেছি",
+  "এইগুলোই আপনার",
+  "only for you",
+  "exclusive to you",
+  "these are the only options",
+  "found these just for you",
+  "specially for you",
+  "only these universities",
+  "no other options",
+];
+
+/** Naming universities must come with "there are many more" framing. */
+export const MORE_OPTIONS_HINT =
+  /আরও|অনেক|বেশি|বাইরে|analysis|analyze|shortlist|team|counselor|counsellor|expert|verify|যাচাই|বিশ্লেষণ|টিম/i;
+
+/**
  * How to read a grade WITHOUT flattering the student.
  * A GPA of 5 on a 5 scale is normal-to-good, not "amazing".
  */
@@ -173,6 +195,23 @@ export function checkReplyPolicy(
   // Bullet lists read like a brochure, not a chat.
   if (/^\s*[-•*]\s+/m.test(reply) || /^\s*\d+\.\s+/m.test(reply)) {
     out.push({ rule: "bullet_list", detail: "reply is a list, not a chat message" });
+  }
+
+  // Claiming the options are exclusive to this student, or that they are
+  // the only ones available. The team always shortlists more.
+  const exclusive = EXCLUSIVITY_PHRASES.filter((p) =>
+    reply.toLowerCase().includes(p.toLowerCase())
+  );
+  if (exclusive.length > 0) {
+    out.push({ rule: "exclusive_claim", detail: exclusive.join(", ") });
+  }
+
+  // Name universities without saying more options exist.
+  if (KNOWN_UNIVERSITY_PATTERN.test(reply) && !MORE_OPTIONS_HINT.test(reply)) {
+    out.push({
+      rule: "missing_more_options",
+      detail: "named universities without saying the team has many more",
+    });
   }
 
   // International students take English-taught programmes. Claiming the
