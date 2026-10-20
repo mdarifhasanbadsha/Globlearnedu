@@ -20,10 +20,16 @@ const SOURCE_LABEL: Record<string, string> = {
 export default async function InboxPage({
   searchParams,
 }: {
-  searchParams: Promise<{ c?: string }>;
+  searchParams: Promise<{ c?: string; page?: string }>;
 }) {
   const businessId = getBusinessId();
-  const { c } = await searchParams;
+  const { c, page } = await searchParams;
+
+  // The list shows the most recently active threads. A hard limit of 60 hid
+  // everyone else once the import passed 500; paging keeps the page light
+  // while making every conversation reachable.
+  const PAGE_SIZE = 60;
+  const pageNum = Math.max(1, Number(page) || 1);
 
   const conversations = await db
     .select({
@@ -50,7 +56,8 @@ export default async function InboxPage({
     .leftJoin(bizLeads, eq(bizLeads.conversationId, bizConversations.id))
     .where(eq(bizConversations.businessId, businessId))
     .orderBy(desc(bizConversations.lastMessageAt))
-    .limit(60);
+    .limit(PAGE_SIZE)
+    .offset((pageNum - 1) * PAGE_SIZE);
 
   return (
     <InboxClient
@@ -67,6 +74,8 @@ export default async function InboxPage({
       }))}
       initialSelected={c ?? null}
       aiReady={isDeepSeekConfigured()}
+      page={pageNum}
+      pageSize={PAGE_SIZE}
     />
   );
 }

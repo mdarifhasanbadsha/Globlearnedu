@@ -41,10 +41,14 @@ export default function InboxClient({
   initialConversations,
   initialSelected,
   aiReady,
+  page = 1,
+  pageSize = 60,
 }: {
   initialConversations: Conversation[];
   initialSelected: string | null;
   aiReady: boolean;
+  page?: number;
+  pageSize?: number;
 }) {
   const [conversations, setConversations] = useState(initialConversations);
   const [selected, setSelected] = useState<string | null>(
@@ -341,6 +345,34 @@ export default function InboxClient({
               })}
             </ul>
           )}
+
+          {/* Paging: without it, threads beyond the first page were unreachable. */}
+          {!results && (
+            <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-slate-100 text-[11px]">
+              <a
+                href={page > 1 ? `/business/inbox?page=${page - 1}` : "#"}
+                aria-disabled={page <= 1}
+                className={`px-2 py-1 rounded ${
+                  page > 1
+                    ? "text-[#0F2A52] hover:bg-slate-100"
+                    : "text-slate-300 pointer-events-none"
+                }`}
+              >
+                ← Newer
+              </a>
+              <span className="text-slate-500">Page {page}</span>
+              <a
+                href={`/business/inbox?page=${page + 1}`}
+                className={`px-2 py-1 rounded ${
+                  listed.length >= pageSize
+                    ? "text-[#0F2A52] hover:bg-slate-100"
+                    : "text-slate-300 pointer-events-none"
+                }`}
+              >
+                Older →
+              </a>
+            </div>
+          )}
         </aside>
 
         <section className="bg-white rounded-xl border border-slate-200 flex flex-col min-h-[50vh]">
@@ -410,7 +442,27 @@ export default function InboxClient({
                     <div className="text-[10px] uppercase tracking-wide opacity-70 mb-0.5">
                       {m.authorKind}
                     </div>
-                    <div className="whitespace-pre-wrap break-words">{m.body}</div>
+                    {/* A 5,000-character message — which is what a re-ingested
+                        echo produced — used to fill the whole thread. Long
+                        messages are collapsed so the conversation stays
+                        readable, with the full text one click away. */}
+                    {m.body.length > 600 ? (
+                      <details>
+                        <summary className="cursor-pointer select-none">
+                          <span className="whitespace-pre-wrap break-words">
+                            {m.body.slice(0, 400)}…
+                          </span>
+                          <span className="block text-[11px] opacity-80 mt-1 underline">
+                            Show full message ({m.body.length.toLocaleString()} characters)
+                          </span>
+                        </summary>
+                        <div className="whitespace-pre-wrap break-words mt-1 max-h-72 overflow-y-auto">
+                          {m.body}
+                        </div>
+                      </details>
+                    ) : (
+                      <div className="whitespace-pre-wrap break-words">{m.body}</div>
+                    )}
                   </div>
                 </div>
               );
