@@ -33,7 +33,7 @@ import {
   BATCH_QUIET_MS,
 } from "@/lib/business/conversation-flow";
 import { isUsableReply } from "@/lib/business/reply-quality";
-import { and, eq, asc } from "drizzle-orm";
+import { and, eq, asc, sql } from "drizzle-orm";
 
 export interface AutoReplyOutcome {
   attempted: boolean;
@@ -52,14 +52,44 @@ export async function autoReplyToMessenger(
   const businessId = getBusinessId();
 
   const [conv] = await db
-    .select()
+    .select({
+      id: bizConversations.id,
+      visitorId: bizConversations.visitorId,
+      channel: bizConversations.channel,
+      aiState: bizConversations.aiState,
+      handoffAt: bizConversations.handoffAt,
+      lastInboundAt: bizConversations.lastInboundAt,
+    })
     .from(bizConversations)
     .where(and(eq(bizConversations.businessId, businessId), eq(bizConversations.id, conversationId)))
     .limit(1);
 
   if (!conv) return { attempted: false, reason: "conversation not found" };
   if (conv.channel !== "messenger") return { attempted: false, reason: "not a messenger conversation" };
-  if (conv.aiState !== "active") return { attempted: false, reason: `ai is ${conv.aiState}` };
+  if (conv.aiState === "paused") {
+    // A human explicitly paused automation. Only they should resume it.
+    return { attempted: false, reason: "ai paused by staff" };
+  }
+
+  if (conv.aiState === "handoff_requested") {
+    // Offering a human must not silence the thread forever. If no staff
+    // member has actually taken over and the student keeps writing, the AI
+    // resumes so they are never left with silence.
+    const since = conv.handoffAt ? new Date(conv.handoffAt).getTime() : 0;
+    const RESUME_AFTER_MS = 2 * 60 * 1000;
+
+    if (Date.now() - since < RESUME_AFTER_MS) {
+      return { attempted: false, reason: "handoff pending, waiting for a human" };
+    }
+
+    await db
+      .update(bizConversations)
+      .set({ aiState: "active", updatedAt: new Date() })
+      .where(eq(bizConversations.id, conversationId));
+    console.log("[messenger] handoff aged out — AI resumed");
+  } else if (conv.aiState !== "active") {
+    return { attempted: false, reason: `ai is ${conv.aiState}` };
+  }
   if (!isDeepSeekConfigured()) return { attempted: false, reason: "AI key not configured" };
   if (!windowOpen(conv.lastInboundAt ?? null)) return { attempted: false, reason: "24h window closed" };
 
@@ -106,17 +136,42 @@ export async function autoReplyToMessenger(
     latestMessage: burstText,
     knowledge,
     styleGuide: style ? formatStyleGuide(style) : null,
-    // A recent quote anchors a short follow-up such as "ai ta koto?".
-    quotedMessage: conv.pendingQuote ?? null,
   });
 
-  // A quote is only relevant to the burst it arrived with.
-  if (conv.pendingQuote) {
-    await db
-      .update(bizConversations)
-      .set({ pendingQuote: null, pendingQuoteAt: null })
-      .where(eq(bizConversations.id, conversationId))
-      .catch(() => undefined);
+  // Read the quote defensively: the column only exists after the schema
+  // catch-up has run, and the reply must work either way.
+  let quotedMessage: string | null = null;
+  try {
+    const rows: any[] = await db
+      .execute(
+        sql`select pending_quote from biz_conversations where id = ${conversationId} limit 1`
+      )
+      .then((r: any) => r?.rows ?? r ?? []);
+    quotedMessage = rows?.[0]?.pending_quote ?? null;
+  } catch {
+    quotedMessage = null;
+  }
+
+  if (quotedMessage) {
+    messages.splice(
+      1,
+      0,
+      {
+        role: "system",
+        content: `The student is replying to this earlier message: "${quotedMessage.slice(0, 400)}". Interpret their question in that context.`,
+      }
+    );
+    try {
+      await db
+        .update(bizConversations)
+        .set({ updatedAt: new Date() })
+        .where(eq(bizConversations.id, conversationId));
+      await db.execute(
+        sql`update biz_conversations set pending_quote = null, pending_quote_at = null where id = ${conversationId}`
+      );
+    } catch {
+      /* clearing the quote is best effort */
+    }
   }
 
   // Tell the model when several messages form one thought.

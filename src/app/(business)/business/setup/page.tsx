@@ -6,6 +6,7 @@ import {
 import { getBusinessId, BUSINESS_TIMEZONE, BUSINESS_NAME } from "@/lib/business/config";
 import { isEncryptionConfigured } from "@/lib/business/crypto";
 import { PageHeader, Card, Pill, Alert } from "../_ui";
+import SetupMigrate from "./_SetupMigrate";
 
 export const dynamic = "force-dynamic";
 
@@ -133,6 +134,8 @@ export default async function SetupPage() {
           is safe to run from the project folder.
         </Alert>
       )}
+
+      <SetupMigrate />
 
       <Card title="Environment" padded={false}>
         <div className="px-4 py-1">

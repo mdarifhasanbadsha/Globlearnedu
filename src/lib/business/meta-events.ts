@@ -274,6 +274,8 @@ async function afterInbound(args: {
   const { businessId, conversationId, psid } = args;
 
   // Remember the quote so the settled (batched) reply can use it too.
+  // Wrapped because the column may not exist until the schema catch-up has
+  // run; a missing column must never stop the reply itself.
   if (args.quoted) {
     try {
       await db
@@ -286,6 +288,17 @@ async function afterInbound(args: {
         .where(eq(bizConversations.id, conversationId));
     } catch {
       /* the reply still works without the quote */
+    }
+  } else {
+    // Nothing quoted: clear any stale quote from an earlier message so it is
+    // not applied to this one. Best effort only.
+    try {
+      await db
+        .update(bizConversations)
+        .set({ pendingQuote: null, pendingQuoteAt: null })
+        .where(eq(bizConversations.id, conversationId));
+    } catch {
+      /* ignore */
     }
   }
 
