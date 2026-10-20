@@ -22,6 +22,7 @@ export type Intent =
   | "off_topic"
   | "manipulation"
   | "abuse"
+  | "self_query"
   | "empty"
   | "genuine";
 
@@ -75,7 +76,31 @@ const TOPIC_WORDS =
 
 /** Obvious off-topic: entertainment, homework, unrelated services. */
 const OFF_TOPIC_HINTS =
-  /(?:write|লিখে)\s*(?:me\s*)?(?:a\s*)?(?:poem|story|essay|গল্প|কবিতা|রচনা)|(?:movie|মুভি|song|গান|game|গেম|cricket|ক্রিকেট|football|ফুটবল|weather|আবহাওয়া|recipe|রেসিপি|joke|কৌতুক)|(?:hack|হ্যাক|pirat|পাইরেসি|torrent)|(?:bitcoin|crypto|লটারি|lottery|জুয়া)|(?:girlfriend|boyfriend|প্রেম|dating)|(?:loan|ঋণ|লোন\s*দেন)|(?:visa\s*card|credit\s*card|ক্রেডিট\s*কার্ড).*(?:বানাতে|banate)/i;
+  /(?:write|লিখে)\s*(?:me\s*)?(?:a\s*)?(?:poem|story|essay|গল্প|কবিতা|রচনা)|(?:movie|মুভি|song|গান|game|গেম|cricket|ক্রিকেট|football|ফুটবল|weather|আবহাওয়া|recipe|রেসিপি|joke|কৌতুক)|(?:hack|হ্যাক|pirat|পাইরেসি|torrent)|(?:bitcoin|crypto|লটারি|lottery|জুয়া)|(?:girlfriend|boyfriend|প্রেম|dating)|(?:loan|ঋণ|লোন\s*দেন)|(?:visa\s*card|credit\s*card|ক্রেডিট\s*কার্ড).*(?:বানাতে|banate)|(?:ceo|মালিক|owner|chairman|founder|প্রতিষ্ঠাতা)\s*(?:k|কে|ke|কে\?|ki|কে\b)|(?:python|javascript|java\b|php|html|css|c\+\+|coding|program(?:ming)?\s*(?:language|code)|brute\s*force)/i;
+
+/**
+ * Requests for real work outside counselling: writing code, counting to 100,
+ * explaining a programming language. None of this is our job, and answering it
+ * turns a counsellor into a general-purpose chatbot — which is exactly what a
+ * student testing us is looking for.
+ */
+const WANTS_HOMEWORK =
+  /(?:give|write|make|show|create|de|dao|lekho|likho|koro)\s*(?:me\s*)?(?:a\s*)?(?:python|javascript|java|php|c\+\+|code|script|program|function)|(?:tell|explain|about|ki)\s*(?:me\s*)?(?:about\s*)?(?:python|javascript|java|php|c\+\+|programming\s+language)/i;
+
+/**
+ * Counting on demand. A student asking us to type 1-100 is testing whether the
+ * counsellor is a general chatbot, so it is refused however it is phrased —
+ * including when "admission" is tagged on to make it look like a real request.
+ */
+const COUNTING_TASK = /(?:\btell\s*|\btype\s*(?:koro|kore|korbo)?\s*|\bcount\s*|\bgun[oe]\s*)\d{1,3}\s*(?:-|to|porjonto|theke)\s*\d{1,3}\b|\b\d{1,3}\s*(?:-|to|porjonto)\s*\d{2,3}\b/i;
+
+/**
+ * Questions about the assistant itself. These are the ones a student uses to
+ * find out whether they are talking to software, and they must be answered by
+ * a fixed, human line — never improvised by the model.
+ */
+const SELF_QUERY =
+  /(?:tumi|tumi|apni|you|তুমি|আপনি)\s*(?:ki|কি|are\s+you)?\s*(?:ekta\s*|একটা\s*)?(?:ai|এআই|robot|রোবট|bot|বট|manush|মানুষ|human|software|program)\b|(?:tomar|apnar|your|তোমার|আপনার)\s*(?:model|মডেল|ai|এআই|system|সিস্টেম|name|নাম|programming|প্রোগ্রামিং)|(?:are\s+you|is this)\s+(?:a\s+)?(?:bot|robot|ai|human|real)|who\s+are\s+you|tumi\s+ke\b/i;
 
 /**
  * Classify one message BEFORE any model call.
@@ -144,6 +169,20 @@ export function classifyMessage(raw: string): Classified {
       reason: "thanks",
     };
   }
+  // Questions about the assistant itself. Answered here, by a fixed line, so
+  // the model can never improvise "আমার মডেল বা টেকনিক্যাল ডিটেইলস নেই".
+  // The answer is warm, does not claim to be a human being, and does not
+  // announce being software either — then returns to the student's need.
+  if (SELF_QUERY.test(text)) {
+    return {
+      intent: "self_query",
+      handled: true,
+      reply:
+        "আমি GL Education-এর কাউন্সেলর টিমের একজন 🙂 চায়নায় পড়াশোনা আর ভর্তির ব্যাপারে আপনাকে সাহায্য করাই আমার কাজ। সরাসরি কারও সাথে কথা বলতে চাইলে এই নম্বরে কল করতে পারেন — +8801901923239। বলুন, কী জানতে চান?",
+      reason: "question about the assistant",
+    };
+  }
+
   if (GOODBYE.test(text)) {
     return {
       intent: "goodbye",
@@ -153,15 +192,23 @@ export function classifyMessage(raw: string): Classified {
     };
   }
 
-  // Off-topic only when it matches an unrelated request AND has no study-in-China
-  // vocabulary at all. One stray keyword keeps it genuine.
-  if (OFF_TOPIC_HINTS.test(text) && !TOPIC_WORDS.test(text)) {
+  // Writing code, explaining a programming language, counting on demand: real
+  // work, but not our work. A counsellor who writes your Python becomes a
+  // general chatbot the moment someone tests it, so this is refused plainly
+  // and warmly — and only when no study-in-China vocabulary is present.
+  if (
+    WANTS_HOMEWORK.test(text) ||
+    (OFF_TOPIC_HINTS.test(text) && !TOPIC_WORDS.test(text)) ||
+    // Counting is checked WITHOUT the topic-word escape: "type koro 1-100 then
+    // ami admission nibo" tags a real word onto a chatbot test to slip past.
+    COUNTING_TASK.test(text)
+  ) {
     return {
       intent: "off_topic",
       handled: true,
       reply:
-        "এটা আমার কাজের বাইরে — আমি শুধু চায়না পড়াশোনা নিয়ে সাহায্য করি। 😊 প্রোগ্রাম, খরচ, স্কলারশিপ বা ভর্তি নিয়ে যা জানতে চান, জিজ্ঞেস করুন।",
-      reason: "unrelated topic",
+        "এটা আমি করে দিতে পারব না ভাইয়া 🙂 আমি GL Education-এর কাউন্সেলর — চায়নায় পড়াশোনা, ভর্তি, খরচ আর স্কলারশিপ নিয়ে সাহায্য করি। ওই ব্যাপারে কিছু জানতে চাইলে বলুন, আমি পূর্ণ সাহায্য করব।",
+      reason: "outside counselling scope",
     };
   }
 
