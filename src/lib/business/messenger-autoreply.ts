@@ -301,7 +301,12 @@ export async function autoReplyToMessenger(
   // most important fact in the thread, and it must never be the one dropped.
   const allHistory = [...historyBeforeBurst, ...burst.map((b) => ({ direction: "in", body: b.body }))];
 
-  const knowledge = await loadApprovedKnowledge(businessId, burstText);
+  // Facts first, then knowledge scoped to the student's level, so a
+  // Bachelor student is never handed Diploma material.
+  const facts = knownFacts(allHistory);
+  const knowledge = await loadApprovedKnowledge(businessId, burstText, 12, {
+    level: facts?.degree_level ?? null,
+  });
   const style = await loadActiveStyleGuide(businessId);
 
   const messages = buildCounselingMessages({
@@ -309,7 +314,7 @@ export async function autoReplyToMessenger(
     latestMessage: burstText,
     knowledge,
     styleGuide: style ? formatStyleGuide(style) : null,
-    leadContext: knownFacts(allHistory),
+    leadContext: facts,
     recap: conversationRecap(historyBeforeBurst),
   });
 

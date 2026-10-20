@@ -268,7 +268,12 @@ async function handlePost(req: Request) {
     .orderBy(asc(bizMessages.createdAt))
     .limit(60);
 
-  const knowledge = await loadApprovedKnowledge(businessId, message);
+  // Scope knowledge to the student's level once it is known, so a Bachelor
+  // student is never shown Diploma material.
+  const { knownFacts: factsFor } = await import("@/lib/business/conversation-flow");
+  const knowledge = await loadApprovedKnowledge(businessId, message, 12, {
+    level: factsFor([...history, { direction: "in", body: message }])?.degree_level ?? null,
+  });
 
   // Learn-from-history layer: our approved house style, if published.
   const style = await loadActiveStyleGuide(businessId);

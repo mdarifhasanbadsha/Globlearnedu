@@ -248,6 +248,15 @@ export function knownFacts(history: { direction: string; body: string }[]): Reco
   const intake = all.match(/\b(march|september|january|april|october)\s*(20\d{2})\b/i);
   if (intake) known.intake = `${intake[1]} ${intake[2]}`;
 
+  // HSC / SSC year and group. Students answer "2022/ science" or
+  // "HSC 2021, commerce", and if this is not remembered the AI asks again —
+  // which is exactly what makes them say "shob e bolsi".
+  const hscYear = all.match(/\b(?:hsc|ssc)?\s*(20(?:0\d|1\d|2\d))\b/i);
+  if (hscYear) known.exam_year = hscYear[1];
+
+  const group = all.match(/\b(science|commerce|business studies|arts|humanities)\b/i);
+  if (group) known.exam_group = group[1];
+
   return Object.keys(known).length > 0 ? known : null;
 }
 

@@ -39,7 +39,14 @@ export interface KnowledgeFact {
 export async function loadApprovedKnowledge(
   businessId: string,
   query: string,
-  limit = 12
+  limit = 12,
+  /**
+   * The level the student is actually asking about. Without this, a message
+   * like "2022/ science" pulls whichever rows were most recently updated, so
+   * a Bachelor student is handed Diploma knowledge and the AI starts talking
+   * about a Diploma they already ruled out.
+   */
+  opts: { level?: string | null } = {}
 ): Promise<KnowledgeFact[]> {
   const rows = await db
     .select({
@@ -77,15 +84,27 @@ export async function loadApprovedKnowledge(
 
   if (rows.length === 0) return [];
 
+  // Keep only the level the student is on. Entries with no level (policy
+  // notes, service charges) always stay, because they apply to everyone.
+  const wantLevel = (opts.level ?? "").toLowerCase().trim();
+  const scoped = wantLevel
+    ? rows.filter((r) => {
+        const lv = (r.level ?? "").toLowerCase().trim();
+        return lv === "" || lv === wantLevel;
+      })
+    : rows;
+
+  const usable = scoped.length > 0 ? scoped : rows;
+
   // Cheap relevance filter: prefer rows sharing a token with the query.
   const tokens = query
     .toLowerCase()
     .split(/[^a-z0-9\u0980-\u09FF]+/)
     .filter((t) => t.length > 3);
 
-  if (tokens.length === 0) return rows;
+  if (tokens.length === 0) return usable;
 
-  const scored = rows.map((r) => {
+  const scored = usable.map((r) => {
     const hay = [
       r.universityName,
       r.city,
@@ -635,6 +654,12 @@ Rules for using these facts:
   Bachelor chai", every later answer must be about Bachelor.
 - What is here is the LATEST thing they said. If it contradicts what you said earlier in the
   thread, believe these facts — the student changed direction and you have not caught up yet.
+- Say the level and subject back when you reply, in a few words, so the student can see you have
+  it right. "CST-তে Bachelor — ঠিক আছে।" Not a paragraph, just enough to show you are listening.
+- If exam_year or exam_group is present, do NOT ask for the HSC year or group again. They told
+  you. Ask for what is genuinely still missing (GPA, English proficiency, passport, intake).
+- If they say "shob e bolsi" / "ami sob bolechi" / "I already told you everything", stop
+  collecting and summarise what you have in one line, then say what the team will do next.
 - If they say "ami shob notun kore boli" or "ager kotha bolben na", acknowledge once and start
   clean from the new decision. Do not bring the old plan up again.
 - If the student says "result agei bolechi" or "ami already bolechi", you missed it. Apologise
