@@ -106,6 +106,21 @@ export const bizLeads = pgTable(
     assignedStaffId: uuid("assigned_staff_id"),
     consentContact: boolean("consent_contact").notNull().default(false),
     source: varchar("source", { length: 40 }).notNull().default("website_chat"),
+    // Added by 0008 — lead intelligence scored from real conversations.
+    hasContact: boolean("has_contact").notNull().default(false),
+    contactChannel: varchar("contact_channel", { length: 30 }),
+    contactNote: varchar("contact_note", { length: 255 }),
+    score: integer("score").notNull().default(0),
+    priority: varchar("priority", { length: 20 }).notNull().default("cold"),
+    category: varchar("category", { length: 40 }).notNull().default("unclassified"),
+    reasoning: text("reasoning"),
+    intentSignals: jsonb("intent_signals").default({}),
+    lastInboundAt: timestamp("last_inbound_at"),
+    inboundCount: integer("inbound_count").notNull().default(0),
+    nextAction: varchar("next_action", { length: 200 }),
+    nextActionAt: timestamp("next_action_at"),
+    ignored: boolean("ignored").notNull().default(false),
+    ignoreReason: varchar("ignore_reason", { length: 100 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -113,6 +128,8 @@ export const bizLeads = pgTable(
     index("biz_leads_biz_stage_idx").on(t.businessId, t.stage, t.createdAt),
     index("biz_leads_conv_idx").on(t.conversationId),
     index("biz_leads_phone_idx").on(t.businessId, t.phone),
+    index("biz_leads_priority_idx").on(t.businessId, t.priority, t.score),
+    index("biz_leads_category_idx").on(t.businessId, t.category),
   ]
 );
 
