@@ -195,6 +195,17 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
           }
         }
 
+        // Keep the pipeline honest: a student replying means the lead is alive.
+        try {
+          const { onStudentReplied } = await import("@/lib/business/stage-automation");
+          const adv = await onStudentReplied({ businessId, conversationId: convId });
+          if (adv.moved) {
+            console.log(`[workflow] lead stage ${adv.from} -> ${adv.to}`);
+          }
+        } catch (e) {
+          console.error("[workflow] stage automation failed:", (e as Error)?.message);
+        }
+
         stored++;
         continue;
       }

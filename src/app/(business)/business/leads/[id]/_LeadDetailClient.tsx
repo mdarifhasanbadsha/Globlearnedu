@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
+import LeadWorkflow from "./_LeadWorkflow";
 
 interface Lead {
   id: string;
@@ -289,6 +290,9 @@ export default function LeadDetailClient({ lead, messages }: { lead: Lead; messa
           </div>
         )}
       </section>
+
+      {/* Workflow: notes, followups, tasks, timeline */}
+      <LeadWorkflow leadId={lead.id} />
     </div>
   );
 }

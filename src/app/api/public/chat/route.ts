@@ -315,6 +315,18 @@ export async function POST(req: Request) {
       .where(eq(bizConversations.id, conversationId));
   }
 
+  // Keep the pipeline honest and alert someone when a lead turns hot.
+  try {
+    const { onStudentReplied, onStaffReplied } = await import("@/lib/business/stage-automation");
+    await onStudentReplied({ businessId, conversationId });
+    if (reply) await onStaffReplied({ businessId, conversationId });
+
+    const { alertIfHot } = await import("@/lib/business/alerts");
+    await alertIfHot({ businessId, conversationId });
+  } catch (e) {
+    console.error("[workflow] post-reply automation failed:", (e as Error)?.message);
+  }
+
   // Structured extras for the widget.
   const { toCards, suggestQuickReplies } = await import("@/lib/business/chat-cards");
   const { planPacing, remainingDelay } = await import("@/lib/business/pacing");

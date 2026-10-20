@@ -120,6 +120,7 @@ export const bizLeads = pgTable(
     nextAction: varchar("next_action", { length: 200 }),
     nextActionAt: timestamp("next_action_at"),
     ignored: boolean("ignored").notNull().default(false),
+    alertedAt: timestamp("alerted_at"),
     ignoreReason: varchar("ignore_reason", { length: 100 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -324,5 +325,63 @@ export const bizOutboundSends = pgTable(
   (t) => [
     index("biz_outbound_conv_idx").on(t.conversationId, t.createdAt),
     index("biz_outbound_status_idx").on(t.businessId, t.status, t.createdAt),
+  ]
+);
+
+// -- WORKFLOW SPINE (0011) ------------------------------------
+export const bizLeadNotes = pgTable(
+  "biz_lead_notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id").notNull(),
+    leadId: uuid("lead_id").notNull(),
+    body: text("body").notNull(),
+    kind: varchar("kind", { length: 20 }).notNull().default("note"),
+    outcome: varchar("outcome", { length: 40 }),
+    authorId: uuid("author_id"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("biz_lead_notes_lead_idx").on(t.leadId, t.createdAt)]
+);
+
+export const bizLeadActivity = pgTable(
+  "biz_lead_activity",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id").notNull(),
+    leadId: uuid("lead_id").notNull(),
+    kind: varchar("kind", { length: 40 }).notNull(),
+    summary: varchar("summary", { length: 300 }).notNull(),
+    detail: jsonb("detail"),
+    actorId: uuid("actor_id"),
+    actorKind: varchar("actor_kind", { length: 20 }).notNull().default("system"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("biz_lead_activity_lead_idx").on(t.leadId, t.createdAt),
+    index("biz_lead_activity_biz_idx").on(t.businessId, t.createdAt),
+  ]
+);
+
+export const bizTasks = pgTable(
+  "biz_tasks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id").notNull(),
+    leadId: uuid("lead_id"),
+    title: varchar("title", { length: 300 }).notNull(),
+    notes: text("notes"),
+    dueAt: timestamp("due_at"),
+    status: varchar("status", { length: 20 }).notNull().default("open"),
+    assignedTo: uuid("assigned_to"),
+    priority: varchar("priority", { length: 20 }).notNull().default("normal"),
+    createdBy: uuid("created_by"),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("biz_tasks_assignee_idx").on(t.businessId, t.status, t.dueAt),
+    index("biz_tasks_lead_idx").on(t.leadId),
   ]
 );
