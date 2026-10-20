@@ -46,6 +46,10 @@ export const bizConversations = pgTable(
     // Added by 0014 - cool-off after a conversation stops being productive.
     restingUntil: timestamp("resting_until"),
     strikeCount: integer("strike_count").notNull().default(0),
+    // Added by 0015 - post-handoff contact follow-up.
+    followupStage: varchar("followup_stage", { length: 20 }),
+    followupDueAt: timestamp("followup_due_at"),
+    followupStageAt: timestamp("followup_stage_at"),
     lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

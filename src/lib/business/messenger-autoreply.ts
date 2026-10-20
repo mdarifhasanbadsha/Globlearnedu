@@ -181,6 +181,32 @@ export async function autoReplyToMessenger(
     console.log("[messenger] genuine question — resumed early");
   }
 
+  // ── the student is answering a follow-up ──
+  // This is a conversation about whether we kept our promise, not a counselling
+  // question, so it is scripted rather than handed to the model.
+  const { handleFollowupAnswer } = await import("@/lib/business/followup-reply");
+  const followupAnswer = await handleFollowupAnswer({
+    businessId,
+    conversationId,
+    visitorId: conv.visitorId,
+    message: burstTextForIntent,
+  });
+  if (followupAnswer) {
+    return {
+      attempted: true,
+      reason: followupAnswer.reason,
+      sent: followupAnswer.sent,
+      batched: burst.length,
+    };
+  }
+
+  // A bare "ok" needs no answer. Saying nothing is what a person does; the four
+  // identical paragraphs in production were every one of them a reply to "Ok".
+  if (intent.intent === "acknowledgement") {
+    console.log("[messenger] acknowledgement — staying quiet");
+    return { attempted: false, reason: "acknowledgement, no reply needed", batched: burst.length };
+  }
+
   if (intent.handled && intent.reply) {
     const strikes = await rest.bumpStrikes(conversationId, intent.intent);
 
@@ -383,10 +409,21 @@ export async function autoReplyToMessenger(
   });
 
   if (wantsHandoff) {
+    // Start the contact follow-up: half an hour from now we ask whether the
+    // team actually called. A promise to call must be checked, not assumed.
+    const { firstDueAt } = await import("@/lib/business/followup-engine");
     await db
       .update(bizConversations)
-      .set({ aiState: "handoff_requested", handoffAt: new Date(), updatedAt: new Date() })
+      .set({
+        aiState: "handoff_requested",
+        handoffAt: new Date(),
+        followupStage: "awaiting_call",
+        followupDueAt: firstDueAt(),
+        followupStageAt: new Date(),
+        updatedAt: new Date(),
+      })
       .where(eq(bizConversations.id, conversationId));
+    console.log("[messenger] follow-up scheduled in 30 minutes");
   }
 
   return {

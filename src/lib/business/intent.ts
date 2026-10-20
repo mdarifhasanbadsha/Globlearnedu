@@ -19,12 +19,24 @@ export type Intent =
   | "greeting"
   | "thanks"
   | "goodbye"
+  | "acknowledgement"
   | "off_topic"
   | "manipulation"
   | "abuse"
   | "self_query"
   | "empty"
   | "genuine";
+
+/**
+ * Bare acknowledgements: "ok", "okay", "alright", "thik ache", "ধন্যবাদ".
+ *
+ * These need NO reply at all. In production every "Ok" produced the same
+ * paragraph about a representative calling tomorrow, four times running. A
+ * person says ok back once, or says nothing — they do not restate the plan.
+ * Answering an acknowledgement is the clearest sign a machine is present.
+ */
+const ACKNOWLEDGEMENT =
+  /^(?:ok+|okay+|o\.?k\.?|k|alright|all\s*right|fine|hmm+|thik\s*(?:ache|ase|hobe|hai)|আচ্ছা|ঠিক\s*আছে|হুম+|ha+n+|yeah|yep|yup|yes|got\s*it|noted|done|thanks|thank\s*you|ধন্যবাদ|ok\s*(?:thanks|vaiya|vai|bhai|bro|sir|আছে)|good|great|nice)[\s!.,।🙂😊👍]*$/i;
 
 export interface Classified {
   intent: Intent;
@@ -161,6 +173,29 @@ export function classifyMessage(raw: string): Classified {
       reason: saidSalam ? "salam greeting" : "greeting",
     };
   }
+  // A bare "ok" is the end of a thought, not a new question. Reply is null so
+  // the caller stays quiet; a person does not answer an acknowledgement, and
+  // answering it is what produced four identical paragraphs in production.
+  // A bare emoji is an acknowledgement too — a thumbs-up needs no answer.
+  const lettersOnly = text.replace(/[\s!.,。\u0964\u3002\p{Emoji}\p{Extended_Pictographic}]/gu, "");
+  if (lettersOnly.length === 0 && text.length > 0) {
+    return {
+      intent: "acknowledgement",
+      handled: true,
+      reply: null,
+      reason: "emoji only",
+    };
+  }
+
+  if (ACKNOWLEDGEMENT.test(text)) {
+    return {
+      intent: "acknowledgement",
+      handled: true,
+      reply: null,
+      reason: "acknowledgement — no reply needed",
+    };
+  }
+
   if (THANKS.test(text)) {
     return {
       intent: "thanks",
