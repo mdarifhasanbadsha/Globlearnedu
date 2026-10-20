@@ -148,47 +148,84 @@ export function knownFacts(history: { direction: string; body: string }[]): Reco
   // "Diploma korbo na ami" has told us they are NOT doing Diploma — reading
   // "diploma" as their choice and answering "তাহলে Diploma" is a
   // misunderstanding that makes them repeat themselves in frustration.
+  //
+  // Within ONE message, a later mention also wins: "age diploma korbo
+  // vabsilam, but CST niye bachelor korbo" ends on bachelor.
+  let rejected: string | null = null;
   for (let i = history.length - 1; i >= 0; i--) {
     const h = history[i];
     if (h.direction !== "in") continue;
 
-    // Negation: "X korbo na", "X lagbe na", "not X", "X chai na".
+    // Negation inside this message: "X korbo na", "not X".
     const negated = h.body.match(
-      /(diploma|ডিপ্লোমা|bachelor|ব্যাচেলর|master'?s?|মাস্টার|phd|পিএইচডি)\s*(?:korte|kore|korbo|lagbe|chai|chai na)?\s*na\b|(?:not|no)\s+(diploma|bachelor|master'?s?|phd)/i
+      /(diploma|ডিপ্লোমা|bachelor|ব্যাচেলর|master'?s?|মাস্টার|phd|পিএইচডি)\s*(?:korte|kore|korbo|lagbe|chai)?\s*na\b|(?:not|no)\s+(diploma|bachelor|master'?s?|phd)/i
     );
     if (negated) {
       const word = (negated[1] ?? negated[2] ?? "").toLowerCase();
-      known.rejected_level = /dip/i.test(word) ? "Diploma" : /bach/i.test(word) ? "Bachelor" : word;
+      rejected = /dip/i.test(word) ? "Diploma" : /bach/i.test(word) ? "Bachelor" : word;
       continue;
     }
 
+    // Take the LAST level mentioned in this message, not the first.
+    let lastLabel: string | null = null;
     for (const [rx, label] of levelPatterns) {
-      if (rx.test(h.body)) {
-        known.degree_level = label;
-        break;
-      }
+      const m = h.body.match(new RegExp(rx.source, "gi"));
+      if (m) lastLabel = label;
     }
-    if (known.degree_level) break;
+    if (lastLabel) {
+      known.degree_level = lastLabel;
+      break;
+    }
+  }
+  if (rejected) {
+    known.rejected_level = rejected;
+    if (known.degree_level === rejected) delete known.degree_level;
   }
 
   // A bare "AI" is the SUBJECT Artificial Intelligence, never the word for
   // this assistant. Treating it as anything else makes the AI ask "which
   // subject?" after the student already said it.
+  //
+  // CST is Computer Science & Technology, the abbreviation students and
+  // Bangladeshi families actually use; missing it loses a whole subject.
   const subjectRe =
-    /\b(artificial intelligence|computer science|software engineering|business administration|\bbusiness\b|civil engineering|mechanical engineering|electrical engineering|engineering|\bmbbs\b|medicine|nursing|pharmacy|\bai\b|architecture|accounting|economics|fashion design)\b|(?:কৃত্রিম বুদ্ধিমত্তা|কম্পিউটার সায়েন্স|ব্যবসায় প্রশাসন|সিভিল ইঞ্জিনিয়ারিং|মেডিসিন|নার্সিং|ফ্যাশন ডিজাইন)/i;
-  for (let i = history.length - 1; i >= 0 && !known.subject_interest; i--) {
+    /\b(artificial intelligence|computer science(?: and technology)?|software engineering|business administration|\bbusiness\b|civil engineering|mechanical engineering|electrical engineering|engineering|\bmbbs\b|medicine|nursing|pharmacy|\bai\b|\bcst\b|\beee\b|\bcse\b|information technology|architecture|accounting|economics|fashion design)\b|(?:কৃত্রিম বুদ্ধিমত্তা|কম্পিউটার সায়েন্স|ব্যবসায় প্রশাসন|সিভিল ইঞ্জিনিয়ারিং|মেডিসিন|নার্সিং|ফ্যাশন ডিজাইন)/i;
+
+  // The most recent subject wins, and a message that announces a change of
+  // mind invalidates everything said before it.
+  const CHANGE_OF_MIND =
+    /(?:notun\s*kore|নতুন\s*করে|notun\s*kotha|আর\s*নতুন|change\s*kor|বদল|poriborton|আগের\s*কথা|ager\s*kotha|vabsilam|ভাবসিলাম|actually|আসলে)/i;
+
+  let cutoff = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
     const h = history[i];
     if (h.direction !== "in") continue;
-    const m = h.body.match(subjectRe);
+    if (CHANGE_OF_MIND.test(h.body)) {
+      // Everything at or before this message is superseded by what follows.
+      cutoff = i;
+      break;
+    }
+  }
+
+  const recent = history.slice(cutoff).filter((h) => h.direction === "in");
+
+  for (let i = recent.length - 1; i >= 0 && !known.subject_interest; i--) {
+    const body = recent[i].body;
+    const m = body.match(subjectRe);
     if (m) {
-      known.subject_interest =
-        m[0].toLowerCase() === "ai" ? "Artificial Intelligence" : m[0];
+      const raw = m[0].toLowerCase();
+      // Expand the abbreviations so the model never has to guess.
+      if (raw === "ai") known.subject_interest = "Artificial Intelligence";
+      else if (raw === "cst") known.subject_interest = "Computer Science and Technology (CST)";
+      else if (raw === "cse") known.subject_interest = "Computer Science and Engineering (CSE)";
+      else if (raw === "eee") known.subject_interest = "Electrical and Electronic Engineering (EEE)";
+      else known.subject_interest = m[0];
       break;
     }
     // A message that is only "AI" (or ends with it) also counts. `\b` fails
     // when Bangla text sits right beside the Latin word, which is exactly
     // what students type.
-    if (/(?:^|[\s,.!?।])ai(?:$|[\s,.!?।])/i.test(h.body.trim())) {
+    if (/(?:^|[\s,.!?।])ai(?:$|[\s,.!?।])/i.test(body.trim())) {
       known.subject_interest = "Artificial Intelligence";
     }
   }

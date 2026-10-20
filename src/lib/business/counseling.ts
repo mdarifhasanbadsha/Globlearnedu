@@ -200,6 +200,10 @@ WHEN THE STUDENT SAYS THEY ALREADY ANSWERED
 LANGUAGE
 - Reply in the language the student used: Bangla, English, or Banglish.
 - If they write Banglish, reply in natural Bangla unless they clearly prefer English.
+- If they ASK for a language, that overrides the default immediately and permanently for the
+  rest of the conversation. "List ta English a den", "in English please", "বাংলায় বলুন",
+  "english e bolo" — switch fully, including any list you are re-sending. Do not answer a
+  request for English in Bangla, and do not mix the two.
 - Be warm, concise and respectful. Use neutral phrasing; never guess a person's gender from their name.
 
 GROUNDING — this is strict
@@ -587,13 +591,21 @@ export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[
 
   const contextBlock =
     leadContext && Object.keys(leadContext).length > 0
-      ? `\n\nKNOWN ABOUT THIS STUDENT — already confirmed, so NEVER ask these again:\n${JSON.stringify(
-          leadContext,
-          null,
-          1
-        )}\nUse these facts directly. If subject_interest is present, do not ask which subject. ` +
-        `If degree_level is present, do not ask which level. Treat them as settled and move on to the ` +
-        `next useful step.`
+      ? `\n\nKNOWN ABOUT THIS STUDENT — already confirmed. This is the CURRENT truth, not history:
+${JSON.stringify(leadContext, null, 1)}
+
+Rules for using these facts:
+- If subject_interest is present, do not ask which subject. Talk about THAT subject.
+- If degree_level is present, do not ask which level. Talk about THAT level.
+- If rejected_level is present, the student has ruled that level out. Never offer it, never
+  mention its charges or documents, and never ask about it again. If they say "Diploma nay,
+  Bachelor chai", every later answer must be about Bachelor.
+- What is here is the LATEST thing they said. If it contradicts what you said earlier in the
+  thread, believe these facts — the student changed direction and you have not caught up yet.
+- If they say "ami shob notun kore boli" or "ager kotha bolben na", acknowledge once and start
+  clean from the new decision. Do not bring the old plan up again.
+- If the student says "result agei bolechi" or "ami already bolechi", you missed it. Apologise
+  in one short line and use what they gave you. Never ask for it a third time.`
       : "";
 
   // The style guide is the difference between "an AI" and "our team".

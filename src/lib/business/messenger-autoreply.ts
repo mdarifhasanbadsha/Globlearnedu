@@ -263,8 +263,17 @@ export async function autoReplyToMessenger(
   const burstText = joinBurst(burst);
 
   // Earlier inbound messages are context, not new questions.
-  const burstIds = new Set(burst.map((b) => b.id));
   const historyBeforeBurst = history.slice(0, Math.max(0, history.length - burst.length));
+
+  // Facts come from the WHOLE conversation, including the message just
+  // received.
+  //
+  // This used to read historyBeforeBurst, so a student who wrote
+  // "ami age diploma korbo vabsilam, but HSC ache tai family bollo CST niye
+  // bachelor koro" had that decision removed from the facts — the model then
+  // answered with the old Diploma plan. A student changing their mind is the
+  // most important fact in the thread, and it must never be the one dropped.
+  const allHistory = [...historyBeforeBurst, ...burst.map((b) => ({ direction: "in", body: b.body }))];
 
   const knowledge = await loadApprovedKnowledge(businessId, burstText);
   const style = await loadActiveStyleGuide(businessId);
@@ -274,9 +283,7 @@ export async function autoReplyToMessenger(
     latestMessage: burstText,
     knowledge,
     styleGuide: style ? formatStyleGuide(style) : null,
-    // Same fact extraction as the web widget, so neither path re-asks a
-    // question the student already answered.
-    leadContext: knownFacts(historyBeforeBurst),
+    leadContext: knownFacts(allHistory),
     recap: conversationRecap(historyBeforeBurst),
   });
 
@@ -326,7 +333,6 @@ export async function autoReplyToMessenger(
         "Do not answer each one separately.",
     });
   }
-  void burstIds;
 
   const result = await deepseekChatWithRetry({
     messages,
