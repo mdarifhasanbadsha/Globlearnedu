@@ -59,6 +59,29 @@ export const MORE_OPTIONS_HINT =
   /আরও|অনেক|বেশি|বাইরে|analysis|analyze|shortlist|team|counselor|counsellor|expert|verify|যাচাই|বিশ্লেষণ|টিম/i;
 
 /**
+ * Promises about when a human will respond. We do not control the
+ * counsellor's schedule, so a specific day or time must never be given.
+ */
+export const TIMED_PROMISE = [
+  /কাল(?!ক)/, // কাল = tomorrow (but not কালক = calculating)
+  /আগামীকাল/,
+  /আজ\s*সন্ধ্যায়/,
+  /সন্ধ্যার\s*মধ্যে/,
+  /১\s*ঘণ্টার\s*মধ্যে/,
+  /এক\s*ঘণ্টার\s*মধ্যে/,
+  /\b(?:tomorrow|tonight|this evening|by tonight)\b/i,
+  /\bwithin\s+(?:an?\s+)?(?:hour|1|one|2|two|30|10|15)\s*(?:minutes?|hours?)?\b/i,
+  /\b(?:at|by)\s+\d{1,2}\s*(?::\d{2})?\s*(?:am|pm|টায়|টার)\b/i,
+  /\b\d{1,2}\s*(?:am|pm)\b/i,
+];
+
+/**
+ * The honest way to set expectations: team busy, contact soon, no clock.
+ */
+export const BUSY_DISCLOSURE =
+  /busy|ব্যস্ত|একটু\s*সময়|অল্প\s*সময়ের\s*মধ্যে|শীঘ্রই|দ্রুত|as\s*soon\s*as\s*possible|soon/i;
+
+/**
  * How to read a grade WITHOUT flattering the student.
  * A GPA of 5 on a 5 scale is normal-to-good, not "amazing".
  */
@@ -212,6 +235,14 @@ export function checkReplyPolicy(
       rule: "missing_more_options",
       detail: "named universities without saying the team has many more",
     });
+  }
+
+  // Promising a human will call on a specific day or at a specific time.
+  // We cannot control the counsellor's schedule, and a missed promise costs
+  // more trust than an honest "soon".
+  const timed = TIMED_PROMISE.find((rx) => rx.test(reply));
+  if (timed) {
+    out.push({ rule: "timed_promise", detail: String(timed) });
   }
 
   // International students take English-taught programmes. Claiming the
