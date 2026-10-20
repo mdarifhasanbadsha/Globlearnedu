@@ -32,6 +32,7 @@ import {
   joinBurst,
   BATCH_QUIET_MS,
   knownFacts,
+  conversationRecap,
 } from "@/lib/business/conversation-flow";
 import { isUsableReply } from "@/lib/business/reply-quality";
 import { and, eq, asc, sql } from "drizzle-orm";
@@ -121,7 +122,7 @@ export async function autoReplyToMessenger(
     .from(bizMessages)
     .where(eq(bizMessages.conversationId, conversationId))
     .orderBy(asc(bizMessages.createdAt))
-    .limit(30);
+    .limit(60);
 
   const burstText = joinBurst(burst);
 
@@ -140,6 +141,7 @@ export async function autoReplyToMessenger(
     // Same fact extraction as the web widget, so neither path re-asks a
     // question the student already answered.
     leadContext: knownFacts(historyBeforeBurst),
+    recap: conversationRecap(historyBeforeBurst),
   });
 
   // Read the quote defensively: the column only exists after the schema

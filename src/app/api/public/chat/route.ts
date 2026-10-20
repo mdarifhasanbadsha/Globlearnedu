@@ -189,7 +189,7 @@ async function handlePost(req: Request) {
     .from(bizMessages)
     .where(eq(bizMessages.conversationId, conversationId))
     .orderBy(asc(bizMessages.createdAt))
-    .limit(40);
+    .limit(60);
 
   const knowledge = await loadApprovedKnowledge(businessId, message);
 
@@ -199,7 +199,7 @@ async function handlePost(req: Request) {
   // What the student has ALREADY told us, read from the transcript. Without
   // this the model re-asks questions it has the answers to — "which subject?"
   // one message after the student named the subject.
-  const { knownFacts } = await import("@/lib/business/conversation-flow");
+  const { knownFacts, conversationRecap } = await import("@/lib/business/conversation-flow");
 
   const messages = buildCounselingMessages({
     history: history.slice(0, -1),
@@ -207,6 +207,7 @@ async function handlePost(req: Request) {
     knowledge,
     styleGuide: style ? formatStyleGuide(style) : null,
     leadContext: knownFacts(history),
+    recap: conversationRecap(history),
   });
 
   // Generous ceiling: the model emits reasoning tokens before the JSON reply.

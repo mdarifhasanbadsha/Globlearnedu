@@ -527,10 +527,12 @@ export interface BuildPromptArgs {
   styleGuide?: string | null;
   /** When the student replied to an older message, quote it here. */
   quotedMessage?: string | null;
+  /** Compressed earlier turns, for threads longer than the history window. */
+  recap?: string | null;
 }
 
 export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[] {
-  const { history, latestMessage, knowledge, leadContext, styleGuide, quotedMessage } = args;
+  const { history, latestMessage, knowledge, leadContext, styleGuide, quotedMessage, recap } = args;
 
   const knowledgeBlock =
     knowledge.length > 0
@@ -557,7 +559,9 @@ export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[
     ? `\n\nTHE STUDENT IS REPLYING TO THIS EARLIER MESSAGE:\n"${quotedMessage.slice(0, 400)}"\nInterpret the question in that context.`
     : "";
 
-  const system = `${BASE_RULES}${styleBlock}${quoteBlock}
+  const recapBlock = recap ? `\n\n${recap}` : "";
+
+  const system = `${BASE_RULES}${styleBlock}${quoteBlock}${recapBlock}
 
 KNOWLEDGE (verified, owner-approved — the ONLY source of program facts):
 ${knowledgeBlock}${contextBlock}
@@ -574,7 +578,7 @@ EXTRACTION RULE — important:
 - Omit fields the student has not clearly provided. Never guess a phone number or name.
 - Only set gpa_value/gpa_scale together. Only set budget_amount when a currency is clear.`;
 
-  const convo: DeepSeekMessage[] = history.slice(-16).map((m) => ({
+  const convo: DeepSeekMessage[] = history.slice(-40).map((m) => ({
     role: (m.direction === "out" ? "assistant" : "user") as "assistant" | "user",
     content: m.body,
   }));

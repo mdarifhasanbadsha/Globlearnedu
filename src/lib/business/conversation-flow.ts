@@ -136,16 +136,38 @@ export function knownFacts(history: { direction: string; body: string }[]): Reco
 
   // Level. Bangla words are matched too — students write "ডিপ্লোমা" far more
   // often than "diploma", and missing it causes the question to be re-asked.
-  if (/diploma|ডিপ্লোমা|ডিপ্লোমাতে|ডিপ্লোমার/i.test(all)) known.degree_level = "Diploma";
-  else if (/master'?s?|মাস্টার্স|মাস্টার/i.test(all)) known.degree_level = "Master's";
-  else if (/\bphd\b|পিএইচডি/i.test(all)) known.degree_level = "PhD";
-  else if (/bachelor|ব্যাচেলর|স্নাতক/i.test(all)) known.degree_level = "Bachelor";
-  else if (/language|ল্যাঙ্গুয়েজ|ভাষা/i.test(all)) known.degree_level = "Chinese Language";
+  // Checked most-specific first so "diploma theke bachelor" reads as Diploma
+  // only when bachelor is not the actual target.
+  const levelPatterns: [RegExp, string][] = [
+    [/phd|পিএইচডি/i, "PhD"],
+    [/master'?s?|মাস্টার্স|মাস্টার/i, "Master's"],
+    [/diploma|ডিপ্লোমা|ডিপ্লোমাতে|ডিপ্লোমার/i, "Diploma"],
+    [/bachelor|ব্যাচেলর|স্নাতক/i, "Bachelor"],
+    [/language|ল্যাঙ্গুয়েজ|ভাষা/i, "Chinese Language"],
+  ];
+  // The LAST level mentioned is usually the current one in a changing thread,
+  // so scan from the end.
+  for (let i = history.length - 1; i >= 0 && !known.degree_level; i--) {
+    const h = history[i];
+    if (h.direction !== "in") continue;
+    for (const [rx, label] of levelPatterns) {
+      if (rx.test(h.body)) {
+        known.degree_level = label;
+        break;
+      }
+    }
+  }
 
-  const subject = all.match(
-    /\b(artificial intelligence|computer science|software engineering|business administration|\bbusiness\b|civil engineering|mechanical engineering|electrical engineering|engineering|\bmbbs\b|medicine|nursing|pharmacy|\bai\b|architecture|accounting|economics|fashion design)\b|(?:কৃত্রিম বুদ্ধিমত্তা|কম্পিউটার সায়েন্স|ব্যবসায় প্রশাসন|সিভিল ইঞ্জিনিয়ারিং|মেডিসিন|নার্সিং|ফ্যাশন ডিজাইন)/i
-  );
-  if (subject) known.subject_interest = subject[0];
+  // The most recent subject mention wins, so a student who changes their mind
+  // is not pinned to their first answer.
+  const subjectRe =
+    /\b(artificial intelligence|computer science|software engineering|business administration|\bbusiness\b|civil engineering|mechanical engineering|electrical engineering|engineering|\bmbbs\b|medicine|nursing|pharmacy|\bai\b|architecture|accounting|economics|fashion design)\b|(?:কৃত্রিম বুদ্ধিমত্তা|কম্পিউটার সায়েন্স|ব্যবসায় প্রশাসন|সিভিল ইঞ্জিনিয়ারিং|মেডিসিন|নার্সিং|ফ্যাশন ডিজাইন)/i;
+  for (let i = history.length - 1; i >= 0 && !known.subject_interest; i--) {
+    const h = history[i];
+    if (h.direction !== "in") continue;
+    const m = h.body.match(subjectRe);
+    if (m) known.subject_interest = m[0];
+  }
 
   // GPA with its scale, in the forms students actually use:
   //   "4.50 er moddhe 5", "3.8/4", "GPA 4.5 out of 5", "4.20"
@@ -166,4 +188,42 @@ export function knownFacts(history: { direction: string; body: string }[]): Reco
   if (intake) known.intake = `${intake[1]} ${intake[2]}`;
 
   return Object.keys(known).length > 0 ? known : null;
+}
+
+/**
+ * A one-line recap of the conversation so far.
+ *
+ * Once a thread passes the history window, the oldest messages are cut and
+ * the model loses the thread of what was discussed. Rather than raising the
+ * window forever — which costs tokens on every message — the earlier turns
+ * are compressed into a short recap that stays cheap.
+ */
+export function conversationRecap(
+  history: { direction: string; body: string }[],
+  keepRecent = 20
+): string | null {
+  if (history.length <= keepRecent) return null;
+
+  const older = history.slice(0, history.length - keepRecent);
+  const asked = older
+    .filter((h) => h.direction === "in")
+    .map((h) => h.body.replace(/\s+/g, " ").trim())
+    .filter((b) => b.length > 1 && !/^\[/.test(b))
+    .slice(-12);
+  const told = older
+    .filter((h) => h.direction === "out")
+    .map((h) => h.body.replace(/\s+/g, " ").trim())
+    .filter((b) => b.length > 1)
+    .slice(-6);
+
+  if (asked.length === 0 && told.length === 0) return null;
+
+  const lines = [
+    "EARLIER IN THIS CONVERSATION (compressed — do not repeat any of it):",
+    asked.length ? `Student asked about: ${asked.map((a) => `"${a.slice(0, 90)}"`).join(", ")}` : "",
+    told.length ? `We already told them: ${told.map((t) => `"${t.slice(0, 80)}"`).join(", ")}` : "",
+    "Do not re-explain these points. Continue from where the conversation actually is.",
+  ].filter(Boolean);
+
+  return lines.join("\n");
 }
