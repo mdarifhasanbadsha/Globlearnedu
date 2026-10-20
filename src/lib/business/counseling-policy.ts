@@ -226,7 +226,13 @@ export interface PolicyViolation {
 
 export function checkReplyPolicy(
   reply: string,
-  opts: { level?: string | null; question?: string | null; allowedUniversities?: string[] | null } = {}
+  opts: {
+    level?: string | null;
+    question?: string | null;
+    allowedUniversities?: string[] | null;
+    /** True once the student has already shared a phone number. */
+    numberAlreadyKnown?: boolean;
+  } = {}
 ): PolicyViolation[] {
   const out: PolicyViolation[] = [];
   const lower = reply.toLowerCase();
@@ -321,6 +327,14 @@ export function checkReplyPolicy(
 
   // Contact details must be exactly ours.
   out.push(...checkContactAccuracy(reply));
+
+  // Repeating "your number is with us" after it was already given reads
+  // like a call-centre script and the student stops reading.
+  const repeatNumber =
+    /আপনার\s*নম্বর(?:টা|টি)?\s*(?:আমাদের\s*কাছে|নিয়ে\s*নিচ্ছি|পেয়ে\s*গেছি)|your\s*number\s*(?:is|has been)\s*(?:with us|noted|saved)/i;
+  if (repeatNumber.test(reply) && opts.numberAlreadyKnown) {
+    out.push({ rule: "repeated_number_mention", detail: "number offered again after being given" });
+  }
 
   return out;
 }
