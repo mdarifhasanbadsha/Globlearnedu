@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { bizConversations, bizMessages, bizAiRuns } from "@/lib/db/schema.business";
 import { bizLeads } from "@/lib/db/schema.business2";
 import { getBusinessId } from "@/lib/business/config";
-import { deepseekChat, isDeepSeekConfigured, estimateCostMicros } from "@/lib/business/deepseek";
+import { deepseekChatWithRetry, isDeepSeekConfigured, estimateCostMicros } from "@/lib/business/deepseek";
 import {
   buildCounselingMessages,
   loadApprovedKnowledge,
@@ -134,11 +134,18 @@ export async function POST(req: Request) {
   });
 
   // Generous ceiling: the model emits reasoning tokens before the JSON reply.
-  const result = await deepseekChat({
+  //
+  // jsonMode is deliberately OFF here. With response_format=json_object the
+  // model intermittently returns whitespace-only content on the 2nd and later
+  // turns (measured 6/6 empty) while putting the whole reply in
+  // reasoning_content. Without it, the same request succeeded 6/6. The prompt
+  // still demands JSON and parseCounselingReply() extracts it from prose.
+  const result = await deepseekChatWithRetry({
     messages,
     maxTokens: 3000,
     timeoutMs: 30_000,
-    jsonMode: true,
+    jsonMode: false,
+    temperature: 0.4,
   });
 
   const started = Date.now();
@@ -151,6 +158,15 @@ export async function POST(req: Request) {
     reply = parsed.reply;
     wantsHandoff = parsed.wantsHumanHandoff;
     extracted = sanitizeExtracted(parsed.extracted);
+  }
+
+  // A visitor must never be left with an empty bubble. If the provider
+  // failed after retries, say so plainly and hand off to a human.
+  if (!reply) {
+    reply =
+      "Sorry — I couldn't put an answer together just now. " +
+      "Please try again in a moment, or share your WhatsApp number and our counselor will reply.";
+    wantsHandoff = true;
   }
 
   // Log usage honestly (cost unknown when prices are unset).
