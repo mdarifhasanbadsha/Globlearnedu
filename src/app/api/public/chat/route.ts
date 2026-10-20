@@ -108,6 +108,21 @@ async function handlePost(req: Request) {
   const { classifyMessage } = await import("@/lib/business/intent");
   const intent = classifyMessage(message);
 
+  // A bare "ok" gets no reply. The widget shows nothing, which is exactly what
+  // a person does. Without this the message fell through to the model and came
+  // back with a paragraph restating the plan.
+  if (intent.intent === "acknowledgement") {
+    return NextResponse.json({
+      token: isValidGuestToken(payload?.token) ? payload.token : "",
+      reply: null,
+      aiEnabled: true,
+      intent: "acknowledgement",
+      cards: [],
+      quickReplies: [],
+      typingMs: 0,
+    });
+  }
+
   if (intent.handled && intent.reply) {
     return NextResponse.json({
       token: isValidGuestToken(payload?.token) ? payload.token : "",
