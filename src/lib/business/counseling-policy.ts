@@ -216,7 +216,15 @@ export function checkReplyPolicy(
   }
 
   // Bullet lists read like a brochure, not a chat.
-  if (/^\s*[-•*]\s+/m.test(reply) || /^\s*\d+\.\s+/m.test(reply)) {
+  // A numbered list is CORRECT when the student asked for a checklist.
+  // It is only wrong when they were simply chatting.
+  const askedForList =
+    /document|requirement|checklist|কি কি|কী কী|ডকুমেন্ট|কাগজ|কাগজপত্র|তালিকা|paper/i.test(
+      opts.question ?? ""
+    );
+  // `\d` does not match Bangla numerals, so the range is explicit.
+  const hasListLine = /^\s*(?:[-•*]|[\d\u09E6-\u09EF]+[.)])\s+/m.test(reply);
+  if (!askedForList && hasListLine) {
     out.push({ rule: "bullet_list", detail: "reply is a list, not a chat message" });
   }
 
