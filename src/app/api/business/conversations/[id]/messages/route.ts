@@ -71,7 +71,12 @@ export async function POST(
   }
 
   const [conv] = await db
-    .select({ id: bizConversations.id, aiState: bizConversations.aiState })
+    .select({
+      id: bizConversations.id,
+      aiState: bizConversations.aiState,
+      channel: bizConversations.channel,
+      visitorId: bizConversations.visitorId,
+    })
     .from(bizConversations)
     .where(and(eq(bizConversations.businessId, businessId), eq(bizConversations.id, id)))
     .limit(1);
@@ -79,14 +84,45 @@ export async function POST(
   if (!conv) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
 
   // 1. Persist the staff message first — the reply must never depend on AI success.
-  await db.insert(bizMessages).values({
-    businessId,
-    conversationId: id,
-    direction: "out",
-    authorKind: "staff",
-    authorId: guard.userId,
-    body,
-  });
+  const [saved] = await db
+    .insert(bizMessages)
+    .values({
+      businessId,
+      conversationId: id,
+      direction: "out",
+      authorKind: "staff",
+      authorId: guard.userId,
+      body,
+    })
+    .returning({ id: bizMessages.id });
+
+  // 1b. Actually deliver it when this is a Messenger thread.
+  // A saved-but-undelivered message is worse than an error, so the
+  // delivery result is reported back to the inbox.
+  let delivery: {
+    channel: string;
+    status: string;
+    note?: string;
+  } = { channel: conv.channel, status: "stored" };
+
+  if (conv.channel === "messenger") {
+    const { sendMessengerText } = await import("@/lib/business/messenger-send");
+    const result = await sendMessengerText({
+      businessId,
+      conversationId: id,
+      recipientId: conv.visitorId,
+      body,
+      messageId: saved?.id,
+    });
+
+    delivery = {
+      channel: "messenger",
+      status: result.status,
+      note: result.ok
+        ? undefined
+        : (result.skipped ?? result.errorMessage ?? "Delivery failed"),
+    };
+  }
 
   let aiError: string | null = null;
 
@@ -141,5 +177,6 @@ export async function POST(
   return NextResponse.json({
     messages: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
     aiError,
+    delivery,
   });
 }

@@ -144,6 +144,16 @@ export default function InboxClient({
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error ?? "Send failed");
       setMessages(json.messages ?? []);
+
+      // A saved message that never reached Messenger must not look sent.
+      const d = json.delivery as { channel: string; status: string; note?: string } | undefined;
+      if (d && d.channel === "messenger" && d.status !== "sent") {
+        setError(
+          d.status === "deferred"
+            ? `Saved, but not delivered: ${d.note ?? "outside Meta's 24-hour window"}. An approved template is required.`
+            : `Saved, but Messenger delivery failed: ${d.note ?? d.status}`
+        );
+      }
       void refreshList();
     } catch (e: any) {
       setError(e.message ?? "Send failed");

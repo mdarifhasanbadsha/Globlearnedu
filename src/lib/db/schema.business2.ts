@@ -299,3 +299,30 @@ export const bizTestFindings = pgTable(
   },
   (t) => [index("biz_test_findings_biz_idx").on(t.businessId, t.verdict, t.createdAt)]
 );
+
+// -- OUTBOUND SENDS (0009) ------------------------------------
+export const bizOutboundSends = pgTable(
+  "biz_outbound_sends",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id").notNull(),
+    conversationId: uuid("conversation_id"),
+    messageId: uuid("message_id"),
+    channel: varchar("channel", { length: 30 }).notNull(),
+    recipientId: varchar("recipient_id", { length: 200 }).notNull(),
+    body: text("body").notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    providerId: varchar("provider_id", { length: 200 }),
+    errorCode: varchar("error_code", { length: 50 }),
+    errorMessage: text("error_message"),
+    deferredReason: varchar("deferred_reason", { length: 80 }),
+    attempts: integer("attempts").notNull().default(0),
+    sentAt: timestamp("sent_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("biz_outbound_conv_idx").on(t.conversationId, t.createdAt),
+    index("biz_outbound_status_idx").on(t.businessId, t.status, t.createdAt),
+  ]
+);

@@ -171,8 +171,29 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
 
         await db
           .update(bizConversations)
-          .set({ lastMessageAt: new Date(), updatedAt: new Date(), status: "open" })
+          .set({
+            lastMessageAt: new Date(),
+            // Opens Meta's 24-hour free-messaging window.
+            lastInboundAt: new Date(),
+            updatedAt: new Date(),
+            status: "open",
+          })
           .where(eq(bizConversations.id, convId));
+
+        // Reply automatically when the AI still owns the thread. This only
+        // runs for live webhook traffic; the history import calls its own
+        // path so thousands of old messages never trigger replies.
+        if (process.env.META_AUTOREPLY !== "off") {
+          try {
+            const { autoReplyToMessenger } = await import("@/lib/business/messenger-autoreply");
+            const outcome = await autoReplyToMessenger(convId);
+            console.log(
+              `[messenger] auto-reply ${outcome.sent ? "sent" : "skipped"}: ${outcome.reason}`
+            );
+          } catch (e) {
+            console.error("[messenger] auto-reply crashed:", (e as Error)?.message);
+          }
+        }
 
         stored++;
         continue;

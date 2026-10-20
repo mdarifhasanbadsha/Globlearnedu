@@ -29,6 +29,8 @@ export const bizConversations = pgTable(
     leadId: uuid("lead_id"),
     handoffAt: timestamp("handoff_at"),
     visitorName: varchar("visitor_name", { length: 200 }),
+    // Added by 0010 — drives Meta's 24-hour messaging window.
+    lastInboundAt: timestamp("last_inbound_at"),
     lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
