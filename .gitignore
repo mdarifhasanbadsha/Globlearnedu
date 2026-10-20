@@ -13,3 +13,4 @@ yarn-error.log*
 data/*.json
 scratch_pages
 scratch_voice/
+ui_*.png

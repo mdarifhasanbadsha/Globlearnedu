@@ -49,7 +49,9 @@ export default function KnowledgeClient() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-  const [filter, setFilter] = useState<"draft" | "approved" | "issues" | "all">("draft");
+  // Default to "all" so an owner who just approved data sees it, not an empty tab.
+  const [filter, setFilter] = useState<"all" | "approved" | "draft" | "issues">("all");
+  const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<Entry | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
@@ -165,10 +167,21 @@ export default function KnowledgeClient() {
     }
   }
 
+  const q = query.trim().toLowerCase();
   const shown = entries.filter((e) => {
-    if (filter === "all") return true;
-    if (filter === "issues") return e.issues.length > 0;
-    return e.status === filter;
+    if (filter !== "all") {
+      if (filter === "issues") {
+        if (e.issues.length === 0) return false;
+      } else if (e.status !== filter) {
+        return false;
+      }
+    }
+    if (!q) return true;
+    return (
+      (e.universityName ?? "").toLowerCase().includes(q) ||
+      (e.city ?? "").toLowerCase().includes(q) ||
+      (e.programName ?? "").toLowerCase().includes(q)
+    );
   });
 
   const draftCount = entries.filter((e) => e.status === "draft").length;
@@ -178,7 +191,7 @@ export default function KnowledgeClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#1B3A6B]">Knowledge</h1>
+        <h1 className="text-2xl font-bold text-[#0F2A52]">Universities</h1>
         <p className="text-sm text-slate-600 mt-1">
           Upload brochures and photos. The AI extracts program details as drafts — nothing is
           used in student conversations until you approve it.
@@ -222,32 +235,53 @@ export default function KnowledgeClient() {
       </section>
 
       <section className="bg-white rounded-xl border border-slate-200">
-        <div className="px-4 py-3 border-b border-slate-200 flex flex-wrap items-center gap-2 justify-between">
-          <h2 className="font-semibold text-[#1B3A6B] text-sm">
-            Extracted programs
-            <span className="ml-2 text-xs font-normal text-slate-500">
-              {draftCount} draft · {approvedCount} approved
-              {issueCount > 0 && <span className="text-amber-700"> · {issueCount} need review</span>}
-            </span>
-          </h2>
-          <div className="flex gap-1">
-            {(["draft", "approved", "issues", "all"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize ${
-                  filter === f ? "bg-[#1B3A6B] text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
+        <div className="px-4 py-3 border-b border-slate-200 space-y-3">
+          <div className="flex flex-wrap items-center gap-2 justify-between">
+            <h2 className="font-semibold text-[#0F2A52] text-sm">
+              Universities
+              <span className="ml-2 text-xs font-normal text-slate-500">
+                {approvedCount} live · {draftCount} draft
+                {issueCount > 0 && (
+                  <span className="text-amber-700"> · {issueCount} need review</span>
+                )}
+              </span>
+            </h2>
+            <div className="flex gap-1">
+              {(["all", "approved", "draft", "issues"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  aria-pressed={filter === f}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize ${
+                    filter === f
+                      ? "bg-[#0F2A52] text-white"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  {f === "all" ? "All" : f}
+                </button>
+              ))}
+            </div>
           </div>
+          <input
+            value={query}
+            onChange={(ev) => setQuery(ev.target.value)}
+            placeholder="Search by university, city or program…"
+            aria-label="Search universities"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#29ABE2]"
+          />
         </div>
 
         {shown.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-sm text-slate-600">Nothing here.</p>
+            <p className="text-sm font-medium text-slate-700">
+              {entries.length === 0 ? "No universities yet." : "No universities match."}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              {entries.length === 0
+                ? "Upload a brochure above and the AI will extract the details."
+                : "Try a different search, or switch the filter."}
+            </p>
           </div>
         ) : (
           <ul className="divide-y divide-slate-100">
