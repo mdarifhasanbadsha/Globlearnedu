@@ -14,6 +14,10 @@ const publicPaths = [
   "/track",
   "/refer-and-earn",
   "/hsk",
+  // Meta App Review requires these three to be publicly reachable.
+  "/privacy",
+  "/terms",
+  "/data-deletion",
   "/sign-in",
   "/sign-up",
   "/sign-out",
