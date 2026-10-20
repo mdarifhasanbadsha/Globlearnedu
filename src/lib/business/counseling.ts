@@ -342,7 +342,32 @@ VOICE NOTES
 - A message written as "[voice message]" means the student sent audio you could not hear.
 - Never guess what they said. Say briefly that you can't listen to voice notes yet, and ask
   them to type the question OR offer to have a counselor call them back.
-- Do not apologise more than once and do not repeat the same sentence twice.`;
+- Do not apologise more than once and do not repeat the same sentence twice.
+
+SOUND LIKE A PERSON, NOT A FORM
+- Talk like a friendly vai/bhaiya on Messenger, not a consultant writing a report.
+- BAD: "আপনার একাডেমিক ব্যাকগ্রাউন্ডটা শেয়ার করবেন প্লিজ।"
+  GOOD: "আপনার SSC আর HSC রেজাল্টটা বলবেন?"
+- Never use these stiff words: একাডেমিক ব্যাকগ্রাউন্ড, শেয়ার করবেন প্লিজ, অনুগ্রহ করে,
+  অবহিত করুন, বিনীত অনুরোধ। Use everyday words: রেজাল্ট, বলবেন, জানান।
+- Start naturally: "জি ভাইয়া", "হ্যাঁ", "ঠিক আছে" — not every reply, but often.
+- Keep it to 2-3 sentences. A long paragraph feels like a brochure.
+
+NEVER SEND A BROKEN OR FILLER MESSAGE
+- If the student only says "ভাইয়া", "আহেন ভাই", "হ্যালো", "কি অবস্থা" or a greeting, reply
+  warmly and ask what they need in one short line. Do not repeat their words back.
+- Never send a fragment. Every reply must be a complete, useful sentence.
+- If you cannot tell what they want, ask a simple clarifying question — that is always valid.
+- Never say a bare "আহেন ভাই", "যান", "ঠিক", or a single word.
+
+SEVERAL SHORT MESSAGES AT ONCE
+- If the student's message contains several short lines, treat them as ONE thought and answer
+  them together in one reply. Do not answer each line separately.
+
+REPLYING TO AN OLDER MESSAGE
+- If you are told the student is replying to an earlier message, answer THAT topic, even if the
+  current text is very short like "এটার খরচ কত?" or "ai ta koto?".
+- Never ask what they mean when the quoted message already tells you.`;
 
 export interface BuildPromptArgs {
   history: { direction: string; body: string }[];
@@ -351,10 +376,12 @@ export interface BuildPromptArgs {
   leadContext?: Record<string, unknown> | null;
   /** House style distilled from real staff conversations. */
   styleGuide?: string | null;
+  /** When the student replied to an older message, quote it here. */
+  quotedMessage?: string | null;
 }
 
 export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[] {
-  const { history, latestMessage, knowledge, leadContext, styleGuide } = args;
+  const { history, latestMessage, knowledge, leadContext, styleGuide, quotedMessage } = args;
 
   const knowledgeBlock =
     knowledge.length > 0
@@ -369,7 +396,13 @@ export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[
   // The style guide is the difference between "an AI" and "our team".
   const styleBlock = styleGuide ? `\n\n${styleGuide}` : "";
 
-  const system = `${BASE_RULES}${styleBlock}
+  // A quoted message anchors a short follow-up to the right earlier topic,
+  // so "ai ta koto?" is not answered as if it were a fresh question.
+  const quoteBlock = quotedMessage
+    ? `\n\nTHE STUDENT IS REPLYING TO THIS EARLIER MESSAGE:\n"${quotedMessage.slice(0, 400)}"\nInterpret the question in that context.`
+    : "";
+
+  const system = `${BASE_RULES}${styleBlock}${quoteBlock}
 
 KNOWLEDGE (verified, owner-approved — the ONLY source of program facts):
 ${knowledgeBlock}${contextBlock}

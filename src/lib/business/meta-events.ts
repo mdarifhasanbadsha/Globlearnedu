@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 import { bizConversations, bizMessages } from "@/lib/db/schema.business";
 import { getBusinessId } from "@/lib/business/config";
 import { VOICE_PLACEHOLDER } from "@/lib/business/voice";
+import { quotedFromEvent } from "@/lib/business/conversation-flow";
 import { and, eq, desc, gte } from "drizzle-orm";
 
 interface MetaMessage {
@@ -206,7 +207,12 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
         // Everything a student message must trigger: identity, auto-reply
         // and pipeline movement. Shared with the postback branch so a
         // button tap is never silently left unanswered.
-        await afterInbound({ businessId, conversationId: convId, psid });
+        await afterInbound({
+          businessId,
+          conversationId: convId,
+          psid,
+          quoted: quotedFromEvent(ev)?.text ?? null,
+        });
 
         stored++;
         continue;
@@ -262,8 +268,26 @@ async function afterInbound(args: {
   businessId: string;
   conversationId: string;
   psid: string;
+  /** The earlier message this one replies to, if any. */
+  quoted?: string | null;
 }): Promise<void> {
   const { businessId, conversationId, psid } = args;
+
+  // Remember the quote so the settled (batched) reply can use it too.
+  if (args.quoted) {
+    try {
+      await db
+        .update(bizConversations)
+        .set({
+          pendingQuote: args.quoted.slice(0, 400),
+          pendingQuoteAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(bizConversations.id, conversationId));
+    } catch {
+      /* the reply still works without the quote */
+    }
+  }
 
   // 1. Identity: name and photo, retried until we have a name.
   try {
@@ -283,13 +307,39 @@ async function afterInbound(args: {
   }
 
   // 2. Auto-reply, if the AI still owns the thread.
+  //
+  // A student often sends several short messages in a few seconds. We show
+  // the typing indicator immediately (so they know we are there), then wait
+  // for them to stop before answering the whole burst as one turn.
   if (process.env.META_AUTOREPLY !== "off") {
     try {
+      const { sendTypingOn, BATCH_QUIET_MS } = await import("@/lib/business/conversation-flow");
       const { autoReplyToMessenger } = await import("@/lib/business/messenger-autoreply");
-      const outcome = await autoReplyToMessenger(conversationId);
-      console.log(
-        `[messenger] auto-reply ${outcome.sent ? "sent" : "skipped"}: ${outcome.reason}`
-      );
+
+      // Immediate feedback: "typing…" appears while they are still typing.
+      await sendTypingOn(psid);
+
+      const first = await autoReplyToMessenger(conversationId, { waitForQuiet: false });
+      if (first.attempted) {
+        console.log(`[messenger] auto-reply ${first.sent ? "sent" : "skipped"}: ${first.reason}`);
+      } else if (first.reason === "student still typing") {
+        // Let the burst settle, then answer once. waitUntil keeps the
+        // Worker alive after the HTTP response so Meta does not retry.
+        const settle = (async () => {
+          await new Promise((r) => setTimeout(r, BATCH_QUIET_MS + 1500));
+          const outcome = await autoReplyToMessenger(conversationId, { waitForQuiet: true });
+          console.log(
+            `[messenger] batched reply ${outcome.sent ? "sent" : "skipped"}: ${outcome.reason} ` +
+              `(${outcome.batched ?? 0} messages)`
+          );
+        })();
+
+        const exec = (globalThis as any).ctx?.waitUntil;
+        if (typeof exec === "function") exec.call((globalThis as any).ctx, settle);
+        else void settle;
+      } else {
+        console.log(`[messenger] auto-reply skipped: ${first.reason}`);
+      }
     } catch (e) {
       console.error("[messenger] auto-reply crashed:", (e as Error)?.message);
     }

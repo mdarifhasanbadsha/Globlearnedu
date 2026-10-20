@@ -40,6 +40,9 @@ export const bizConversations = pgTable(
     sourceAdId: varchar("source_ad_id", { length: 100 }),
     sourcePostId: varchar("source_post_id", { length: 100 }),
     sourceUrl: text("source_url"),
+    // Added by 0013 — quoted-message context for the batched reply.
+    pendingQuote: text("pending_quote"),
+    pendingQuoteAt: timestamp("pending_quote_at"),
     lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
