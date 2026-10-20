@@ -13,7 +13,7 @@ import { db } from "@/lib/db";
 import { bizConversations, bizMessages } from "@/lib/db/schema.business";
 import { getBusinessId } from "@/lib/business/config";
 import { VOICE_PLACEHOLDER } from "@/lib/business/voice";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, gte } from "drizzle-orm";
 
 interface MetaMessage {
   mid?: string;
@@ -117,17 +117,36 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
         if (isEcho) {
           const convId = await conversationForPsid(businessId, ev.recipient?.id ?? psid);
           const body = msg.text ?? "";
-          // Skip empty echoes (e.g. pure attachments already logged on send).
+
+          // We already stored this message when we sent it, so Meta echoing
+          // it back must not create a second bubble in the thread. Match on
+          // the text within the last few minutes.
           if (body.trim().length > 0) {
-            await storeMessage({
-              businessId,
-              conversationId: convId,
-              direction: "out",
-              authorKind: "staff",
-              body,
-              meta: { source: "messenger_echo", mid: msg.mid ?? null },
-            });
-            stored++;
+            const since = new Date(Date.now() - 5 * 60 * 1000);
+            const [dupe] = await db
+              .select({ id: bizMessages.id })
+              .from(bizMessages)
+              .where(
+                and(
+                  eq(bizMessages.conversationId, convId),
+                  eq(bizMessages.direction, "out"),
+                  eq(bizMessages.body, body),
+                  gte(bizMessages.createdAt, since)
+                )
+              )
+              .limit(1);
+
+            if (!dupe) {
+              await storeMessage({
+                businessId,
+                conversationId: convId,
+                direction: "out",
+                authorKind: "staff",
+                body,
+                meta: { source: "messenger_echo", mid: msg.mid ?? null },
+              });
+              stored++;
+            }
           }
           continue;
         }

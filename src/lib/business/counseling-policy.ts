@@ -175,5 +175,18 @@ export function checkReplyPolicy(
     out.push({ rule: "bullet_list", detail: "reply is a list, not a chat message" });
   }
 
+  // International students take English-taught programmes. Claiming the
+  // subject is taught in Chinese, or that a Chinese foundation year comes
+  // first, is wrong and scares students off.
+  const chineseMedium =
+    /(most|many|usually|generally)\s+universities\s+teach[^.]*in\s+chinese/i.test(reply) ||
+    /teach(es)?\s+(it|this|the subject)\s+in\s+chinese/i.test(reply) ||
+    /\b(chinese[- ]medium|chinese-taught)\s+(is\s+)?(required|necessary|mandatory)/i.test(reply) ||
+    /চীনা?\s*ভাষায়\s*(পড়া|পড়ানো|পড়াশোনা)\s*(লাগবে|প্রয়োজন|বাধ্যতামূলক)/.test(reply) ||
+    /(বেশিরভাগ|অধিকাংশ)\s*বিশ্ববিদ্যালয়ে?\s*চীনা/.test(reply);
+  if (chineseMedium) {
+    out.push({ rule: "chinese_medium_claim", detail: "implied Chinese-taught is the norm" });
+  }
+
   return out;
 }
