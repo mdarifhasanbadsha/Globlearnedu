@@ -74,6 +74,20 @@ export async function GET(req: Request) {
 
 // POST /api/public/chat — start a conversation or send a message.
 export async function POST(req: Request) {
+  try {
+    return await handlePost(req);
+  } catch (e: any) {
+    // Surface the reason instead of an opaque 500. This route is public, so
+    // only the message is exposed, never a stack trace or env value.
+    console.error("[chat] unhandled:", e?.message);
+    return NextResponse.json(
+      { error: "Chat failed", detail: String(e?.message ?? e).slice(0, 300) },
+      { status: 500 }
+    );
+  }
+}
+
+async function handlePost(req: Request) {
   let payload: any;
   try {
     payload = await req.json();
