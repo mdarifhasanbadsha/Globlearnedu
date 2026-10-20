@@ -20,6 +20,8 @@ export interface StyleGuide {
   followupPhrases: string[];
   avoidPhrases: string[];
   languageMix: string;
+  /** Owner-typed instruction. Applied last so it always wins. */
+  customRules: string | null;
 }
 
 /** Pull recent staff-authored replies across all channels as style samples. */
@@ -65,6 +67,7 @@ export async function loadActiveStyleGuide(businessId: string): Promise<StyleGui
     followupPhrases: (row.followupPhrases as string[]) ?? [],
     avoidPhrases: (row.avoidPhrases as string[]) ?? [],
     languageMix: row.languageMix ?? "",
+    customRules: row.customRules ?? null,
   };
 }
 
@@ -82,5 +85,11 @@ export function formatStyleGuide(g: StyleGuide): string {
     "Write like a human counselor, not a brochure: short sentences, no bullet-list walls, " +
       "no corporate filler. Match the student's language and script."
   );
+  // Owner instructions come last and take precedence over everything above.
+  if (g.customRules && g.customRules.trim().length > 0) {
+    lines.push("");
+    lines.push("OWNER INSTRUCTIONS (highest priority — follow these over the guidance above):");
+    lines.push(g.customRules.trim());
+  }
   return lines.join("\n");
 }

@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function StylePage() {
   const businessId = getBusinessId();
 
+  // Prefer the live guide; fall back to the newest draft.
   const rows = await db
     .select()
     .from(bizStyleGuides)
@@ -17,23 +18,33 @@ export default async function StylePage() {
     .orderBy(desc(bizStyleGuides.updatedAt))
     .limit(10);
 
+  const active =
+    rows.find((r) => r.status === "approved") ?? rows.find((r) => r.status === "draft") ?? null;
+
   const samples = await sampleStaffReplies(businessId, 8);
 
   return (
     <StyleClient
-      guides={rows.map((r) => ({
-        id: r.id,
-        summary: r.summary,
-        tone: (r.tone as string[]) ?? [],
-        greetingPatterns: (r.greetingPatterns as string[]) ?? [],
-        pricingPhrases: (r.pricingPhrases as string[]) ?? [],
-        followupPhrases: (r.followupPhrases as string[]) ?? [],
-        avoidPhrases: (r.avoidPhrases as string[]) ?? [],
-        languageMix: r.languageMix,
-        sampleCount: r.sampleCount,
-        status: r.status,
-        updatedAt: r.updatedAt.toISOString(),
-      }))}
+      guide={
+        active
+          ? {
+              id: active.id,
+              summary: active.summary,
+              tone: (active.tone as string[]) ?? [],
+              greetingPatterns: (active.greetingPatterns as string[]) ?? [],
+              pricingPhrases: (active.pricingPhrases as string[]) ?? [],
+              followupPhrases: (active.followupPhrases as string[]) ?? [],
+              avoidPhrases: (active.avoidPhrases as string[]) ?? [],
+              languageMix: active.languageMix,
+              customRules: active.customRules,
+              sampleCount: active.sampleCount,
+              status: active.status,
+              version: active.version,
+              editedByOwner: active.editedByOwner,
+              updatedAt: active.updatedAt.toISOString(),
+            }
+          : null
+      }
       samples={samples.map((s) => ({ body: s.body, channel: s.channel }))}
     />
   );

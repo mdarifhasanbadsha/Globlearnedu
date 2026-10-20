@@ -75,6 +75,7 @@ export default function LabClient({
   const [grading, setGrading] = useState<{ q: string; a: string } | null>(null);
   const [expected, setExpected] = useState("");
   const [note, setNote] = useState("");
+  const [teachMsg, setTeachMsg] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const active = sessions.find((s) => s.id === activeId) ?? null;
@@ -157,6 +158,7 @@ export default function LabClient({
   async function grade(verdict: string) {
     if (!grading || !activeId) return;
     setBusy(true);
+    setTeachMsg(null);
     try {
       const res = await fetch("/api/business/lab/findings", {
         method: "POST",
@@ -171,12 +173,31 @@ export default function LabClient({
         }),
       });
       if (!res.ok) throw new Error((await res.json())?.error ?? "Failed");
+
+      // If the owner stated what it should say, offer to teach it now.
+      if (expected.trim().length > 0) {
+        const list = await fetch("/api/business/lab", { cache: "no-store" });
+        const lj = await list.json();
+        setFindings(lj.findings ?? []);
+        const newest = (lj.findings ?? [])[0];
+        if (newest) {
+          const t = await fetch("/api/business/lab/teach", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ findingId: newest.id }),
+          });
+          const tj = await t.json();
+          setTeachMsg(t.ok ? tj.note : (tj.error ?? "Could not teach this yet."));
+        }
+      } else {
+        const list = await fetch("/api/business/lab", { cache: "no-store" });
+        const lj = await list.json();
+        setFindings(lj.findings ?? []);
+      }
+
       setGrading(null);
       setExpected("");
       setNote("");
-      const list = await fetch("/api/business/lab", { cache: "no-store" });
-      const lj = await list.json();
-      setFindings(lj.findings ?? []);
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -212,6 +233,15 @@ export default function LabClient({
       {err && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {err}
+        </div>
+      )}
+
+      {teachMsg && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 flex items-start justify-between gap-3">
+          <span>{teachMsg}</span>
+          <button onClick={() => setTeachMsg(null)} className="text-emerald-700 shrink-0" aria-label="Dismiss">
+            ×
+          </button>
         </div>
       )}
 
@@ -424,7 +454,7 @@ export default function LabClient({
               <input
                 value={expected}
                 onChange={(e) => setExpected(e.target.value)}
-                placeholder="What should it have said? (optional)"
+                placeholder="What should it have said? Filling this teaches your brand voice."
                 className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs"
               />
               <input
