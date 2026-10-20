@@ -72,6 +72,36 @@ export function checkDocumentList(reply: string): PolicyViolation[] {
   return out;
 }
 
+/**
+ * A counsellor does not introduce themselves as software. Saying "I am an
+ * AI" ends the illusion of a conversation and reads as a helpdesk bot.
+ * This checks the shop window, not the ethics: if asked directly whether
+ * they are human, the AI still answers honestly.
+ */
+export function checkSelfReveal(reply: string, question?: string | null): PolicyViolation[] {
+  const out: PolicyViolation[] = [];
+
+  const askedIfHuman = /(?:are you|are u|tu?mi)\s*(?:a\s*)?(?:human|manush|রোবট|robot)|মানুষ তো|তুমি কি মানুষ/i.test(
+    question ?? ""
+  );
+
+  // Only flag unprompted self-description as software.
+  if (!askedIfHuman) {
+    const reveal =
+      /আমি (?:একটি|একটা)?\s*(?:AI|এআই|রোবট|বট|চ্যাটবট|ভার্চুয়াল)|as an AI|I am an AI|I'm an AI|I am a bot|I'm a bot|language model|কৃত্রিম বুদ্ধিমত্তা হিসেবে|আমি শুধু একটা প্রোগ্রাম/i;
+    const m = reply.match(reveal);
+    if (m) out.push({ rule: "self_reveal", detail: m[0] });
+  }
+
+  // Referring to instructions the student cannot see.
+  const meta =
+    /(?:আমার|আমাকে)\s*(?:যে )?(?:নির্দেশনা|নিয়ম|গাইডলাইন|ইনস্ট্রাকশন)|(?:my|the)\s+(?:instructions|guidelines|system prompt)|KNOWLEDGE block/i;
+  const mm = reply.match(meta);
+  if (mm) out.push({ rule: "meta_reference", detail: mm[0] });
+
+  return out;
+}
+
 /** Naming universities must come with "there are many more" framing. */
 export const MORE_OPTIONS_HINT =
   /আরও|অনেক|বেশি|বাইরে|analysis|analyze|shortlist|team|counselor|counsellor|expert|verify|যাচাই|বিশ্লেষণ|টিম/i;
@@ -345,6 +375,7 @@ export function checkReplyPolicy(
 
   // Contact details must be exactly ours.
   out.push(...checkContactAccuracy(reply));
+  out.push(...checkSelfReveal(reply, opts.question));
   out.push(...checkDocumentList(reply));
 
   // Repeating "your number is with us" after it was already given reads
