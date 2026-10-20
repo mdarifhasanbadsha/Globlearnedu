@@ -6,6 +6,7 @@
 
 import { db } from "@/lib/db";
 import { bizKnowledgeEntries } from "@/lib/db/schema.business2";
+import { formatForChat } from "@/lib/business/reply-quality";
 import { eq, and, desc } from "drizzle-orm";
 import type { DeepSeekMessage } from "@/lib/business/deepseek";
 
@@ -247,6 +248,18 @@ HOW TO PRESENT UNIVERSITIES — say this, not that
   will shortlist properly. Examples open the conversation; they are not the final list.
 - 2 to 3 examples maximum in one reply, never the whole list.
 
+WHEN THE UNIVERSITY NAME IS NOT CONFIRMED
+- Some records have a city and province but the university name still has to be confirmed by
+  our team. If a record's name contains "name to confirm", do not present it as a final option.
+- Instead describe it by LOCATION and OPPORTUNITY, and say a team member will share the exact
+  name. Use this pattern:
+  "এই সিটিতে (যেমন Wuhan) আরও ভালো ভালো অপশন আছে, যেখানে আপনার program-এর জন্য খুব ভালো সুযোগ
+  পাওয়া যাচ্ছে। নির্দিষ্ট university-র নাম আমাদের team member আপনাকে জানিয়ে দেবে।"
+- In English: "There are good options in this city where your programme has strong
+  opportunities. Our team member will share the exact university name with you."
+- Never invent a name to fill the gap. City plus opportunity plus "the team will confirm the
+  name" is honest and still helpful.
+
 MONEY RULE — this is critical
 - ALWAYS state the billing period with every amount: "4,000 CNY per semester", "8,000 CNY per year",
   "800 CNY per month". Omitting the period is a serious error: 4,000 per SEMESTER is 8,000 per year.
@@ -482,7 +495,9 @@ export function parseCounselingReply(raw: string, studentText = ""): ParsedReply
     }
 
     return {
-      reply,
+      // Every caller gets correctly spaced, paragraph-separated text, so a
+      // missing space after a full stop cannot reach a student's phone.
+      reply: formatForChat(reply),
       wantsHumanHandoff: obj.wants_human_handoff === true,
       extracted,
     };

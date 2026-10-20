@@ -86,3 +86,51 @@ export function softenBangla(reply: string): string {
   for (const [rx, to] of STIFF_PHRASES) out = out.replace(rx, to);
   return out.replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
+
+/**
+ * Make a reply read cleanly in a chat bubble.
+ *
+ * The model regularly produces "করুন।আপনি" or "CNY/year.Tell me" — a
+ * missing space after a sentence end runs two thoughts together, which is
+ * what "messages not using proper spaces" looks like on the phone.
+ */
+export function formatForChat(reply: string): string {
+  let out = reply.replace(/\r\n/g, "\n");
+
+  // Missing space after sentence-ending punctuation when a letter follows.
+  // Bangla danda (।), Latin full stop, and question/exclamation marks.
+  out = out.replace(/([।.!?])(?=[\u0980-\u09FFA-Za-z])/g, "$1 ");
+
+  // Space before punctuation that should hug the previous word.
+  out = out.replace(/\s+([।,.!?])/g, "$1");
+
+  // Collapse any run of horizontal whitespace.
+  out = out.replace(/[ \t]{2,}/g, " ");
+
+  // A long single block is hard to read: split into short paragraphs at
+  // sentence boundaries when there is no newline at all.
+  if (!out.includes("\n") && out.length > 220) {
+    const sentences = out.split(/(?<=[।.!?])\s+/);
+    const chunks: string[] = [];
+    let cur = "";
+    for (const s of sentences) {
+      if (cur.length + s.length > 180 && cur.length > 0) {
+        chunks.push(cur.trim());
+        cur = "";
+      }
+      cur += (cur ? " " : "") + s;
+    }
+    if (cur.trim()) chunks.push(cur.trim());
+    out = chunks.join("\n\n");
+  }
+
+  // Tidy spacing at line boundaries.
+  out = out
+    .split("\n")
+    .map((l) => l.trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return out;
+}

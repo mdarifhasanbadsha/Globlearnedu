@@ -325,8 +325,8 @@
  },
  {
   "name": "Guangdong University of Finance and Economics",
-  "city": null,
-  "province": null,
+  "city": "Guangzhou",
+  "province": "Guangdong",
   "ranking": null,
   "programs": [
    {
@@ -676,8 +676,8 @@
  },
  {
   "name": "Hubei University of Technology",
-  "city": null,
-  "province": null,
+  "city": "Wuhan",
+  "province": "Hubei",
   "ranking": null,
   "programs": [
    {
@@ -1114,8 +1114,8 @@
  },
  {
   "name": "Nantong University",
-  "city": null,
-  "province": null,
+  "city": "Nantong",
+  "province": "Jiangsu",
   "ranking": null,
   "programs": [
    {
@@ -1976,8 +1976,8 @@
  },
  {
   "name": "Wuhan Institute of Technology",
-  "city": null,
-  "province": null,
+  "city": "Wuhan",
+  "province": "Hubei",
   "ranking": null,
   "programs": [
    {
@@ -2044,8 +2044,8 @@
  },
  {
   "name": "Wuhan Polytechnic University",
-  "city": null,
-  "province": null,
+  "city": "Wuhan",
+  "province": "Hubei",
   "ranking": null,
   "programs": [
    {
