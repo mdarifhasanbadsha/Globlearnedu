@@ -136,8 +136,6 @@ export function knownFacts(history: { direction: string; body: string }[]): Reco
 
   // Level. Bangla words are matched too — students write "ডিপ্লোমা" far more
   // often than "diploma", and missing it causes the question to be re-asked.
-  // Checked most-specific first so "diploma theke bachelor" reads as Diploma
-  // only when bachelor is not the actual target.
   const levelPatterns: [RegExp, string][] = [
     [/phd|পিএইচডি/i, "PhD"],
     [/master'?s?|মাস্টার্স|মাস্টার/i, "Master's"],
@@ -145,28 +143,54 @@ export function knownFacts(history: { direction: string; body: string }[]): Reco
     [/bachelor|ব্যাচেলর|স্নাতক/i, "Bachelor"],
     [/language|ল্যাঙ্গুয়েজ|ভাষা/i, "Chinese Language"],
   ];
-  // The LAST level mentioned is usually the current one in a changing thread,
-  // so scan from the end.
-  for (let i = history.length - 1; i >= 0 && !known.degree_level; i--) {
+
+  // The LAST thing the student said decides. A student who says
+  // "Diploma korbo na ami" has told us they are NOT doing Diploma — reading
+  // "diploma" as their choice and answering "তাহলে Diploma" is a
+  // misunderstanding that makes them repeat themselves in frustration.
+  for (let i = history.length - 1; i >= 0; i--) {
     const h = history[i];
     if (h.direction !== "in") continue;
+
+    // Negation: "X korbo na", "X lagbe na", "not X", "X chai na".
+    const negated = h.body.match(
+      /(diploma|ডিপ্লোমা|bachelor|ব্যাচেলর|master'?s?|মাস্টার|phd|পিএইচডি)\s*(?:korte|kore|korbo|lagbe|chai|chai na)?\s*na\b|(?:not|no)\s+(diploma|bachelor|master'?s?|phd)/i
+    );
+    if (negated) {
+      const word = (negated[1] ?? negated[2] ?? "").toLowerCase();
+      known.rejected_level = /dip/i.test(word) ? "Diploma" : /bach/i.test(word) ? "Bachelor" : word;
+      continue;
+    }
+
     for (const [rx, label] of levelPatterns) {
       if (rx.test(h.body)) {
         known.degree_level = label;
         break;
       }
     }
+    if (known.degree_level) break;
   }
 
-  // The most recent subject mention wins, so a student who changes their mind
-  // is not pinned to their first answer.
+  // A bare "AI" is the SUBJECT Artificial Intelligence, never the word for
+  // this assistant. Treating it as anything else makes the AI ask "which
+  // subject?" after the student already said it.
   const subjectRe =
     /\b(artificial intelligence|computer science|software engineering|business administration|\bbusiness\b|civil engineering|mechanical engineering|electrical engineering|engineering|\bmbbs\b|medicine|nursing|pharmacy|\bai\b|architecture|accounting|economics|fashion design)\b|(?:কৃত্রিম বুদ্ধিমত্তা|কম্পিউটার সায়েন্স|ব্যবসায় প্রশাসন|সিভিল ইঞ্জিনিয়ারিং|মেডিসিন|নার্সিং|ফ্যাশন ডিজাইন)/i;
   for (let i = history.length - 1; i >= 0 && !known.subject_interest; i--) {
     const h = history[i];
     if (h.direction !== "in") continue;
     const m = h.body.match(subjectRe);
-    if (m) known.subject_interest = m[0];
+    if (m) {
+      known.subject_interest =
+        m[0].toLowerCase() === "ai" ? "Artificial Intelligence" : m[0];
+      break;
+    }
+    // A message that is only "AI" (or ends with it) also counts. `\b` fails
+    // when Bangla text sits right beside the Latin word, which is exactly
+    // what students type.
+    if (/(?:^|[\s,.!?।])ai(?:$|[\s,.!?।])/i.test(h.body.trim())) {
+      known.subject_interest = "Artificial Intelligence";
+    }
   }
 
   // GPA with its scale, in the forms students actually use:

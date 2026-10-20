@@ -132,8 +132,37 @@ export async function autoReplyToMessenger(
   const decision = rest.decideRest(burstTextForIntent, restState[0]?.restingUntil ?? null);
 
   if (decision.silent) {
-    console.log(`[messenger] resting, ${decision.minutes}m left — staying silent`);
-    return { attempted: false, reason: `resting (${decision.minutes}m left)`, batched: burst.length };
+    // Never leave the student with nothing. Answer the moment they arrive,
+    // then say a short goodbye and step away. Silence reads as a dead chat
+    // and loses the student even when the chat was nonsense.
+    const psidQuiet = conv.visitorId;
+    const goodbye = rest.REST_REPLY;
+    await sendTypingOn(psidQuiet);
+    const [savedQuiet] = await db
+      .insert(bizMessages)
+      .values({
+        businessId,
+        conversationId,
+        direction: "out",
+        authorKind: "ai",
+        body: goodbye,
+        meta: { source: "messenger_auto_reply", intent: "rest_farewell" },
+      })
+      .returning({ id: bizMessages.id });
+    const sentQuiet = await sendMessengerText({
+      businessId,
+      conversationId,
+      recipientId: psidQuiet,
+      body: goodbye,
+      messageId: savedQuiet?.id,
+    });
+    console.log(`[messenger] resting ${decision.minutes}m — sent a goodbye, not silence`);
+    return {
+      attempted: true,
+      reason: `resting (${decision.minutes}m left): ${sentQuiet.ok ? "farewell sent" : "failed"}`,
+      sent: sentQuiet.ok,
+      batched: burst.length,
+    };
   }
 
   if (decision.resuming) {
