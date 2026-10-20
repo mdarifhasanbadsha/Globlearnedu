@@ -55,6 +55,7 @@ export default function InboxClient({
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [live, setLive] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const current = conversations.find((c) => c.id === selected) ?? null;
@@ -140,6 +141,32 @@ export default function InboxClient({
     return () => window.removeEventListener("focus", onFocus);
   }, [selected, loadMessages, refreshList]);
 
+  /**
+   * Live updates over Server-Sent Events: one connection per open inbox,
+   * silent when nothing happens, instant when a message lands. EventSource
+   * reconnects by itself when the server closes the stream.
+   */
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource("/api/business/inbox/stream");
+
+      es.addEventListener("update", () => {
+        void refreshList();
+        if (selected) void loadMessages(selected);
+        setLive(true);
+      });
+      es.addEventListener("ready", () => setLive(true));
+      es.onerror = () => setLive(false);
+    } catch {
+      setLive(false);
+    }
+
+    return () => {
+      es?.close();
+    };
+  }, [refreshList, loadMessages, selected]);
+
   async function send() {
     const text = draft.trim();
     if (!text || !selected || sending) return;
@@ -213,9 +240,27 @@ export default function InboxClient({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-[#1B3A6B]">Inbox</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-2xl font-bold text-[#1B3A6B]">Inbox</h1>
+          <span
+            className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-full ${
+              live ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"
+            }`}
+            title={
+              live
+                ? "Connected — new messages appear automatically"
+                : "Reconnecting — new messages may be delayed"
+            }
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${live ? "bg-emerald-600" : "bg-slate-400"}`}
+              aria-hidden
+            />
+            {live ? "Live" : "Reconnecting"}
+          </span>
+        </div>
         <p className="text-sm text-slate-600 mt-1">
-          Website conversations. Take over any chat to stop automatic replies instantly.
+          Conversations from every channel. New messages arrive automatically.
         </p>
       </div>
 
