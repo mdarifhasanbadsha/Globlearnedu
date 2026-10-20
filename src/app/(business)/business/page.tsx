@@ -82,13 +82,16 @@ export default async function BusinessDashboard() {
 
   const aiReady = isDeepSeekConfigured();
   const knowledgeReady = (knStats?.approved ?? 0) > 0;
+  const recentErrors = aiSince?.errors ?? 0;
 
   const todo: { text: string; href: string; cta: string; tone: "warn" | "info" }[] = [];
   if (!aiReady) {
     todo.push({
-      text: "The AI provider is not reachable, so automatic replies are off.",
+      text:
+        "The AI key is missing on the server, so students get no automatic reply. " +
+        "Run scripts/set-worker-secrets.mjs to set DEEPSEEK_API_KEY on the Worker.",
       href: "/business/setup",
-      cta: "Check health",
+      cta: "How to fix",
       tone: "warn",
     });
   }
@@ -235,8 +238,12 @@ export default async function BusinessDashboard() {
           <Card title="AI status">
             <ul className="space-y-2.5 text-sm">
               <li className="flex items-center justify-between gap-2">
-                <span className="text-slate-600">Provider</span>
-                {aiReady ? <Pill tone="good">connected</Pill> : <Pill tone="bad">unreachable</Pill>}
+                <span className="text-slate-600">Provider key</span>
+                {aiReady ? (
+                  <Pill tone="good">present</Pill>
+                ) : (
+                  <Pill tone="bad">missing</Pill>
+                )}
               </li>
               <li className="flex items-center justify-between gap-2">
                 <span className="text-slate-600">University data</span>
