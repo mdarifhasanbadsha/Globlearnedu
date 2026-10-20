@@ -46,16 +46,41 @@ export function toCards(
     universityName: string | null;
     city: string | null;
     programName: string | null;
+    level: string | null;
     tuitionAmount: number | null;
     tuitionCurrency: string | null;
     tuitionPeriod: string | null;
     applicationDeadline: string | null;
     intakeText: string | null;
-  }[]
+    notes?: string | null;
+    details?: string | null;
+  }[],
+  /** Only show programmes at the level the student is asking about. */
+  opts: { level?: string | null; subject?: string | null } = {}
 ): UniversityCard[] {
+  const wantLevel = (opts.level ?? "").toLowerCase();
+  const wantSubject = (opts.subject ?? "").toLowerCase();
+
   return facts
     .filter((f) => f.universityName)
-    .slice(0, 4)
+    // A card must match the level asked about. Without this, a Diploma
+    // question showed Language-programme universities under the Diploma
+    // heading — which a student reads as "this university teaches my course".
+    .filter((f) => {
+      if (!wantLevel) return true;
+      const lv = (f.level ?? "").toLowerCase();
+      const program = (f.programName ?? "").toLowerCase();
+      return lv === wantLevel || program.includes(wantLevel);
+    })
+    // If a subject is known, prefer cards that actually mention it. Cards that
+    // do not mention it are only shown when nothing matches, and never claimed
+    // to teach it.
+    .filter((f) => {
+      if (!wantSubject || wantSubject.length < 3) return true;
+      const hay = `${f.programName ?? ""} ${f.details ?? ""} ${f.notes ?? ""}`.toLowerCase();
+      return hay.includes(wantSubject);
+    })
+    .slice(0, 3)
     .map((f) => ({
       universityName: f.universityName as string,
       city: f.city,

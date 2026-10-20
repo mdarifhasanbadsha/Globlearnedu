@@ -132,6 +132,23 @@ export function checkPriceQuality(reply: string, question?: string | null): Poli
   return out;
 }
 
+/**
+ * A wall of university names is unreadable and makes a student pick blindly.
+ * At most three examples, never the whole database — which is also a resource
+ * leak, because the list is much of the value in what we know.
+ */
+export function checkUniversityListLength(reply: string): PolicyViolation[] {
+  const out: PolicyViolation[] = [];
+  const re = new RegExp(KNOWN_UNIVERSITY_PATTERN.source, "g");
+  const names = new Set(
+    (reply.match(re) ?? []).map((n) => n.toLowerCase().replace(/\s+/g, " "))
+  );
+  if (names.size > 3) {
+    out.push({ rule: "too_many_universities", detail: `named ${names.size}` });
+  }
+  return out;
+}
+
 /** Naming universities must come with "there are many more" framing. */
 export const MORE_OPTIONS_HINT =
   /আরও|অনেক|বেশি|বাইরে|analysis|analyze|shortlist|team|counselor|counsellor|expert|verify|যাচাই|বিশ্লেষণ|টিম/i;
@@ -408,6 +425,7 @@ export function checkReplyPolicy(
   out.push(...checkSelfReveal(reply, opts.question));
   out.push(...checkDocumentList(reply));
   out.push(...checkPriceQuality(reply, opts.question));
+  out.push(...checkUniversityListLength(reply));
 
   // Repeating "your number is with us" after it was already given reads
   // like a call-centre script and the student stops reading.
