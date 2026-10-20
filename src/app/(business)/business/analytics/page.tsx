@@ -4,6 +4,7 @@ import { bizConversations, bizMessages, bizAiRuns } from "@/lib/db/schema.busine
 import { getBusinessId } from "@/lib/business/config";
 import { eq, sql, and, gte } from "drizzle-orm";
 import { PageHeader, StatCard, Card, Pill } from "../_ui";
+import { formatNumber } from "@/lib/business/dates";
 
 export const dynamic = "force-dynamic";
 

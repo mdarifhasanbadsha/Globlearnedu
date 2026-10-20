@@ -4,6 +4,7 @@ import { bizLeads } from "@/lib/db/schema.business2";
 import { getBusinessId } from "@/lib/business/config";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { PageHeader, StatCard, Card, Pill, EmptyState } from "../_ui";
+import { formatDate } from "@/lib/business/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -172,7 +173,7 @@ export default async function LeadsPage({
                           {l.nextActionAt && (
                             <span className="text-slate-500">
                               {" "}
-                              · due {new Date(l.nextActionAt).toLocaleDateString()}
+                              · due {formatDate(l.nextActionAt)}
                             </span>
                           )}
                         </p>

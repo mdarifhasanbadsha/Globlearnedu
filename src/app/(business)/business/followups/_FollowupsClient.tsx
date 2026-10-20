@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { formatDateTime } from "@/lib/business/dates";
 
 interface Item {
   id: string;
@@ -21,7 +22,7 @@ function formatDue(iso: string, timezone: string) {
       timeZone: timezone,
     }).format(new Date(iso));
   } catch {
-    return new Date(iso).toLocaleString();
+    return formatDateTime(iso);
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatDate, formatDateTime } from "@/lib/business/dates";
 
 interface Session {
   id: string;
@@ -310,7 +311,7 @@ export default function LabClient({
                     >
                       <div className="text-xs font-medium text-[#0F2A52] truncate">{s.title}</div>
                       <div className="text-[10px] text-slate-500">
-                        {new Date(s.createdAt).toLocaleDateString()}
+                        {formatDate(s.createdAt)}
                       </div>
                     </button>
                   </li>
@@ -522,7 +523,7 @@ export default function LabClient({
                     {f.verdict}
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    {new Date(f.createdAt).toLocaleString()}
+                    {formatDateTime(f.createdAt)}
                   </span>
                 </div>
                 {f.question && (
