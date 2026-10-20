@@ -29,12 +29,36 @@ export async function PATCH(req: Request) {
       ? [payload.id]
       : [];
 
+  const businessId = getBusinessId();
+  const action = payload?.action;
+
+  // Fast path after an import: approve every draft in one action, so a
+  // 60-entry import does not need 60 clicks. Still an explicit decision by
+  // the owner, and it is recorded with their user id.
+  if (action === "approve" && payload?.all === true) {
+    const approved = await db
+      .update(bizKnowledgeEntries)
+      .set({
+        status: "approved",
+        approvedBy: guard.userId,
+        approvedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(bizKnowledgeEntries.businessId, businessId),
+          eq(bizKnowledgeEntries.status, "draft")
+        )
+      )
+      .returning({ id: bizKnowledgeEntries.id });
+
+    return NextResponse.json({ ok: true, updated: approved.length, status: "approved" });
+  }
+
   if (ids.length === 0) {
     return NextResponse.json({ error: "No entry id provided" }, { status: 400 });
   }
 
-  const action = payload?.action;
-  const businessId = getBusinessId();
   const scope = and(
     eq(bizKnowledgeEntries.businessId, businessId),
     inArray(bizKnowledgeEntries.id, ids)

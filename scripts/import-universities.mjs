@@ -56,21 +56,28 @@ for (const u of data) {
         and coalesce(intake_text, '') = ${p.intake ?? ""}
       limit 1`;
 
+    // Column names are "notes" (text) and "requirements" (jsonb) — the
+    // schema has no "details" column.
+    const reqJson = requirements ? JSON.stringify({ documents: requirements }) : null;
+
     if (existing) {
       await sql`
         update biz_knowledge_entries set
-          city = ${u.city}, level = ${p.level}, details = ${details},
-          requirements = ${requirements}, intake_text = ${p.intake ?? null},
+          city = ${u.city}, level = ${p.level}, notes = ${details},
+          requirements = coalesce(${reqJson}::jsonb, requirements),
+          intake_text = ${p.intake ?? null},
+          teaching_language = ${p.teaching_language ?? null},
           status = 'approved', updated_at = now()
         where id = ${existing.id}`;
       updated++;
     } else {
       await sql`
         insert into biz_knowledge_entries
-          (business_id, university_name, city, program_name, level, details,
-           requirements, intake_text, status)
+          (business_id, university_name, city, program_name, level, notes,
+           requirements, intake_text, teaching_language, status)
         values (${BIZ}, ${u.name}, ${u.city}, ${programName}, ${p.level}, ${details},
-                ${requirements}, ${p.intake ?? null}, 'approved')`;
+                ${reqJson}::jsonb, ${p.intake ?? null},
+                ${p.teaching_language ?? null}, 'approved')`;
       inserted++;
     }
   }
