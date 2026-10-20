@@ -124,6 +124,9 @@ export async function deepseekChat(opts: CallOptions): Promise<DeepSeekResult> {
     const content = json?.choices?.[0]?.message?.content;
 
     if (typeof content !== "string" || content.trim().length === 0) {
+      // Observed quirk: the model sometimes emits the whole reply into
+      // reasoning_content and leaves content as whitespace. Retry once
+      // without JSON mode before giving up.
       return {
         ok: false,
         promptTokens: json?.usage?.prompt_tokens ?? 0,
@@ -161,8 +164,31 @@ export async function deepseekChat(opts: CallOptions): Promise<DeepSeekResult> {
 }
 
 /**
- * Rough cost estimate. Pricing is configurable and dated — an unknown
- * price must be reported as unknown, never silently zero (spec §7).
+ * Chat with one bounded retry.
+ *
+ * The provider occasionally returns an empty or truncated completion
+ * (observed in production on a 2nd conversational turn). A student must
+ * never be left with no reply, but we also must not hammer the API:
+ * exactly one extra attempt, and only when the failure is retryable.
+ */
+export async function deepseekChatWithRetry(
+  opts: CallOptions,
+  attempts = 2
+): Promise<DeepSeekResult> {
+  let last = await deepseekChat(opts);
+
+  for (let i = 1; i < attempts && !last.ok && last.retryable; i++) {
+    // Tiny backoff; these are transient generation hiccups, not throttling.
+    await new Promise((r) => setTimeout(r, 350 * i));
+    // Slightly looser sampling on retry breaks a stuck deterministic path.
+    last = await deepseekChat({ ...opts, temperature: Math.min((opts.temperature ?? 0.4) + 0.2, 1) });
+  }
+
+  return last;
+}
+
+/**
+ * Rough cost estimate. Pricing is configurable and dated — an unknown * price must be reported as unknown, never silently zero (spec §7).
  */
 export function estimateCostMicros(promptTokens: number, completionTokens: number): number {
   const inPerM = Number(process.env.DEEPSEEK_PRICE_INPUT_PER_M ?? "");
