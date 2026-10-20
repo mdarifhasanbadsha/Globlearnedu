@@ -116,3 +116,54 @@ export function formatQuote(q: QuotedContext | null): string | null {
   if (!q) return null;
   return `[The student is replying to this earlier message: "${q.text.slice(0, 400)}"]`;
 }
+
+// ── known facts ────────────────────────────────────────────────────────
+/**
+ * Everything the student has already told us, read straight from the
+ * transcript.
+ *
+ * Without this the model re-asks questions it has the answers to — the most
+ * visible failure in a chat, where it asks "which subject?" one message
+ * after the student named the subject. Reading the transcript rather than
+ * the lead row keeps it independent of extraction timing.
+ */
+export function knownFacts(history: { direction: string; body: string }[]): Record<string, string> | null {
+  const known: Record<string, string> = {};
+  const all = history
+    .filter((h) => h.direction === "in")
+    .map((h) => h.body)
+    .join(" ");
+
+  // Level. Bangla words are matched too — students write "ডিপ্লোমা" far more
+  // often than "diploma", and missing it causes the question to be re-asked.
+  if (/diploma|ডিপ্লোমা|ডিপ্লোমাতে|ডিপ্লোমার/i.test(all)) known.degree_level = "Diploma";
+  else if (/master'?s?|মাস্টার্স|মাস্টার/i.test(all)) known.degree_level = "Master's";
+  else if (/\bphd\b|পিএইচডি/i.test(all)) known.degree_level = "PhD";
+  else if (/bachelor|ব্যাচেলর|স্নাতক/i.test(all)) known.degree_level = "Bachelor";
+  else if (/language|ল্যাঙ্গুয়েজ|ভাষা/i.test(all)) known.degree_level = "Chinese Language";
+
+  const subject = all.match(
+    /\b(artificial intelligence|computer science|software engineering|business administration|\bbusiness\b|civil engineering|mechanical engineering|electrical engineering|engineering|\bmbbs\b|medicine|nursing|pharmacy|\bai\b|architecture|accounting|economics|fashion design)\b|(?:কৃত্রিম বুদ্ধিমত্তা|কম্পিউটার সায়েন্স|ব্যবসায় প্রশাসন|সিভিল ইঞ্জিনিয়ারিং|মেডিসিন|নার্সিং|ফ্যাশন ডিজাইন)/i
+  );
+  if (subject) known.subject_interest = subject[0];
+
+  // GPA with its scale, in the forms students actually use:
+  //   "4.50 er moddhe 5", "3.8/4", "GPA 4.5 out of 5", "4.20"
+  const gpa = all.match(
+    /\b(\d(?:\.\d{1,2})?)\s*(?:\/\s*(\d)|\s*(?:er|of|out of)\s*(?:moddhe\s*)?(\d))|\b(?:gpa)\s*(\d(?:\.\d{1,2})?)/i
+  );
+  if (gpa) {
+    const value = gpa[1] ?? gpa[4];
+    const scale = gpa[2] ?? gpa[3];
+    if (value) known.gpa_value = value;
+    if (scale) known.gpa_scale = scale;
+  }
+
+  const phone = all.match(/(?:\+?88)?01\d{9}/);
+  if (phone) known.phone = phone[0];
+
+  const intake = all.match(/\b(march|september|january|april|october)\s*(20\d{2})\b/i);
+  if (intake) known.intake = `${intake[1]} ${intake[2]}`;
+
+  return Object.keys(known).length > 0 ? known : null;
+}

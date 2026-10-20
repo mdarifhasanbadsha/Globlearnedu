@@ -31,6 +31,7 @@ import {
   burstSettled,
   joinBurst,
   BATCH_QUIET_MS,
+  knownFacts,
 } from "@/lib/business/conversation-flow";
 import { isUsableReply } from "@/lib/business/reply-quality";
 import { and, eq, asc, sql } from "drizzle-orm";
@@ -136,6 +137,9 @@ export async function autoReplyToMessenger(
     latestMessage: burstText,
     knowledge,
     styleGuide: style ? formatStyleGuide(style) : null,
+    // Same fact extraction as the web widget, so neither path re-asks a
+    // question the student already answered.
+    leadContext: knownFacts(historyBeforeBurst),
   });
 
   // Read the quote defensively: the column only exists after the schema

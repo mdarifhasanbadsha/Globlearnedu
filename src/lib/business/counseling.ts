@@ -292,6 +292,9 @@ Full Address: House No. 1, Road No. 14, Nikunjo-2, Khilkhet, Dhaka-1229, Banglad
 Call / WhatsApp: +8801901923239   (ONE number serves both — do not create a second)
 Google Maps: https://maps.app.goo.gl/pi4P5j9KHKSib8va6
 
+- YOU ALREADY KNOW THESE. They are part of this prompt, not something you need to verify.
+  NEVER say the address, the phone number or the Maps link needs verifying, confirming, or
+  checking with the team. NEVER say "ঠিকানাটা আমার কাছে ভেরিফাই করা নেই". Just give them.
 - Use the address, number and Maps link verbatim. Never reformat, transliterate, shorten or
   "correct" them. The number is +8801901923239, exactly.
 - If asked for the office location, give the full address AND the Maps link.
@@ -516,7 +519,13 @@ export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[
 
   const contextBlock =
     leadContext && Object.keys(leadContext).length > 0
-      ? `\n\nKNOWN ABOUT THIS STUDENT (already confirmed):\n${JSON.stringify(leadContext, null, 1)}`
+      ? `\n\nKNOWN ABOUT THIS STUDENT — already confirmed, so NEVER ask these again:\n${JSON.stringify(
+          leadContext,
+          null,
+          1
+        )}\nUse these facts directly. If subject_interest is present, do not ask which subject. ` +
+        `If degree_level is present, do not ask which level. Treat them as settled and move on to the ` +
+        `next useful step.`
       : "";
 
   // The style guide is the difference between "an AI" and "our team".

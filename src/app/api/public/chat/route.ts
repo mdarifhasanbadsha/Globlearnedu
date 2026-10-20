@@ -196,11 +196,17 @@ async function handlePost(req: Request) {
   // Learn-from-history layer: our approved house style, if published.
   const style = await loadActiveStyleGuide(businessId);
 
+  // What the student has ALREADY told us, read from the transcript. Without
+  // this the model re-asks questions it has the answers to — "which subject?"
+  // one message after the student named the subject.
+  const { knownFacts } = await import("@/lib/business/conversation-flow");
+
   const messages = buildCounselingMessages({
     history: history.slice(0, -1),
     latestMessage: message,
     knowledge,
     styleGuide: style ? formatStyleGuide(style) : null,
+    leadContext: knownFacts(history),
   });
 
   // Generous ceiling: the model emits reasoning tokens before the JSON reply.
