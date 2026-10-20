@@ -59,6 +59,11 @@ export async function GET() {
       intakeText: e.intakeText,
       intakeMonths: e.intakeMonths,
       applicationDeadline: e.applicationDeadline,
+      // The imported and written text lives in `notes`. Without it the list
+      // showed only a name, and the detail could not be reviewed or edited.
+      notes: e.notes,
+      requirements: e.requirements,
+      teachingLanguage: e.teachingLanguage,
       sourcePage: e.sourcePage,
       status: e.status,
       issues: checkEntry({

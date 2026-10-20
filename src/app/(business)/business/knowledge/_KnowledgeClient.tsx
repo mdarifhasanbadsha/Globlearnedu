@@ -19,6 +19,9 @@ interface Entry {
   intakeText: string | null;
   intakeMonths: unknown;
   applicationDeadline: string | null;
+  notes?: string | null;
+  requirements?: unknown;
+  teachingLanguage?: string | null;
   sourcePage: number | null;
   status: string;
   issues: string[];
@@ -180,7 +183,7 @@ export default function KnowledgeClient() {
     return (
       (e.universityName ?? "").toLowerCase().includes(q) ||
       (e.city ?? "").toLowerCase().includes(q) ||
-      (e.programName ?? "").toLowerCase().includes(q)
+      `${e.programName ?? ""} ${e.notes ?? ""}`.toLowerCase().includes(q)
     );
   });
 
@@ -308,8 +311,19 @@ export default function KnowledgeClient() {
                     <div className="text-xs text-slate-500">
                       {e.intakeText ? `Intake ${e.intakeText}` : null}
                       {e.applicationDeadline ? ` · Deadline ${e.applicationDeadline}` : null}
+                      {e.teachingLanguage ? ` · ${e.teachingLanguage}` : null}
                       {e.sourcePage ? ` · p.${e.sourcePage}` : null}
                     </div>
+                    {e.notes && (
+                      <details className="mt-1.5">
+                        <summary className="text-[11px] text-[#29ABE2] cursor-pointer select-none">
+                          Show what the AI reads
+                        </summary>
+                        <pre className="mt-1 whitespace-pre-wrap break-words text-[11px] leading-relaxed text-slate-700 bg-slate-50 border border-slate-200 rounded-lg p-2 max-h-56 overflow-y-auto font-sans">
+                          {e.notes}
+                        </pre>
+                      </details>
+                    )}
                     {e.issues.length > 0 && (
                       <div className="mt-2 rounded border border-amber-200 bg-amber-50 px-2.5 py-1.5">
                         {e.issues.map((i) => (

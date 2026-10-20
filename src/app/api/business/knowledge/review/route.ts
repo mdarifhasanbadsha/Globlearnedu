@@ -102,7 +102,7 @@ export async function PATCH(req: Request) {
       ["intakeText", 100],
       ["languageToDegree", 100],
       ["feePaymentNote", 2000],
-      ["notes", 2000],
+      ["notes", 8000],
     ];
     for (const [key, max] of strFields) {
       if (typeof f[key] === "string") patch[key] = f[key].slice(0, max);
