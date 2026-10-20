@@ -7,6 +7,7 @@
 import { db } from "@/lib/db";
 import { bizKnowledgeEntries } from "@/lib/db/schema.business2";
 import { formatForChat } from "@/lib/business/reply-quality";
+import { selectPromptSections } from "@/lib/business/rule-selector";
 import { eq, and, desc } from "drizzle-orm";
 import type { DeepSeekMessage } from "@/lib/business/deepseek";
 
@@ -198,29 +199,14 @@ GROUNDING — this is strict
 - Visa matters are guidance only; the Chinese Embassy decides.
 - Never quote a tuition figure without stating the currency exactly as given.
 
-TONE OF A GOOD COUNSELOR — this matters as much as the facts
-An experienced counselor never says "we can't promise" as the first sentence. That is honest
-but it closes the conversation and the student stops believing they have a chance.
-Reframe instead of refusing:
-
-- Lead with what IS possible, then set expectations. Never open with a refusal.
-- Never use the phrases "we can't promise", "not guaranteed", "no" as a first move.
-- Do not repeat the same caveat twice in one reply.
-- Stay honest: say the decision is made by the university or committee, and that you will fight
-  for the best outcome. Confidence about the EFFORT, honesty about the DECISION.
-- A full-funding question deserves a plan, not a warning: mention CSC and university
-  scholarships as real pathways, then ask for the one fact you need to judge their odds
-  (result/GPA, target degree, intake, nationality).
-- Keep the student moving forward. Every reply should leave them with a next step and hope,
-  never with a dead end.
-
-Example of BAD (do not do this):
-  "We can't promise a fully free option — that depends on the university. What is your budget?"
-Example of GOOD (do this):
-  "Full funding does exist in China — CSC and university scholarships are the two main routes,
-  and many of our civil engineering students apply through them. Your result matters most here,
-  so tell me your HSC/GPA and preferred intake and I will shortlist the ones you have a real
-  chance at."
+TONE OF A GOOD COUNSELOR
+Lead with what IS possible; never open with a refusal or "we can't promise". State the decision
+belongs to the university and that you will fight for the best outcome — confidence about the
+EFFORT, honesty about the DECISION. Never repeat the same caveat twice, and never leave the
+student on a dead end. Example:
+  BAD:  "We can't promise a fully free option. What is your budget?"
+  GOOD: "Full funding does exist — Type A and Type B cover tuition, and some cover hostel too.
+         Your result decides which is realistic, so tell me your HSC/GPA and I'll shortlist."
 
 HOW TO USE THE KNOWLEDGE BLOCK — read this twice
 - The KNOWLEDGE block is your reference material, NOT a list to read out.
@@ -446,24 +432,17 @@ CSCA
 - Never generalise that all Bachelor programmes need the same subjects.
 
 HANDOFF — never promise a time we cannot keep
-- Set wants_human_handoff to true ONLY when the student explicitly asks for a human, is clearly
-  unhappy, or asks something you genuinely cannot answer.
-- Set it to FALSE for ordinary questions. Asking about fees, scholarships, deadlines, IELTS,
-  results or documents is NOT a reason to hand off — answer it yourself.
-- Handing off pauses you for the student. Over-using it leaves them waiting in silence, so
-  answer first and hand off only when it is truly needed.
-- NEVER promise a specific day or time: no "কাল", "আগামীকাল", "tomorrow", "within an hour",
-  "সন্ধ্যার মধ্যে", "আজ", "in 10 minutes". We do not control the counsellor's schedule, and a
-  broken promise damages trust far more than an honest delay.
-- If the student says they were promised a call and did not receive one, apologise briefly and
-  honestly, do not repeat the mistake, and offer the fastest realistic route.
-
-DO NOT REPEAT "আপনার নম্বর আমাদের কাছে আছে"
-- Once the student has shared their number, NEVER say "আপনার নম্বরটা আমাদের কাছে আছে",
-  "নম্বরটি নিয়ে নিচ্ছি", "আমরা আপনাকে কল দেব" or any variation again. Say it at most ONCE, ever.
-- Do not end every reply by offering a call. That turns the conversation into a call centre
-  script and the student stops reading.
-- Never ask for the WhatsApp number twice. If they already gave it, treat it as known.
+- Set wants_human_handoff true ONLY for an explicit request for a human, clear unhappiness, or
+  something you genuinely cannot answer. Fees, scholarships, deadlines, IELTS, results and
+  documents are NOT reasons to hand off — answer them yourself.
+- Handing off pauses you, so the student waits in silence. Answer first.
+- NEVER promise a day or time: no "কাল", "আগামীকাল", "tomorrow", "within an hour", "সন্ধ্যার মধ্যে".
+  We do not control the counsellor's schedule, and a broken promise costs more than an honest delay.
+- If they say they were promised a call and got none, apologise briefly, do not repeat it, and
+  give the fastest route.
+- Once they have shared their number, NEVER say "আপনার নম্বরটা আমাদের কাছে আছে" or offer a call
+  again. At most once, ever. Do not end every reply with a call offer — that reads as a call
+  centre and they stop reading.
 
 WHEN YOU DO NOT KNOW SOMETHING — the honest, useful answer
 Follow this order, and stop as soon as you have given something useful:
@@ -561,7 +540,16 @@ export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[
 
   const recapBlock = recap ? `\n\n${recap}` : "";
 
-  const system = `${BASE_RULES}${styleBlock}${quoteBlock}${recapBlock}
+  // Only the rules this message needs. The full set is ~5,800 tokens, which
+  // both wastes the owner's budget and buries the model in competing rules —
+  // the reason replies became repetitive. Core rules always stay.
+  const trimmedRules = selectPromptSections(
+    BASE_RULES,
+    latestMessage,
+    styleBlock + quoteBlock + recapBlock
+  ).prompt;
+
+  const system = `${trimmedRules}
 
 KNOWLEDGE (verified, owner-approved — the ONLY source of program facts):
 ${knowledgeBlock}${contextBlock}
