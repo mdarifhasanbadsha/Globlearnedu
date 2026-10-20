@@ -15,3 +15,4 @@ scratch_pages
 scratch_voice/
 ui_*.png
 lab_*.png
+scratch_video/ | scratch_video

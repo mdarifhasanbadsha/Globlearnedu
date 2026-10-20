@@ -16,6 +16,62 @@ import { eq, and, asc } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Restore a visitor's own conversation when they come back later.
+ *
+ * The token is an unguessable 128-bit value held in their browser, so a
+ * caller who does not hold it cannot read anyone else's thread. Only the
+ * visitor's own messages plus AI/staff replies are returned.
+ */
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const token = searchParams.get("token") ?? "";
+
+  if (!isValidGuestToken(token)) {
+    return NextResponse.json({ messages: [] });
+  }
+
+  const businessId = getBusinessId();
+
+  const [conv] = await db
+    .select({ id: bizConversations.id, status: bizConversations.status })
+    .from(bizConversations)
+    .where(
+      and(
+        eq(bizConversations.businessId, businessId),
+        eq(bizConversations.channel, "website"),
+        eq(bizConversations.visitorId, token)
+      )
+    )
+    .limit(1);
+
+  if (!conv) return NextResponse.json({ messages: [], found: false });
+
+  const rows = await db
+    .select({
+      direction: bizMessages.direction,
+      authorKind: bizMessages.authorKind,
+      body: bizMessages.body,
+      createdAt: bizMessages.createdAt,
+    })
+    .from(bizMessages)
+    .where(eq(bizMessages.conversationId, conv.id))
+    .orderBy(asc(bizMessages.createdAt))
+    .limit(50);
+
+  return NextResponse.json({
+    found: true,
+    status: conv.status,
+    messages: rows
+      .filter((r) => r.body.trim().length > 0 && r.body !== "[voice message]")
+      .map((r) => ({
+        role: r.direction === "in" ? "user" : "assistant",
+        text: r.body,
+        createdAt: r.createdAt.toISOString(),
+      })),
+  });
+}
+
 // POST /api/public/chat — start a conversation or send a message.
 export async function POST(req: Request) {
   let payload: any;
@@ -193,6 +249,12 @@ export async function POST(req: Request) {
   }
 
   // Upsert lead fields that were clearly provided.
+  let existingLead: {
+    degreeLevel: string | null;
+    gpaValue: string | null;
+    phone: string | null;
+  } | null = null;
+
   if (Object.keys(extracted).length > 0) {
     const existing = await db
       .select({ id: bizLeads.id })
@@ -231,6 +293,20 @@ export async function POST(req: Request) {
     }
   }
 
+  // Whatever the lead already knows, so quick replies stay relevant.
+  {
+    const [leadRow] = await db
+      .select({
+        degreeLevel: bizLeads.degreeLevel,
+        gpaValue: bizLeads.gpaValue,
+        phone: bizLeads.phone,
+      })
+      .from(bizLeads)
+      .where(and(eq(bizLeads.businessId, businessId), eq(bizLeads.conversationId, conversationId)))
+      .limit(1);
+    existingLead = leadRow ?? null;
+  }
+
   // Explicit request for a human pauses automation.
   if (wantsHandoff) {
     await db
@@ -239,6 +315,22 @@ export async function POST(req: Request) {
       .where(eq(bizConversations.id, conversationId));
   }
 
+  // Structured extras for the widget: program cards and tappable replies.
+  const { toCards, suggestQuickReplies } = await import("@/lib/business/chat-cards");
+  const { planPacing, remainingDelay } = await import("@/lib/business/pacing");
+
+  const cards = toCards(knowledge);
+  const quickReplies = suggestQuickReplies({
+    askedAboutFee: /tuition|fee|taka|koto|খরচ|ফি|টাকা/i.test(history.map((h) => h.body).join(" ")),
+    hasDegree: !!(extracted.degree_level || existingLead?.degreeLevel),
+    hasGpa: extracted.gpa_value != null || !!existingLead?.gpaValue,
+    hasContact: !!(extracted.phone || existingLead?.phone),
+  });
+
+  // Believable pacing: the model is fast, a human counselor is not.
+  const pacing = planPacing(message, result.latencyMs);
+  const waitMs = remainingDelay(pacing, result.latencyMs);
+
   return NextResponse.json({
     token,
     conversationId,
@@ -246,5 +338,11 @@ export async function POST(req: Request) {
     reply,
     aiError: result.ok ? null : result.error,
     status: conversationStatus,
+    cards,
+    quickReplies,
+    // The widget keeps the typing indicator up for this long before
+    // revealing the reply, so a 1s answer does not look robotic.
+    typingMs: waitMs,
+    modelMs: result.latencyMs,
   });
 }

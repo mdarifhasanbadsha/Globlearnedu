@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 interface Conversation {
   id: string;
@@ -152,7 +153,7 @@ export default function InboxClient({
     }
   }
 
-  async function setState(action: "takeover" | "return" | "resolve" | "reopen") {
+  async function setState(action: "takeover" | "return" | "resolve" | "reopen" | "snooze") {
     if (!selected) return;
     const body =
       action === "takeover"
@@ -161,7 +162,9 @@ export default function InboxClient({
           ? { aiState: "active" }
           : action === "resolve"
             ? { status: "resolved" }
-            : { status: "open" };
+            : action === "snooze"
+              ? { status: "snoozed" }
+              : { status: "open" };
 
     try {
       const res = await fetch(`/api/business/conversations/${selected}`, {
@@ -176,6 +179,12 @@ export default function InboxClient({
     } catch (e: any) {
       setError(e.message);
     }
+  }
+
+  async function assignToMe() {
+    if (!selected) return;
+    // Taking the thread makes the current staff member its owner.
+    await setState("takeover");
   }
 
   const ai = current ? AI_LABEL[current.aiState] ?? AI_LABEL.active : null;
@@ -195,7 +204,7 @@ export default function InboxClient({
         </div>
       )}
 
-      <div className="grid md:grid-cols-[280px_1fr] gap-4">
+      <div className="grid lg:grid-cols-[240px_minmax(0,1fr)_200px] gap-4">
         <aside className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="px-3 py-2 border-b border-slate-200">
             <input
@@ -274,10 +283,17 @@ export default function InboxClient({
                   </button>
                 )}
                 <button
+                  onClick={() => void setState("snooze")}
+                  disabled={current.status === "snoozed"}
+                  className="text-xs font-medium px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-40"
+                >
+                  Later
+                </button>
+                <button
                   onClick={() => void setState(current.status === "resolved" ? "reopen" : "resolve")}
                   className="text-xs font-medium px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"
                 >
-                  {current.status === "resolved" ? "Reopen" : "Resolve"}
+                  {current.status === "resolved" ? "Reopen" : "Done"}
                 </button>
               </div>
             )}
@@ -338,6 +354,68 @@ export default function InboxClient({
             </button>
           </div>
         </section>
+
+        {/* Third pane: who am I talking to, and what can I do next */}
+        {current && (
+          <aside className="bg-white rounded-xl border border-slate-200 p-3 space-y-3 h-fit">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Contact
+              </div>
+              <div className="text-sm font-medium text-[#0F2A52] mt-0.5 truncate">
+                {current.visitorId.startsWith("g_")
+                  ? "Website visitor"
+                  : `Messenger ${current.visitorId.slice(-6)}`}
+              </div>
+            </div>
+
+            <div className="space-y-1.5 text-[11px]">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Status</span>
+                <span className="font-medium capitalize">{current.status}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">AI</span>
+                <span className="font-medium capitalize">{current.aiState.replace(/_/g, " ")}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Messages</span>
+                <span className="font-medium tabular-nums">{messages.length}</span>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 space-y-1.5">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Actions
+              </div>
+              <button
+                onClick={() => void assignToMe()}
+                className="w-full text-xs font-medium px-2.5 py-1.5 rounded-lg bg-[#0F2A52] text-white hover:bg-[#1B3A6B]"
+              >
+                Assign to me
+              </button>
+              <button
+                onClick={() => void setState("snooze")}
+                className="w-full text-xs font-medium px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"
+              >
+                Snooze
+              </button>
+              <button
+                onClick={() => void setState(current.status === "resolved" ? "reopen" : "resolve")}
+                className="w-full text-xs font-medium px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"
+              >
+                {current.status === "resolved" ? "Reopen" : "Mark done"}
+              </button>
+            </div>
+
+            <Link
+              href="/business/lab"
+              className="block text-center text-[11px] text-[#29ABE2] hover:underline pt-1"
+            >
+              Test this answer in the lab →
+            </Link>
+          </aside>
+        )}
       </div>
     </div>
   );

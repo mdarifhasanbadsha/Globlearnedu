@@ -2,11 +2,27 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+interface UniversityCard {
+  universityName: string;
+  city: string | null;
+  programName: string | null;
+  tuitionLabel: string;
+  deadline: string | null;
+  intake: string | null;
+}
+
+interface QuickReply {
+  label: string;
+  send: string;
+}
+
 interface Bubble {
   id: string;
   role: "user" | "assistant" | "system";
   text: string;
   pending?: boolean;
+  cards?: UniversityCard[];
+  chips?: QuickReply[];
 }
 
 const TOKEN_KEY = "gl_chat_token";
@@ -22,6 +38,7 @@ export default function BusinessChatWidget() {
   const tokenRef = useRef<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const restoredRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -40,74 +57,117 @@ export default function BusinessChatWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [bubbles, open]);
 
-  const send = useCallback(async () => {
-    const text = draft.trim();
-    if (!text || busy) return;
+  // Returning visitor: restore their own earlier conversation once.
+  useEffect(() => {
+    if (!open || restoredRef.current || !tokenRef.current) return;
+    restoredRef.current = true;
 
-    setError(null);
-    setDraft("");
-    setBusy(true);
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/public/chat?token=${encodeURIComponent(tokenRef.current)}`,
+          { cache: "no-store" }
+        );
+        const json = await res.json();
+        const past = (json.messages ?? []) as { role: string; text: string }[];
+        if (past.length === 0) return;
 
-    const userBubble: Bubble = {
-      id: `u_${Date.now()}`,
-      role: "user",
-      text,
-    };
-    const pendingBubble: Bubble = {
-      id: `p_${Date.now()}`,
-      role: "assistant",
-      text: "",
-      pending: true,
-    };
-    setBubbles((b) => [...b, userBubble, pendingBubble]);
-
-    try {
-      const res = await fetch("/api/public/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, token: tokenRef.current }),
-      });
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json?.error ?? "Something went wrong");
+        setBubbles([
+          { id: "resumed", role: "system", text: "Welcome back — here is where we left off" },
+          ...past.map((m, i) => ({
+            id: `h_${i}`,
+            role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+            text: m.text,
+          })),
+        ]);
+      } catch {
+        /* restore is best effort */
       }
+    })();
+  }, [open]);
 
-      if (typeof json.token === "string" && json.token) {
-        tokenRef.current = json.token;
-        try {
-          localStorage.setItem(TOKEN_KEY, json.token);
-        } catch {
-          /* storage may be blocked; session still works in memory */
+  const send = useCallback(
+    async (override?: string) => {
+      const text = (override ?? draft).trim();
+      if (!text || busy) return;
+
+      setError(null);
+      setDraft("");
+      setBusy(true);
+
+      const stamp = Date.now();
+      const pendingId = `p_${stamp}`;
+      setBubbles((b) => [
+        ...b,
+        { id: `u_${stamp}`, role: "user", text },
+        { id: pendingId, role: "assistant", text: "", pending: true },
+      ]);
+
+      const sentAt = Date.now();
+
+      try {
+        const res = await fetch("/api/public/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, token: tokenRef.current }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error ?? "Something went wrong");
+
+        if (typeof json.token === "string" && json.token) {
+          tokenRef.current = json.token;
+          try {
+            localStorage.setItem(TOKEN_KEY, json.token);
+          } catch {
+            /* storage may be blocked */
+          }
         }
-      }
 
-      setBubbles((b) =>
-        b
-          .filter((x) => x.id !== pendingBubble.id)
-          .concat(
-            json.reply
-              ? [{ id: `a_${Date.now()}`, role: "assistant", text: json.reply }]
-              : [
-                  {
-                    id: `s_${Date.now()}`,
-                    role: "system",
-                    text: "Thanks — a counselor will reply here shortly.",
-                  },
-                ]
-          )
-      );
-    } catch (e: any) {
-      setBubbles((b) => b.filter((x) => x.id !== pendingBubble.id));
-      setError(e?.message ?? "Could not send. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }, [draft, busy]);
+        // Keep the typing indicator up for a believable span. The API tells
+        // us how long; the delay is bounded there, not invented here.
+        const typingMs: number = Math.min(json.typingMs ?? 0, 12_000);
+        const elapsed = Date.now() - sentAt;
+        const wait = Math.max(0, typingMs - elapsed);
+        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+
+        const cards: UniversityCard[] = json.cards ?? [];
+        const chips: QuickReply[] = json.quickReplies ?? [];
+
+        setBubbles((b) =>
+          b
+            .filter((x) => x.id !== pendingId)
+            .concat(
+              json.reply
+                ? [
+                    {
+                      id: `a_${Date.now()}`,
+                      role: "assistant" as const,
+                      text: json.reply,
+                      cards,
+                      chips,
+                    },
+                  ]
+                : [
+                    {
+                      id: `s_${Date.now()}`,
+                      role: "system" as const,
+                      text: "Thanks — a counselor will reply here shortly.",
+                    },
+                  ]
+            )
+        );
+      } catch (e: any) {
+        setBubbles((b) => b.filter((x) => x.id !== pendingId));
+        setError(e?.message ?? "Could not send. Please try again.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [draft, busy]
+  );
 
   return (
     <>
-      {/* Launcher */}
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close chat" : "Chat with GL Education"}
@@ -165,24 +225,67 @@ export default function BusinessChatWidget() {
               }
               const mine = b.role === "user";
               return (
-                <div key={b.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words ${
-                      mine
-                        ? "bg-[#C8102E] text-white rounded-br-sm"
-                        : "bg-white text-slate-900 border border-slate-200 rounded-bl-sm"
-                    }`}
-                  >
-                    {b.pending ? (
-                      <span className="flex gap-1 items-center h-5" aria-label="Assistant is typing">
-                        <Dot delay="0s" />
-                        <Dot delay="0.15s" />
-                        <Dot delay="0.3s" />
-                      </span>
-                    ) : (
-                      b.text
-                    )}
+                <div key={b.id} className="space-y-1.5">
+                  <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words ${
+                        mine
+                          ? "bg-[#C8102E] text-white rounded-br-sm"
+                          : "bg-white text-slate-900 border border-slate-200 rounded-bl-sm"
+                      }`}
+                    >
+                      {b.pending ? (
+                        <span
+                          className="flex gap-1 items-center h-5"
+                          aria-label="Assistant is typing"
+                        >
+                          <Dot delay="0s" />
+                          <Dot delay="0.15s" />
+                          <Dot delay="0.3s" />
+                        </span>
+                      ) : (
+                        b.text
+                      )}
+                    </div>
                   </div>
+
+                  {!mine && b.cards && b.cards.length > 0 && (
+                    <div className="space-y-1.5">
+                      {b.cards.map((c, i) => (
+                        <div
+                          key={i}
+                          className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                        >
+                          <div className="font-semibold text-[#1B3A6B] truncate">
+                            {c.universityName}
+                          </div>
+                          {c.city && <div className="text-slate-500">{c.city}</div>}
+                          {c.programName && (
+                            <div className="text-slate-700 truncate">{c.programName}</div>
+                          )}
+                          <div className="mt-1 flex flex-wrap gap-x-3 text-slate-600">
+                            <span className="font-medium text-[#1B3A6B]">{c.tuitionLabel}</span>
+                            {c.deadline && <span>Deadline {c.deadline}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!mine && b.chips && b.chips.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {b.chips.map((q, i) => (
+                        <button
+                          key={i}
+                          onClick={() => void send(q.send)}
+                          disabled={busy}
+                          className="text-[11px] font-medium px-2.5 py-1.5 rounded-full border border-[#29ABE2] text-[#1B3A6B] bg-white hover:bg-[#29ABE2]/10 disabled:opacity-40"
+                        >
+                          {q.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -218,7 +321,13 @@ export default function BusinessChatWidget() {
               className="h-10 w-10 shrink-0 rounded-full bg-[#C8102E] text-white flex items-center justify-center hover:bg-[#A50D25] disabled:opacity-40"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </div>
