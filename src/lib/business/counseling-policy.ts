@@ -58,6 +58,47 @@ export const EXCLUSIVITY_PHRASES = [
 export const MORE_OPTIONS_HINT =
   /আরও|অনেক|বেশি|বাইরে|analysis|analyze|shortlist|team|counselor|counsellor|expert|verify|যাচাই|বিশ্লেষণ|টিম/i;
 
+// The only official contact details. Anything else is an invention.
+export const OFFICE = {
+  address:
+    "House No. 1, Road No. 14, Nikunjo-2, Khilkhet, Dhaka-1229, Bangladesh",
+  phone: "+8801901923239",
+  maps: "https://maps.app.goo.gl/pi4P5j9KHKSib8va6",
+};
+
+// Any phone-like number that is not the official one.
+const PHONE_LIKE = /\+?8?8?0?1\d{9}|\+?\d{11,15}/g;
+
+/**
+ * Catch an invented phone number, a wrong address or a made-up Maps link.
+ * The AI is told to copy these exactly, so drifting is a real defect.
+ */
+export function checkContactAccuracy(reply: string): PolicyViolation[] {
+  const out: PolicyViolation[] = [];
+
+  const digits = (s: string) => s.replace(/[^\d]/g, "");
+
+  for (const m of reply.match(PHONE_LIKE) ?? []) {
+    const d = digits(m);
+    // 5-digit or smaller strings are prices, years or counts, not phones.
+    if (d.length < 10) continue;
+    if (digits(OFFICE.phone).endsWith(d) || d.endsWith(digits(OFFICE.phone))) continue;
+    out.push({ rule: "wrong_phone", detail: m });
+  }
+
+  // A maps link that differs from ours. The pattern must not swallow a
+  // trailing sentence full stop, or every correct link looks like a typo.
+  const linkRe = /https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|maps\.google\.[a-z.]+)\/[^\s)<>"'।]*/gi;
+  for (const m of reply.match(linkRe) ?? []) {
+    const clean = m.replace(/[.,;]+$/, "");
+    if (clean !== OFFICE.maps && !clean.startsWith(OFFICE.maps)) {
+      out.push({ rule: "wrong_maps_link", detail: clean });
+    }
+  }
+
+  return out;
+}
+
 /**
  * Promises about when a human will respond. We do not control the
  * counsellor's schedule, so a specific day or time must never be given.
@@ -277,6 +318,9 @@ export function checkReplyPolicy(
       });
     }
   }
+
+  // Contact details must be exactly ours.
+  out.push(...checkContactAccuracy(reply));
 
   return out;
 }

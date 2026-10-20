@@ -97,6 +97,15 @@ export function softenBangla(reply: string): string {
 export function formatForChat(reply: string): string {
   let out = reply.replace(/\r\n/g, "\n");
 
+  // Protect URLs first. The sentence-spacing rule below would turn
+  // "https://maps.app.goo.gl/x" into "https://maps. app. goo. gl/x",
+  // which is a broken link — invisible until a student taps it.
+  const urls: string[] = [];
+  out = out.replace(/https?:\/\/[^\s)<>"'।]+/g, (m) => {
+    urls.push(m);
+    return `\u0000URL${urls.length - 1}\u0000`;
+  });
+
   // Missing space after sentence-ending punctuation when a letter follows.
   // Bangla danda (।), Latin full stop, and question/exclamation marks.
   out = out.replace(/([।.!?])(?=[\u0980-\u09FFA-Za-z])/g, "$1 ");
@@ -109,7 +118,7 @@ export function formatForChat(reply: string): string {
 
   // A long single block is hard to read: split into short paragraphs at
   // sentence boundaries when there is no newline at all.
-  if (!out.includes("\n") && out.length > 220) {
+  if (!out.includes("\n") && out.replace(/\u0000URL\d+\u0000/g, "").length > 220) {
     const sentences = out.split(/(?<=[।.!?])\s+/);
     const chunks: string[] = [];
     let cur = "";
@@ -131,6 +140,9 @@ export function formatForChat(reply: string): string {
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+
+  // Restore every URL exactly as the model produced it.
+  out = out.replace(/\u0000URL(\d+)\u0000/g, (_, i) => urls[Number(i)] ?? "");
 
   return out;
 }
