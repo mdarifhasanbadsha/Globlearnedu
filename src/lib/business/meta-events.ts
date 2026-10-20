@@ -119,24 +119,28 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
           const body = msg.text ?? "";
 
           // We already stored this message when we sent it, so Meta echoing
-          // it back must not create a second bubble in the thread. Match on
-          // the text within the last few minutes.
+          // it back must not create a second bubble in the thread.
+          //
+          // Meta also echoes messages a HUMAN typed in the Page inbox, which
+          // we have never seen and must store. So the test is not "did we
+          // send something" but "is this exact text already the most recent
+          // outbound message here". Comparing against the latest row also
+          // avoids depending on clock skew between Meta and Neon, which is
+          // why the timestamp-window version let duplicates through.
           if (body.trim().length > 0) {
-            const since = new Date(Date.now() - 5 * 60 * 1000);
-            const [dupe] = await db
-              .select({ id: bizMessages.id })
+            const [last] = await db
+              .select({ body: bizMessages.body })
               .from(bizMessages)
               .where(
-                and(
-                  eq(bizMessages.conversationId, convId),
-                  eq(bizMessages.direction, "out"),
-                  eq(bizMessages.body, body),
-                  gte(bizMessages.createdAt, since)
-                )
+                and(eq(bizMessages.conversationId, convId), eq(bizMessages.direction, "out"))
               )
+              .orderBy(desc(bizMessages.createdAt))
               .limit(1);
 
-            if (!dupe) {
+            const normalise = (s: string) => s.replace(/\s+/g, " ").trim();
+            const isDupe = !!last && normalise(last.body) === normalise(body);
+
+            if (!isDupe) {
               await storeMessage({
                 businessId,
                 conversationId: convId,

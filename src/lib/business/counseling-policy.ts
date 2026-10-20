@@ -140,7 +140,7 @@ export interface PolicyViolation {
 
 export function checkReplyPolicy(
   reply: string,
-  opts: { level?: string | null; question?: string | null } = {}
+  opts: { level?: string | null; question?: string | null; allowedUniversities?: string[] | null } = {}
 ): PolicyViolation[] {
   const out: PolicyViolation[] = [];
   const lower = reply.toLowerCase();
@@ -188,5 +188,24 @@ export function checkReplyPolicy(
     out.push({ rule: "chinese_medium_claim", detail: "implied Chinese-taught is the norm" });
   }
 
+  // Naming a university requires an approved entry for that exact subject.
+  // The caller passes the universities it is allowed to mention.
+  if (opts.allowedUniversities && opts.allowedUniversities.length === 0) {
+    const named = KNOWN_UNIVERSITY_PATTERN.test(reply);
+    if (named) {
+      out.push({
+        rule: "unverified_university",
+        detail: "named a university with no approved knowledge for this question",
+      });
+    }
+  }
+
   return out;
 }
+
+/**
+ * A university name in a reply. Used only to detect names the model was
+ * not entitled to produce, so it errs toward catching too much.
+ */
+export const KNOWN_UNIVERSITY_PATTERN =
+  /\b(?:[A-Z][A-Za-z'’.-]*\s+){0,4}(?:University|Institute|College|Polytechnic|Academy)\b(?: of [A-Z][A-Za-z ]+)?/;
