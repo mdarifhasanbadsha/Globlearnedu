@@ -102,6 +102,36 @@ export function checkSelfReveal(reply: string, question?: string | null): Policy
   return out;
 }
 
+/**
+ * A price answered as a bare number reads like a shopkeeper, not a counsellor.
+ * The reply must give the figure AND say what it covers, so the number means
+ * something to the student.
+ */
+export function checkPriceQuality(reply: string, question?: string | null): PolicyViolation[] {
+  const out: PolicyViolation[] = [];
+  const askedPrice = /fee|ফি|খরচ|charge|চার্জ|টাকা|taka|price|cost|কত/i.test(question ?? "");
+  if (!askedPrice) return out;
+
+  const hasAmount = /[০-৯]{2,3}[,\u066C]?[০-৯]{3}|\d{2,3},\d{3}/.test(reply);
+  if (!hasAmount) return out;
+
+  const givesContext =
+    /সার্ভিস|service|অন্তর্ভুক্ত|includes?|আবেদন|application|ভিসা|visa|পুরো|support|সাপোর্ট|সহায়তা/i.test(
+      reply
+    );
+  const asksAboutThem =
+    /চাচ্ছেন|ভাবছেন|আগ্রহী|কোন প্রোগ্রাম|কোন লেভেল|কবে|intake|plan|পরিকল্পনা/i.test(reply);
+
+  if (!givesContext) {
+    out.push({ rule: "bare_price", detail: "quoted a number without saying what it covers" });
+  }
+  if (!asksAboutThem) {
+    out.push({ rule: "no_interest", detail: "did not ask anything about the student" });
+  }
+
+  return out;
+}
+
 /** Naming universities must come with "there are many more" framing. */
 export const MORE_OPTIONS_HINT =
   /আরও|অনেক|বেশি|বাইরে|analysis|analyze|shortlist|team|counselor|counsellor|expert|verify|যাচাই|বিশ্লেষণ|টিম/i;
@@ -377,6 +407,7 @@ export function checkReplyPolicy(
   out.push(...checkContactAccuracy(reply));
   out.push(...checkSelfReveal(reply, opts.question));
   out.push(...checkDocumentList(reply));
+  out.push(...checkPriceQuality(reply, opts.question));
 
   // Repeating "your number is with us" after it was already given reads
   // like a call-centre script and the student stops reading.

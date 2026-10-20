@@ -117,11 +117,23 @@ export function classifyMessage(raw: string): Classified {
 
   // A short greeting or thanks does not need the model.
   if (GREETING.test(text)) {
+    // Match the greeting they used. "hi" gets "Hello", not "ওয়ালাইকুম আসসালাম" —
+    // answering a plain hi with a religious greeting reads as a template.
+    const saidSalam = /salam|সালাম|assalamu/i.test(text);
+    const isBangla = /[\u0980-\u09FF]/.test(text);
+    const saidBanglaGreeting = /হ্যালো|হাই|কেমন|কি অবস্থা/i.test(text);
+
+    const reply = saidSalam
+      ? "ওয়ালাইকুম আসসালাম! 🙂 চায়না নিয়ে কী জানতে চান — কোন প্রোগ্রাম বা কোন বিষয়ে পড়তে চান?"
+      : isBangla || saidBanglaGreeting
+        ? "হ্যালো ভাইয়া! 🙂 চায়না নিয়ে কী জানতে চান — কোন প্রোগ্রাম বা কোন বিষয়ে পড়তে চান?"
+        : "Hello ভাইয়া! 🙂 কী জানতে চান — চায়নার কোন প্রোগ্রাম বা কোন বিষয়ে পড়তে চান?";
+
     return {
       intent: "greeting",
       handled: true,
-      reply: "ওয়ালাইকুম আসসালাম! 🙏 চায়না পড়াশোনা নিয়ে কী জানতে চান — প্রোগ্রাম, খরচ, নাকি ভর্তির প্রক্রিয়া?",
-      reason: "greeting",
+      reply,
+      reason: saidSalam ? "salam greeting" : "greeting",
     };
   }
   if (THANKS.test(text)) {
