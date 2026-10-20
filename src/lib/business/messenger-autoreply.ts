@@ -113,6 +113,43 @@ export async function autoReplyToMessenger(
     return { attempted: false, reason: "student asked to stop" };
   }
 
+  // Classify before spending a model call. Greetings, thanks, off-topic chat
+  // and attempts to break scope get a short scripted answer instead. Clear
+  // abuse is answered calmly and never reaches the model.
+  const { classifyMessage } = await import("@/lib/business/intent");
+  const intent = classifyMessage(joinBurst(burst));
+
+  if (intent.handled && intent.reply) {
+    const psidForIntent = conv.visitorId;
+    await sendTypingOn(psidForIntent);
+    const [savedIntent] = await db
+      .insert(bizMessages)
+      .values({
+        businessId,
+        conversationId,
+        direction: "out",
+        authorKind: "ai",
+        body: intent.reply,
+        meta: { source: "messenger_auto_reply", intent: intent.intent },
+      })
+      .returning({ id: bizMessages.id });
+
+    const sentIntent = await sendMessengerText({
+      businessId,
+      conversationId,
+      recipientId: psidForIntent,
+      body: intent.reply,
+      messageId: savedIntent?.id,
+    });
+
+    return {
+      attempted: true,
+      reason: `${intent.intent}: ${sentIntent.ok ? "sent" : (sentIntent.errorCode ?? "failed")}`,
+      sent: sentIntent.ok,
+      batched: burst.length,
+    };
+  }
+
   // ── typing indicator BEFORE we think ──
   const psid = conv.visitorId;
   await sendTypingOn(psid);

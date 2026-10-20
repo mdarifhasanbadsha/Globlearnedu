@@ -100,6 +100,26 @@ async function handlePost(req: Request) {
     return NextResponse.json({ error: "Message must be 1-2000 characters" }, { status: 400 });
   }
 
+  // Classify BEFORE spending a model call. Greetings, thanks, off-topic chat
+  // and attempts to break scope get a short scripted answer instead, which
+  // protects the API budget and keeps the conversation on track. A student is
+  // never punished for being confusing — only clear abuse and clear attempts
+  // to misuse the assistant are refused, and even then politely.
+  const { classifyMessage } = await import("@/lib/business/intent");
+  const intent = classifyMessage(message);
+
+  if (intent.handled && intent.reply) {
+    return NextResponse.json({
+      token: isValidGuestToken(payload?.token) ? payload.token : "",
+      reply: intent.reply,
+      aiEnabled: true,
+      intent: intent.intent,
+      cards: [],
+      quickReplies: [],
+      typingMs: 900,
+    });
+  }
+
   let token: string = isValidGuestToken(payload?.token) ? payload.token : "";
   const isNew = token === "";
 
