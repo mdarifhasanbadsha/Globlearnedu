@@ -315,11 +315,23 @@ export async function POST(req: Request) {
       .where(eq(bizConversations.id, conversationId));
   }
 
-  // Structured extras for the widget: program cards and tappable replies.
+  // Structured extras for the widget.
   const { toCards, suggestQuickReplies } = await import("@/lib/business/chat-cards");
   const { planPacing, remainingDelay } = await import("@/lib/business/pacing");
+  const { decideCards } = await import("@/lib/business/card-policy");
 
-  const cards = toCards(knowledge);
+  // Cards are shown sparingly: a counselor talks, they do not paste a catalogue.
+  const alreadyShownCard = history.some(
+    (h) => h.direction === "out" && /per semester|per year|per month/i.test(h.body)
+  );
+  const cardDecision = decideCards({
+    reply: reply ?? "",
+    question: message,
+    candidates: toCards(knowledge),
+    turnIndex: history.filter((h) => h.direction === "in").length - 1,
+    alreadyShownCard,
+  });
+
   const quickReplies = suggestQuickReplies({
     askedAboutFee: /tuition|fee|taka|koto|খরচ|ফি|টাকা/i.test(history.map((h) => h.body).join(" ")),
     hasDegree: !!(extracted.degree_level || existingLead?.degreeLevel),
@@ -338,7 +350,8 @@ export async function POST(req: Request) {
     reply,
     aiError: result.ok ? null : result.error,
     status: conversationStatus,
-    cards,
+    cards: cardDecision.cards,
+    cardsReason: cardDecision.reason,
     quickReplies,
     // The widget keeps the typing indicator up for this long before
     // revealing the reply, so a 1s answer does not look robotic.
