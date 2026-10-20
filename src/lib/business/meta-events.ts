@@ -180,60 +180,10 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
           })
           .where(eq(bizConversations.id, convId));
 
-        // Reply automatically when the AI still owns the thread. This only
-        // runs for live webhook traffic; the history import calls its own
-        // path so thousands of old messages never trigger replies.
-        if (process.env.META_AUTOREPLY !== "off") {
-          try {
-            const { autoReplyToMessenger } = await import("@/lib/business/messenger-autoreply");
-            const outcome = await autoReplyToMessenger(convId);
-            console.log(
-              `[messenger] auto-reply ${outcome.sent ? "sent" : "skipped"}: ${outcome.reason}`
-            );
-          } catch (e) {
-            console.error("[messenger] auto-reply crashed:", (e as Error)?.message);
-          }
-        }
-
-        // Keep the pipeline honest: a student replying means the lead is alive.
-        try {
-          const { onStudentReplied } = await import("@/lib/business/stage-automation");
-          const adv = await onStudentReplied({ businessId, conversationId: convId });
-          if (adv.moved) {
-            console.log(`[workflow] lead stage ${adv.from} -> ${adv.to}`);
-          }
-        } catch (e) {
-          console.error("[workflow] stage automation failed:", (e as Error)?.message);
-        }
-
-        // Capture who this is, and where they came from.
-        // A name in the inbox turns "Messenger t_647061" into a person.
-        try {
-          const { syncConversationProfile, referralFields } = await import(
-            "@/lib/business/profile"
-          );
-
-          const [c] = await db
-            .select({ name: bizConversations.contactName })
-            .from(bizConversations)
-            .where(eq(bizConversations.id, convId))
-            .limit(1);
-
-          // Fetch the profile once per thread unless it is still unknown.
-          if (!c?.name) {
-            const synced = await syncConversationProfile(businessId, convId);
-            if (synced.ok) console.log(`[profile] ${synced.name ?? "unknown"}`);
-          }
-
-          // Referral is only delivered on the live event, so store it now.
-          const src = referralFields((ev as any).referral);
-          if (Object.keys(src).length > 0) {
-            await db.update(bizConversations).set(src).where(eq(bizConversations.id, convId));
-            console.log(`[source] ${String((src as any).sourceKind)}`);
-          }
-        } catch (e) {
-          console.error("[profile] sync failed:", (e as Error)?.message);
-        }
+        // Everything a student message must trigger: identity, auto-reply
+        // and pipeline movement. Shared with the postback branch so a
+        // button tap is never silently left unanswered.
+        await afterInbound({ businessId, conversationId: convId, psid });
 
         stored++;
         continue;
@@ -242,14 +192,30 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
       // Postback (button tap) arrives without a message object.
       if (ev.postback) {
         const convId = await conversationForPsid(businessId, psid);
+
+        // A button tap is still a student speaking to us: it must open the
+        // 24h window and it must be answerable, exactly like text.
+        const pbText = ev.postback.title ?? ev.postback.payload ?? "";
         await storeMessage({
           businessId,
           conversationId: convId,
           direction: "in",
           authorKind: "student",
-          body: `[button] ${ev.postback.title ?? ev.postback.payload ?? ""}`.trim(),
-          meta: { source: "messenger_postback" },
+          body: pbText.length > 0 ? pbText : "[button]",
+          meta: { source: "messenger_postback", payload: ev.postback.payload ?? null },
         });
+
+        await db
+          .update(bizConversations)
+          .set({
+            lastMessageAt: new Date(),
+            lastInboundAt: new Date(),
+            updatedAt: new Date(),
+            status: "open",
+          })
+          .where(eq(bizConversations.id, convId));
+
+        await afterInbound({ businessId, conversationId: convId, psid });
         stored++;
       }
     }
@@ -260,4 +226,58 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
   }
 
   return stored;
+}
+
+/**
+ * Everything that must happen after a student message, regardless of
+ * whether it arrived as text, an attachment or a button tap.
+ *
+ * Keeping this in one place is what stopped postbacks from silently
+ * receiving no reply.
+ */
+async function afterInbound(args: {
+  businessId: string;
+  conversationId: string;
+  psid: string;
+}): Promise<void> {
+  const { businessId, conversationId, psid } = args;
+
+  // 1. Identity: name and photo, retried until we have a name.
+  try {
+    const [c] = await db
+      .select({ name: bizConversations.contactName })
+      .from(bizConversations)
+      .where(eq(bizConversations.id, conversationId))
+      .limit(1);
+
+    if (!c?.name) {
+      const { syncConversationProfile } = await import("@/lib/business/profile");
+      const synced = await syncConversationProfile(businessId, conversationId);
+      console.log(`[profile] ${synced.ok ? synced.name : "failed: " + synced.error}`);
+    }
+  } catch (e) {
+    console.error("[profile] sync failed:", (e as Error)?.message);
+  }
+
+  // 2. Auto-reply, if the AI still owns the thread.
+  if (process.env.META_AUTOREPLY !== "off") {
+    try {
+      const { autoReplyToMessenger } = await import("@/lib/business/messenger-autoreply");
+      const outcome = await autoReplyToMessenger(conversationId);
+      console.log(
+        `[messenger] auto-reply ${outcome.sent ? "sent" : "skipped"}: ${outcome.reason}`
+      );
+    } catch (e) {
+      console.error("[messenger] auto-reply crashed:", (e as Error)?.message);
+    }
+  }
+
+  // 3. Pipeline: a student replying means the lead is alive.
+  try {
+    const { onStudentReplied } = await import("@/lib/business/stage-automation");
+    const adv = await onStudentReplied({ businessId, conversationId });
+    if (adv.moved) console.log(`[workflow] lead stage ${adv.from} -> ${adv.to}`);
+  } catch (e) {
+    console.error("[workflow] stage automation failed:", (e as Error)?.message);
+  }
 }
