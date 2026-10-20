@@ -15,10 +15,32 @@ export default function SetupMigrate() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/business/setup/migrate", { cache: "no-store" });
-      if (res.ok) setStatus(await res.json());
-    } catch {
-      /* ignore */
+      const res = await fetch("/api/business/setup/migrate", {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
+      const text = await res.text();
+      // A truncated or HTML body must never surface as "Unexpected end of
+      // JSON input" — that tells the owner nothing actionable.
+      if (!text.trim()) {
+        setErr("The server returned an empty response. Try again in a moment.");
+        return;
+      }
+      let json: any;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        setErr(`Unexpected response from the server (${res.status}).`);
+        return;
+      }
+      if (json?.error) {
+        setErr(String(json.error));
+        return;
+      }
+      setErr(null);
+      setStatus(json);
+    } catch (e: any) {
+      setErr(e?.message ?? "Could not reach the server.");
     }
   }, []);
 
@@ -31,13 +53,18 @@ export default function SetupMigrate() {
     setErr(null);
     setResult(null);
     try {
-      const res = await fetch("/api/business/setup/migrate", { method: "POST" });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error ?? "Failed");
+      const res = await fetch("/api/business/setup/migrate", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+      });
+      const text = await res.text();
+      if (!text.trim()) throw new Error("The server returned an empty response. Try again.");
+      const json = JSON.parse(text);
+      if (!res.ok) throw new Error(json?.error ?? "Update failed");
       setResult({ applied: json.applied ?? 0, failed: json.failed ?? [] });
       await load();
     } catch (e: any) {
-      setErr(e.message ?? "Failed");
+      setErr(e.message ?? "Update failed");
     } finally {
       setBusy(false);
     }
