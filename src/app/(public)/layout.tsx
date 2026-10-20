@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomBar } from "@/components/layout/MobileBottomBar";
 import FloatingWhatsApp from "@/components/shared/FloatingWhatsApp";
+import BusinessChatWidget from "@/components/shared/BusinessChatWidget";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <Footer />
       <MobileBottomBar />
       <FloatingWhatsApp />
+      <BusinessChatWidget />
     </>
   );
 }

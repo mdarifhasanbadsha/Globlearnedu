@@ -32,6 +32,10 @@ function isPublicPath(pathname: string): boolean {
   if (pathname.startsWith("/api/csca/homework")) return true;
   if (pathname.startsWith("/api/csca/mocktest")) return true;
   if (pathname.startsWith("/api/public")) return true;
+  // Public chat endpoint (guests) and Meta webhooks (verified by HMAC, not
+  // by session cookie) must stay reachable without a login redirect.
+  if (pathname.startsWith("/api/public/chat")) return true;
+  if (pathname.startsWith("/api/business/webhooks")) return true;
   if (pathname.startsWith("/_next")) return true;
   if (pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?|ttf|eot)$/)) return true;
   return publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
@@ -54,6 +58,13 @@ const protectedMiddleware = auth((req) => {
   }
 
   if (pathname.startsWith("/staff") && !["admin", "staff"].includes(role)) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  if (
+    (pathname === "/business" || pathname.startsWith("/business/")) &&
+    !["admin", "staff"].includes(role)
+  ) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
