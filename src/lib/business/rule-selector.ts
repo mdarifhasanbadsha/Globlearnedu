@@ -21,6 +21,10 @@ export const CORE_SECTIONS = new Set([
   "SOUND LIKE A PERSON",
   "NEVER SEND A BROKEN",
   "EXTRACTION RULE",
+  // Not topic-specific: never inventing a benefit applies to every business
+  // answer, and getting it wrong costs a student real money.
+  "NEVER INVENT A FACILITY",
+  "PAYMENT POLICY",
 ]);
 
 export interface Section {

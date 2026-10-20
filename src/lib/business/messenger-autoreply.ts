@@ -123,13 +123,24 @@ export async function autoReplyToMessenger(
   // ── rest mode ──
   // After several non-genuine turns in a row, step away for fifteen minutes
   // rather than keep answering. A genuine question always wins over the timer.
+  //
+  // Read defensively: if the resting_until column has not been added yet, a
+  // failed select here would throw and abort the entire reply, leaving the
+  // student with silence — exactly what happened once in production. A broken
+  // rest feature must never stop a normal answer.
   const rest = await import("@/lib/business/rest-mode");
-  const restState = await db
-    .select({ restingUntil: bizConversations.restingUntil })
-    .from(bizConversations)
-    .where(eq(bizConversations.id, conversationId))
-    .limit(1);
-  const decision = rest.decideRest(burstTextForIntent, restState[0]?.restingUntil ?? null);
+  let restingUntil: Date | null = null;
+  try {
+    const rows: any[] = await db
+      .execute(
+        sql`select resting_until from biz_conversations where id = ${conversationId} limit 1`
+      )
+      .then((r: any) => r?.rows ?? r ?? []);
+    restingUntil = rows?.[0]?.resting_until ? new Date(rows[0].resting_until) : null;
+  } catch {
+    restingUntil = null;
+  }
+  const decision = rest.decideRest(burstTextForIntent, restingUntil);
 
   if (decision.silent) {
     // Never leave the student with nothing. Answer the moment they arrive,
