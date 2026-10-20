@@ -43,6 +43,9 @@ export const bizConversations = pgTable(
     // Added by 0013 — quoted-message context for the batched reply.
     pendingQuote: text("pending_quote"),
     pendingQuoteAt: timestamp("pending_quote_at"),
+    // Added by 0014 - cool-off after a conversation stops being productive.
+    restingUntil: timestamp("resting_until"),
+    strikeCount: integer("strike_count").notNull().default(0),
     lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

@@ -117,9 +117,65 @@ export async function autoReplyToMessenger(
   // and attempts to break scope get a short scripted answer instead. Clear
   // abuse is answered calmly and never reaches the model.
   const { classifyMessage } = await import("@/lib/business/intent");
-  const intent = classifyMessage(joinBurst(burst));
+  const burstTextForIntent = joinBurst(burst);
+  const intent = classifyMessage(burstTextForIntent);
+
+  // ── rest mode ──
+  // After several non-genuine turns in a row, step away for fifteen minutes
+  // rather than keep answering. A genuine question always wins over the timer.
+  const rest = await import("@/lib/business/rest-mode");
+  const restState = await db
+    .select({ restingUntil: bizConversations.restingUntil })
+    .from(bizConversations)
+    .where(eq(bizConversations.id, conversationId))
+    .limit(1);
+  const decision = rest.decideRest(burstTextForIntent, restState[0]?.restingUntil ?? null);
+
+  if (decision.silent) {
+    console.log(`[messenger] resting, ${decision.minutes}m left — staying silent`);
+    return { attempted: false, reason: `resting (${decision.minutes}m left)`, batched: burst.length };
+  }
+
+  if (decision.resuming) {
+    await rest.leaveRest(conversationId);
+    console.log("[messenger] genuine question — resumed early");
+  }
 
   if (intent.handled && intent.reply) {
+    const strikes = await rest.bumpStrikes(conversationId, intent.intent);
+
+    // Enough. Exit once, politely, and stay quiet for the rest period.
+    if (rest.shouldRest(strikes)) {
+      await rest.enterRest(conversationId);
+      const psidRest = conv.visitorId;
+      await sendTypingOn(psidRest);
+      const [savedRest] = await db
+        .insert(bizMessages)
+        .values({
+          businessId,
+          conversationId,
+          direction: "out",
+          authorKind: "ai",
+          body: rest.REST_REPLY,
+          meta: { source: "messenger_auto_reply", intent: "rest_start" },
+        })
+        .returning({ id: bizMessages.id });
+      const sentRest = await sendMessengerText({
+        businessId,
+        conversationId,
+        recipientId: psidRest,
+        body: rest.REST_REPLY,
+        messageId: savedRest?.id,
+      });
+      console.log(`[messenger] entering ${rest.REST_MINUTES}m rest after ${strikes} strikes`);
+      return {
+        attempted: true,
+        reason: `rest started after ${strikes} strikes: ${sentRest.ok ? "sent" : "failed"}`,
+        sent: sentRest.ok,
+        batched: burst.length,
+      };
+    }
+
     const psidForIntent = conv.visitorId;
     await sendTypingOn(psidForIntent);
     const [savedIntent] = await db
@@ -149,6 +205,9 @@ export async function autoReplyToMessenger(
       batched: burst.length,
     };
   }
+
+  // A genuine question resets the strike counter.
+  await rest.bumpStrikes(conversationId, "genuine");
 
   // ── typing indicator BEFORE we think ──
   const psid = conv.visitorId;

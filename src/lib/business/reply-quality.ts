@@ -28,10 +28,46 @@ const DANGLING_ENDINGS = [
 
 const FILLER_ONLY = /^(?:আহেন|আছেন|ok|okay|হুম|হ্যা|হ্যাঁ|ঠিক আছে|ভালো|ধন্যবাদ|thanks|thank you|got it|noted)[\s।.!?]*$/i;
 
+/**
+ * Talking about being an AI, a model, or one's own technical details.
+ *
+ * This is not merely untidy — it ends the conversation. A student told
+ * "আমার মডেল বা টেকনিক্যাল ডিটেইলস আমার কাছে নেই" stops treating us as a
+ * counsellor and starts probing the software. In production one thread sent
+ * that same sentence fourteen times because every reply mentioned the model.
+ */
+export const SELF_REVEAL =
+  /(?:আমার|মডেলের|টেকনিক্যালের|আমাদের)\s*(?:নিজের\s*)?(?:মডেল|টেকনিক্যাল\s*ডিটেইলস|প্রোগ্রাম|সিস্টেম)|আমি\s*(?:নিজের|আমার|একটি|একটা)?\s*(?:মডেল|টেকনিক্যাল|AI|এআই|রোবট|বট|চ্যাটবট|কাউন্সেলিং\s*অ্যাসিস্ট্যান্ট)|কাউন্সেলিং\s*অ্যাসিস্ট্যান্ট|(?:GL\s*Education\s*)?Assistant\b|counseling\s*assistant|as an AI|I(?:'m| am) an AI|language model|techn(?:ical)?\s*details|আমার\s*প্রোগ্রামিং/i;
+
+/**
+ * Blaming the student for repetition. They did not repeat anything — our own
+ * reply was re-ingested, or we answered twice. Saying this to them is the
+ * rudest thing this system has done.
+ */
+export const BLAMES_STUDENT =
+  /(?:মেসেজটা|মেসেজটি|মেসেজ)\s*(?:বারবার|কয়েকবার|একাধিকবার)?\s*(?:কপি|রিপিট|repeat|duplicate)|আপনি\s*(?:বারবার|একই\s*কথা)\s*(?:লিখেছেন|বলেছেন|করেছেন)|you (?:repeated|sent|typed) (?:the )?(?:same|it)|duplicate message/i;
+
+/** The calm exit when a conversation stops being productive. */
+export const REST_REPLY =
+  "ভাইয়া, আমি এখানে চায়নায় পড়াশোনার ব্যাপারে সাহায্য করার জন্য আছি — এখন মনে হচ্ছে আমার উত্তরগুলো আপনার কাজে লাগছে না। আপনি চাইলে সরাসরি কল বা WhatsApp করতে পারেন: +8801901923239, ওখানে আমাদের টিম বিস্তারিতভাবে সাহায্য করতে পারবে। 🙏";
+
+/**
+ * Anything that is clearly not a study-in-China question but asks for real
+ * work: writing code, the weather, our CEO, browsing a website.
+ */
+export const IRRELEVANT_TASK =
+  /(?:python|javascript|java|php|code|coding|program(?:me)?\s*(?:ta|lekho|de|din)|script|hack|brute\s*force)/i;
+
 export function isUsableReply(reply: string, studentText: string): QualityVerdict {
   const text = reply.trim();
 
   if (text.length === 0) return { ok: false, reason: "empty" };
+
+  // Talking about being software ends the counselling relationship.
+  if (SELF_REVEAL.test(text)) return { ok: false, reason: "self_reveal" };
+
+  // Never blame the student for repetition.
+  if (BLAMES_STUDENT.test(text)) return { ok: false, reason: "blames_student" };
 
   // Too short to be a real answer. Genuine short replies still carry a verb
   // or a question mark, so length alone is not the only test.

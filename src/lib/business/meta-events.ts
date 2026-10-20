@@ -14,7 +14,7 @@ import { bizConversations, bizMessages } from "@/lib/db/schema.business";
 import { getBusinessId } from "@/lib/business/config";
 import { VOICE_PLACEHOLDER } from "@/lib/business/voice";
 import { quotedFromEvent } from "@/lib/business/conversation-flow";
-import { and, eq, desc, gte } from "drizzle-orm";
+import { and, eq, desc, gte, gt } from "drizzle-orm";
 
 interface MetaMessage {
   mid?: string;
@@ -157,6 +157,49 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
         }
 
         const convId = await conversationForPsid(businessId, psid);
+
+        // A student must never be shown our own words as their own.
+        //
+        // Messenger does not reliably set is_echo (and postback/attachment
+        // events never carry it), so an outgoing reply could be re-ingested
+        // as an inbound message. In production this looped: the AI read its
+        // own reply, repeated it, and each copy became a 5,000-character
+        // "student" message.
+        //
+        // So BEFORE treating anything as student text, check whether it is
+        // already one of our recent outbound messages.
+        const inboundCandidate = (msg.text ?? "").trim();
+        if (inboundCandidate.length > 0) {
+          const recentOut = await db
+            .select({ body: bizMessages.body })
+            .from(bizMessages)
+            .where(
+              and(
+                eq(bizMessages.conversationId, convId),
+                eq(bizMessages.direction, "out"),
+                gt(bizMessages.createdAt, new Date(Date.now() - 10 * 60 * 1000))
+              )
+            )
+            .orderBy(desc(bizMessages.createdAt))
+            .limit(8);
+
+          const norm = (s: string) => s.replace(/\s+/g, " ").trim();
+          const incoming = norm(inboundCandidate);
+          const isOurOwnText = recentOut.some((o) => {
+            const mine = norm(o.body);
+            if (!mine) return false;
+            // Exact match, or the incoming text is our own reply repeated.
+            return (
+              incoming === mine ||
+              (incoming.length > 60 && (incoming.includes(mine) || mine.includes(incoming)))
+            );
+          });
+
+          if (isOurOwnText) {
+            console.log("[messenger] dropped re-ingested outbound text");
+            continue;
+          }
+        }
 
         // Attachment-first: a voice note has no text, so we must not store
         // an empty body and must not let the AI invent what was said.

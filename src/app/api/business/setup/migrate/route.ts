@@ -23,6 +23,8 @@ const CHANGES: [string, string][] = [
   ["biz_conversations.source_post_id", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "source_post_id" varchar(100)`],
   ["biz_conversations.source_url", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "source_url" text`],
   ["biz_leads.alerted_at", `ALTER TABLE "biz_leads" ADD COLUMN IF NOT EXISTS "alerted_at" timestamp`],
+  ["biz_conversations.resting_until", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "resting_until" timestamp`],
+  ["biz_conversations.strike_count", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "strike_count" integer DEFAULT 0 NOT NULL`],
   ["biz_lead_notes", `CREATE TABLE IF NOT EXISTS "biz_lead_notes" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
       "business_id" uuid NOT NULL, "lead_id" uuid NOT NULL, "body" text NOT NULL,
