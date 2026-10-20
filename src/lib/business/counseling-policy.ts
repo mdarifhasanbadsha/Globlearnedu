@@ -54,6 +54,24 @@ export const EXCLUSIVITY_PHRASES = [
   "no other options",
 ];
 
+/**
+ * The document checklist is fixed. Extra notes and the wrong currency are
+ * both defects: they change what the student thinks they must prepare.
+ */
+export function checkDocumentList(reply: string): PolicyViolation[] {
+  const out: PolicyViolation[] = [];
+  const isDocList = /ডকুমেন্ট|document|কাগজ/i.test(reply) && /[০-৯\d]+\.\s/.test(reply);
+  if (!isDocList) return out;
+
+  if (/মূল কপি|ইংরেজি অনুবাদ|notariz|attest|translat/i.test(reply)) {
+    out.push({ rule: "document_note_added", detail: "added a copy/translation note" });
+  }
+  if (/\bUSD\b|\$|dollar|ডলার/i.test(reply)) {
+    out.push({ rule: "wrong_currency", detail: "bank statement must be in RMB" });
+  }
+  return out;
+}
+
 /** Naming universities must come with "there are many more" framing. */
 export const MORE_OPTIONS_HINT =
   /আরও|অনেক|বেশি|বাইরে|analysis|analyze|shortlist|team|counselor|counsellor|expert|verify|যাচাই|বিশ্লেষণ|টিম/i;
@@ -327,6 +345,7 @@ export function checkReplyPolicy(
 
   // Contact details must be exactly ours.
   out.push(...checkContactAccuracy(reply));
+  out.push(...checkDocumentList(reply));
 
   // Repeating "your number is with us" after it was already given reads
   // like a call-centre script and the student stops reading.
