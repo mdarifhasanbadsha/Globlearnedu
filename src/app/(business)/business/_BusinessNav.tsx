@@ -26,6 +26,7 @@ const GROUPS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/business/knowledge", label: "Universities", icon: "▤" },
       { href: "/business/style", label: "Brand voice", icon: "✎" },
+      { href: "/business/lab", label: "Test & Train", icon: "◬" },
     ],
   },
   {

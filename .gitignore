@@ -14,3 +14,4 @@ data/*.json
 scratch_pages
 scratch_voice/
 ui_*.png
+lab_*.png

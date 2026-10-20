@@ -228,3 +228,52 @@ export const bizImportRuns = pgTable(
   },
   (t) => [index("biz_import_runs_biz_idx").on(t.businessId, t.startedAt)]
 );
+
+// ── TEST LAB (sandbox; never mixes with real conversations) ──
+export const bizTestSessions = pgTable(
+  "biz_test_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id").notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    persona: varchar("persona", { length: 40 }).notNull().default("student"),
+    mode: varchar("mode", { length: 30 }).notNull().default("live"),
+    status: varchar("status", { length: 20 }).notNull().default("open"),
+    createdBy: uuid("created_by"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("biz_test_sessions_biz_idx").on(t.businessId, t.createdAt)]
+);
+
+export const bizTestMessages = pgTable(
+  "biz_test_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id").notNull(),
+    businessId: uuid("business_id").notNull(),
+    role: varchar("role", { length: 12 }).notNull(),
+    body: text("body").notNull(),
+    meta: jsonb("meta"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("biz_test_messages_session_idx").on(t.sessionId, t.createdAt)]
+);
+
+export const bizTestFindings = pgTable(
+  "biz_test_findings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    sessionId: uuid("session_id").notNull(),
+    businessId: uuid("business_id").notNull(),
+    messageId: uuid("message_id"),
+    verdict: varchar("verdict", { length: 20 }).notNull(),
+    question: text("question"),
+    answer: text("answer"),
+    expected: text("expected"),
+    note: text("note"),
+    createdBy: uuid("created_by"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("biz_test_findings_biz_idx").on(t.businessId, t.verdict, t.createdAt)]
+);
