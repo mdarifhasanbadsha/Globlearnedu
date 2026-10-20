@@ -112,6 +112,19 @@ export default function BusinessChatWidget() {
           body: JSON.stringify({ message: text, token: tokenRef.current }),
         });
         const json = await res.json();
+
+        // Adopt any token the server hands back before checking ok: on a 429
+        // the reply is a rate-limit notice, and losing the token there starts
+        // a fresh conversation and silently wipes the student's history.
+        if (typeof json?.token === "string" && json.token) {
+          tokenRef.current = json.token;
+          try {
+            localStorage.setItem(TOKEN_KEY, json.token);
+          } catch {
+            /* storage may be blocked */
+          }
+        }
+
         if (!res.ok) throw new Error(json?.error ?? "Something went wrong");
 
         if (typeof json.token === "string" && json.token) {

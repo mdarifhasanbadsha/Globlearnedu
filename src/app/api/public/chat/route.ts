@@ -12,7 +12,7 @@ import {
 } from "@/lib/business/counseling";
 import { isRateLimited, newGuestToken, isValidGuestToken } from "@/lib/business/chat-guard";
 import { loadActiveStyleGuide, formatStyleGuide } from "@/lib/business/style";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -104,16 +104,28 @@ async function handlePost(req: Request) {
   const isNew = token === "";
 
   // Per-IP and per-session limits.
+  //
+  // The IP bucket must be generous: an office, a campus and a mobile carrier
+  // can all put many students behind one address, and a student retrying a
+  // slow message looks like abuse. Twenty a minute silently cut people off
+  // mid-conversation, which reads as "the chat forgot everything" because the
+  // client gets 429 and starts a new thread.
   const ip =
     req.headers.get("cf-connecting-ip") ??
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     "unknown";
 
-  if (await isRateLimited(`ip:${ip}`, 20)) {
-    return NextResponse.json({ error: "Too many messages. Please wait a moment." }, { status: 429 });
+  if (await isRateLimited(`ip:${ip}`, 120)) {
+    return NextResponse.json(
+      { error: "Too many messages right now. Please try again in a minute.", token },
+      { status: 429 }
+    );
   }
-  if (token && (await isRateLimited(`sess:${token}`, 15))) {
-    return NextResponse.json({ error: "Too many messages in this chat." }, { status: 429 });
+  if (token && (await isRateLimited(`sess:${token}`, 40))) {
+    return NextResponse.json(
+      { error: "This chat is going very fast — give us a moment.", token },
+      { status: 429 }
+    );
   }
 
   const businessId = getBusinessId();
@@ -150,21 +162,51 @@ async function handlePost(req: Request) {
   }
 
   if (!conversationId) {
-    token = newGuestToken();
-    const [created] = await db
-      .insert(bizConversations)
-      .values({ businessId, visitorId: token, status: "open", aiState: "active", channel: "website" })
-      .returning({ id: bizConversations.id });
-    conversationId = created.id;
+    // The browser lost its token. Rather than starting a blank conversation —
+    // which silently wipes everything the student already told us — adopt the
+    // newest open website thread from this IP in the last hour, and hand its
+    // token back. Only genuinely new visitors get a new thread.
+    if (!token && ip !== "unknown") {
+      try {
+        const recent = await db.execute(
+          sql`select id, visitor_id from biz_conversations
+              where business_id = ${businessId} and channel = 'website'
+                and status = 'open' and last_message_at > now() - interval '1 hour'
+                and exists (select 1 from biz_messages m
+                            where m.conversation_id = biz_conversations.id
+                              and m.meta->>'ip' = ${ip})
+              order by last_message_at desc limit 1`
+        );
+        const row: any = (recent as any)?.rows?.[0] ?? (recent as any)?.[0];
+        if (row?.id && row?.visitor_id) {
+          conversationId = row.id;
+          token = row.visitor_id;
+        }
+      } catch {
+        /* fall through to a new conversation */
+      }
+    }
+
+    if (!conversationId) {
+      token = newGuestToken();
+      const [created] = await db
+        .insert(bizConversations)
+        .values({ businessId, visitorId: token, status: "open", aiState: "active", channel: "website" })
+        .returning({ id: bizConversations.id });
+      conversationId = created.id;
+    }
   }
 
   // Persist the inbound message before any AI work.
+  // The IP is stored (never shown to anyone) so a lost token can be matched
+  // back to the right thread instead of starting a blank one.
   await db.insert(bizMessages).values({
     businessId,
     conversationId,
     direction: "in",
     authorKind: "student",
     body: message,
+    meta: { source: "website", ip },
   });
 
   await db
