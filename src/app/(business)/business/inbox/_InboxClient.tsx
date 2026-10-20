@@ -6,9 +6,20 @@ import Link from "next/link";
 interface Conversation {
   id: string;
   visitorId: string;
+  channel?: string;
   status: string;
   aiState: string;
   lastMessageAt: string;
+  displayName?: string;
+  contactName?: string | null;
+  contactPicture?: string | null;
+  contactLocale?: string | null;
+  sourceLabel?: string | null;
+  leadName?: string | null;
+  leadPriority?: string | null;
+  leadScore?: number | null;
+  leadStage?: string | null;
+  leadId?: string | null;
 }
 
 interface Message {
@@ -248,14 +259,36 @@ export default function InboxClient({
                         selected === c.id ? "bg-slate-100" : ""
                       }`}
                     >
-                      <div className="text-sm font-medium text-[#1B3A6B] truncate">
-                        Visitor {c.visitorId.slice(-6)}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className="text-[10px] text-slate-500">{c.status}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${badge.cls}`}>
-                          {badge.text}
-                        </span>
+                      <div className="flex items-start gap-2">
+                        <Avatar
+                          name={c.displayName ?? c.contactName ?? "?"}
+                          src={c.contactPicture ?? null}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-[#0F2A52] truncate">
+                            {c.displayName ?? `Visitor ${c.visitorId.slice(-6)}`}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            {c.leadPriority === "hot" && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-800 font-medium">
+                                hot {c.leadScore ?? ""}
+                              </span>
+                            )}
+                            {c.leadPriority === "warm" && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                                warm
+                              </span>
+                            )}
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${badge.cls}`}>
+                              {badge.text}
+                            </span>
+                            {c.sourceLabel && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-800">
+                                {c.sourceLabel}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </button>
                   </li>
@@ -372,12 +405,31 @@ export default function InboxClient({
               <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 Contact
               </div>
-              <div className="text-sm font-medium text-[#0F2A52] mt-0.5 truncate">
-                {current.visitorId.startsWith("g_")
-                  ? "Website visitor"
-                  : `Messenger ${current.visitorId.slice(-6)}`}
+              <div className="flex items-center gap-2 mt-1.5">
+                <Avatar
+                  name={current.displayName ?? current.contactName ?? "?"}
+                  src={current.contactPicture ?? null}
+                />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-[#0F2A52] truncate">
+                    {current.displayName ??
+                      (current.visitorId.startsWith("g_")
+                        ? "Website visitor"
+                        : `Messenger ${current.visitorId.slice(-6)}`)}
+                  </div>
+                  {current.contactLocale && (
+                    <div className="text-[10px] text-slate-400">{current.contactLocale}</div>
+                  )}
+                </div>
               </div>
             </div>
+
+            {current.sourceLabel && (
+              <div className="rounded-lg bg-sky-50 border border-sky-100 px-2 py-1.5">
+                <div className="text-[10px] uppercase tracking-wide text-sky-700">Came from</div>
+                <div className="text-xs text-sky-900 font-medium">{current.sourceLabel}</div>
+              </div>
+            )}
 
             <div className="space-y-1.5 text-[11px]">
               <div className="flex items-center justify-between">
@@ -392,7 +444,32 @@ export default function InboxClient({
                 <span className="text-slate-500">Messages</span>
                 <span className="font-medium tabular-nums">{messages.length}</span>
               </div>
+              {current.leadPriority && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Lead</span>
+                  <span className="font-medium capitalize">
+                    {current.leadPriority} · {current.leadScore ?? 0}
+                  </span>
+                </div>
+              )}
+              {current.leadStage && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Stage</span>
+                  <span className="font-medium capitalize">
+                    {current.leadStage.replace(/_/g, " ")}
+                  </span>
+                </div>
+              )}
             </div>
+
+            {current.leadId && (
+              <Link
+                href={`/business/leads/${current.leadId}`}
+                className="block text-center text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-slate-200 text-[#0F2A52] hover:border-[#29ABE2]"
+              >
+                Open lead record →
+              </Link>
+            )}
 
             <div className="pt-2 border-t border-slate-100 space-y-1.5">
               <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -428,5 +505,26 @@ export default function InboxClient({
         )}
       </div>
     </div>
+  );
+}
+
+function Avatar({ name, src }: { name: string; src: string | null }) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+  return (
+    <span className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-[#0F2A52] text-white flex items-center justify-center text-[11px] font-semibold">
+      {src ? (
+        // Meta profile photos are short-lived signed URLs; a plain img is
+        // correct here and avoids configuring remote image domains.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
+      ) : (
+        initials || "?"
+      )}
+    </span>
   );
 }

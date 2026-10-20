@@ -206,6 +206,35 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
           console.error("[workflow] stage automation failed:", (e as Error)?.message);
         }
 
+        // Capture who this is, and where they came from.
+        // A name in the inbox turns "Messenger t_647061" into a person.
+        try {
+          const { syncConversationProfile, referralFields } = await import(
+            "@/lib/business/profile"
+          );
+
+          const [c] = await db
+            .select({ name: bizConversations.contactName })
+            .from(bizConversations)
+            .where(eq(bizConversations.id, convId))
+            .limit(1);
+
+          // Fetch the profile once per thread unless it is still unknown.
+          if (!c?.name) {
+            const synced = await syncConversationProfile(businessId, convId);
+            if (synced.ok) console.log(`[profile] ${synced.name ?? "unknown"}`);
+          }
+
+          // Referral is only delivered on the live event, so store it now.
+          const src = referralFields((ev as any).referral);
+          if (Object.keys(src).length > 0) {
+            await db.update(bizConversations).set(src).where(eq(bizConversations.id, convId));
+            console.log(`[source] ${String((src as any).sourceKind)}`);
+          }
+        } catch (e) {
+          console.error("[profile] sync failed:", (e as Error)?.message);
+        }
+
         stored++;
         continue;
       }
