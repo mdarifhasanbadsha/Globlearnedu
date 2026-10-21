@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "preview": "opennextjs-cloudflare build && wrangler dev",
-    "deploy": "opennextjs-cloudflare build --openNextConfigPath ./open-next.config.ts && wrangler deploy",
+    "deploy": "opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion --openNextConfigPath ./open-next.config.ts && wrangler deploy",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
