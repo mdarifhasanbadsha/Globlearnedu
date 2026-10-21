@@ -29,6 +29,51 @@ export default function KnowledgeImport() {
   const [counts, setCounts] = useState({ draft: 0, approved: 0 });
   const [showDrafts, setShowDrafts] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const replaceRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Delete every saved entry and load this file as approved.
+   *
+   * The owner asked to start clean. Destructive, so it asks for confirmation,
+   * never runs by accident, and reports exactly what was removed and added.
+   */
+  async function replaceAll(file: File) {
+    setBusy(true);
+    setErr(null);
+    setMsg(null);
+    setResult(null);
+    try {
+      const text = await file.text();
+      let parsed: any;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        throw new Error("That file is not valid JSON.");
+      }
+
+      const res = await fetch("/api/business/knowledge/replace", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...parsed, confirmReplace: true }),
+      });
+      const raw = await res.text();
+      if (!raw.trim()) {
+        throw new Error("The replace ran out of time. Use a smaller file.");
+      }
+      const json = JSON.parse(raw);
+      if (!res.ok) throw new Error(json?.error ?? "Replace failed");
+
+      setMsg(
+        `Removed ${json.deletedEntries} old entries. Loaded ${json.insertedEntries} entries across ${json.distinctUniversities} universities, all approved and live.`
+      );
+      await load();
+    } catch (e: any) {
+      setErr(e.message ?? "Replace failed");
+    } finally {
+      setBusy(false);
+      if (replaceRef.current) replaceRef.current.value = "";
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -164,12 +209,38 @@ export default function KnowledgeImport() {
             if (f) void upload(f);
           }}
         />
+        <input
+          ref={replaceRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void replaceAll(f);
+          }}
+        />
         <button
           onClick={() => fileRef.current?.click()}
           disabled={busy}
           className="bg-[#C8102E] text-white text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#A50D25] disabled:opacity-40"
         >
           {busy ? "Working…" : "Choose JSON file"}
+        </button>
+
+        {/* Loading a fresh set: deletes everything first, then inserts approved.
+            Separate from the normal import because deleting knowledge cannot be
+            undone, so it must never be the default action. */}
+        <button
+          onClick={() => {
+            const ok = window.confirm(
+              "This DELETES every university entry currently saved, then loads the file you choose as approved.\n\nAnyone talking to the AI will see the new list immediately. Continue?"
+            );
+            if (ok) replaceRef.current?.click();
+          }}
+          disabled={busy}
+          className="text-xs font-semibold px-3 py-2 rounded-lg border border-red-300 text-[#C8102E] hover:bg-red-50 disabled:opacity-40"
+        >
+          Replace all with this file
         </button>
 
         <a
