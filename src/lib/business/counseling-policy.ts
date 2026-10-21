@@ -229,6 +229,31 @@ export function checkNoInternals(reply: string): PolicyViolation[] {
 
 
 
+
+/**
+ * Stiff or literally-translated phrasing.
+ *
+ * "আপনার প্রশ্নের উত্তর দিতে চাই" is grammatically fine and sounds like a form
+ * letter. A counsellor typing on Messenger does not write that, and the student
+ * notices immediately. Cheaper to block than to hope the model sounds human.
+ */
+const STIFF_WORDING =
+  /(?:আপনার\s*প্রশ্নের\s*উত্তর|উপরোক্ত\s*বিষয়|অনুগ্রহ\s*করে|প্রদান\s*করা\s*হবে|করণীয়|মহোদয়|সাহায্য\s*করতে\s*পেরেছি\s*আশা|in\s*response\s*to\s*your\s*query|kindly|please\s*be\s*informed|I\s*hope\s*this\s*helps|aforementioned|hereby|commences|approximately\s+at)/i;
+
+export function checkWritingStyle(reply: string): PolicyViolation[] {
+  const m = reply.match(STIFF_WORDING);
+  if (m) return [{ rule: "stiff_wording", detail: m[0] }];
+
+  // A sentence over ~20 words is the other reliable sign of brochure prose.
+  const long = reply
+    .split(/(?<=[।.!?])\s+/)
+    .find((s) => s.trim().split(/\s+/).length > 28);
+  if (long) {
+    return [{ rule: "stiff_wording", detail: `sentence too long: ${long.slice(0, 40)}` }];
+  }
+  return [];
+}
+
 /**
  * An answer that explains why something is impossible loses the student.
  *
@@ -560,6 +585,7 @@ export function checkReplyPolicy(
   out.push(...checkNoInternals(reply));
   out.push(...checkNoDeadEnd(reply));
   out.push(...checkHopeKiller(reply));
+  out.push(...checkWritingStyle(reply));
 
   // Repeating "your number is with us" after it was already given reads
   // like a call-centre script and the student stops reading.
