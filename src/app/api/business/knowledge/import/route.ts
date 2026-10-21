@@ -65,12 +65,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Too many universities in one import (max 500)" }, { status: 400 });
   }
 
+  // Cap the work per request so a big file cannot exhaust the Worker and return
+  // an empty body. The caller splits larger imports; telling them so is better
+  // than dying silently halfway through.
+  const MAX_PER_REQUEST = 40;
+  const batch = raw.slice(0, MAX_PER_REQUEST);
+  const remaining = raw.length - batch.length;
+
   let created = 0;
   let updated = 0;
   let skipped = 0;
   const problems: string[] = [];
 
-  for (const u of raw) {
+  // Read every existing entry once, then write in batches.
+  //
+  // The previous version ran two queries per programme. With 67 programmes that
+  // is ~134 round trips inside one Cloudflare Worker request, which hits the
+  // CPU/subrequest limit — the Worker was killed mid-request, the browser got
+  // an empty body, and the screen said "Unexpected end of JSON input". The file
+  // was fine; the import was simply doing too much work.
+  const existingRows = await db
+    .select({
+      id: bizKnowledgeEntries.id,
+      universityName: bizKnowledgeEntries.universityName,
+      programName: bizKnowledgeEntries.programName,
+      intakeText: bizKnowledgeEntries.intakeText,
+    })
+    .from(bizKnowledgeEntries)
+    .where(eq(bizKnowledgeEntries.businessId, businessId));
+
+  const keyOf = (name: string | null, program: string | null, intake: string) =>
+    `${(name ?? "").toLowerCase()}|${(program ?? "").toLowerCase()}|${intake.toLowerCase()}`;
+
+  const existingByKey = new Map<string, string>();
+  for (const row of existingRows) {
+    existingByKey.set(
+      keyOf(row.universityName, row.programName, row.intakeText ?? ""),
+      row.id
+    );
+  }
+
+  const toInsert: any[] = [];
+  const toUpdate: { id: string; values: any }[] = [];
+
+  for (const u of batch) {
     const universityName = scrub(u?.name ?? u?.university_name ?? u?.universityName);
     if (!universityName || universityName.length < 4) {
       skipped++;
@@ -96,84 +134,64 @@ export async function POST(req: Request) {
         continue;
       }
 
-      const majors = (Array.isArray(p?.majors) ? p.majors : [])
-        .map((m: any) => scrub(String(m)))
-        .filter((m: string | null): m is string => !!m);
-
-      // Build the human-readable block the AI will actually read.
-      const bits: string[] = [];
-      if (p?.duration_years) bits.push(`Duration ${p.duration_years} years`);
-      if (p?.teaching_language) bits.push(`Taught in ${scrub(p.teaching_language)}`);
-      if (p?.intake) bits.push(`Intake ${scrub(p.intake)}`);
-      if (p?.age_limit) bits.push(`Age ${scrub(p.age_limit)}`);
-      if (p?.tuition) bits.push(`Tuition ${scrub(p.tuition)}`);
-      if (p?.hostel) bits.push(`Accommodation ${scrub(p.hostel)}`);
-      if (p?.scholarship) bits.push(`Scholarship ${scrub(p.scholarship)}`);
-      if (majors.length > 0) bits.push(`Majors: ${majors.join("; ")}`);
-      if (ranking) bits.push(`Ranking: ${ranking}`);
-      if (p?.notes) bits.push(scrub(p.notes) ?? "");
-
-      const notes = bits.filter(Boolean).join("\n");
-      if (!notes) {
-        skipped++;
-        continue;
-      }
-
+      // The level is what makes a programme meaningful to a student, so an
+      // entry with no level is skipped rather than imported as a guess.
       const programName = `${level.charAt(0).toUpperCase()}${level.slice(1)} programmes`;
+
+      const majors = Array.isArray(p?.majors)
+        ? p.majors.map((m: any) => scrub(String(m))).filter(Boolean)
+        : [];
+
       const intakeText = scrub(p?.intake ?? null);
-      const docs = (Array.isArray(p?.requirements) ? p.requirements : [])
-        .map((r: any) => scrub(String(r)))
-        .filter((r: string | null): r is string => !!r);
-      const reqJson = docs.length > 0 ? JSON.stringify({ documents: docs }) : null;
 
-      const [existing] = await db
-        .select({ id: bizKnowledgeEntries.id })
-        .from(bizKnowledgeEntries)
-        .where(
-          and(
-            eq(bizKnowledgeEntries.businessId, businessId),
-            eq(bizKnowledgeEntries.universityName, universityName),
-            eq(bizKnowledgeEntries.programName, programName),
-            sql`coalesce(${bizKnowledgeEntries.intakeText}, '') = ${intakeText ?? ""}`
-          )
-        )
-        .limit(1);
+      const notesParts: string[] = [];
+      if (majors.length) notesParts.push(`Majors: ${majors.join(", ")}`);
+      if (p?.tuition) notesParts.push(`Tuition: ${p.tuition}`);
+      if (p?.hostel) notesParts.push(`Hostel: ${p.hostel}`);
+      if (p?.scholarship) notesParts.push(`Scholarship: ${String(p.scholarship).replace(/\s+/g, " ").trim()}`);
+      if (p?.duration_years) notesParts.push(`Duration: ${p.duration_years} years`);
+      if (p?.age_limit) notesParts.push(`Age: ${p.age_limit}`);
+      if (ranking) notesParts.push(`Ranking: ${ranking}`);
+      if (p?.notes) notesParts.push(String(p.notes));
+      const notes = scrub(notesParts.join("\n"));
 
-      if (existing) {
-        await db
-          .update(bizKnowledgeEntries)
-          .set({
-            city,
-            level,
-            notes,
-            requirements: reqJson ? JSON.parse(reqJson) : undefined,
-            intakeText,
-            teachingLanguage: scrub(p?.teaching_language ?? null),
-            // Re-imported data goes back to draft so it is reviewed again.
-            status: "draft",
-            dataCompleteness: "partial",
-            updatedAt: new Date(),
-          })
-          .where(eq(bizKnowledgeEntries.id, existing.id));
+      const docs = Array.isArray(p?.requirements)
+        ? p.requirements.map((r: any) => scrub(String(r))).filter(Boolean)
+        : [];
+      const requirements = docs.length > 0 ? { documents: docs } : {};
+
+      const key = keyOf(universityName, programName, intakeText ?? "");
+      const existingId = existingByKey.get(key);
+
+      const values = {
+        city,
+        level,
+        notes,
+        requirements,
+        intakeText,
+        teachingLanguage: scrub(p?.teaching_language ?? null),
+        dataCompleteness: "partial" as const,
+        status: "draft" as const,
+      };
+
+      if (existingId) {
+        toUpdate.push({ id: existingId, values: { ...values, province, updatedAt: new Date() } });
         updated++;
       } else {
-        await db.insert(bizKnowledgeEntries).values({
-          businessId,
-          universityName,
-          city,
-          province,
-          programName,
-          level,
-          notes,
-          requirements: reqJson ? JSON.parse(reqJson) : {},
-          intakeText,
-          teachingLanguage: scrub(p?.teaching_language ?? null),
-          dataCompleteness: "partial",
-          status: "draft",
-        });
+        toInsert.push({ businessId, universityName, province, programName, ...values });
         created++;
       }
     }
+  }
+
+  // Few queries regardless of file size: one insert, a handful of updates.
+  if (toInsert.length > 0) {
+    for (let i = 0; i < toInsert.length; i += 40) {
+      await db.insert(bizKnowledgeEntries).values(toInsert.slice(i, i + 40));
+    }
+  }
+  for (const u of toUpdate) {
+    await db.update(bizKnowledgeEntries).set(u.values).where(eq(bizKnowledgeEntries.id, u.id));
   }
 
   // How much is now waiting for approval?
@@ -184,6 +202,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     created,
+    remaining,
     updated,
     skipped,
     pendingApproval: pending?.n ?? 0,

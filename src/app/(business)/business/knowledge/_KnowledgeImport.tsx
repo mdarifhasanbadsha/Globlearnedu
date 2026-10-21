@@ -65,7 +65,28 @@ export default function KnowledgeImport() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed),
       });
-      const json = await res.json();
+
+      // The server can return an empty body when it runs out of time or memory.
+      // Parsing that threw "Unexpected end of JSON input", which tells the owner
+      // nothing about what to do next. Say the real thing instead.
+      const raw = await res.text();
+      if (!raw.trim()) {
+        throw new Error(
+          res.ok
+            ? "The import ran out of time before finishing. Try the file in smaller parts — around 12 universities each."
+            : `Import failed (HTTP ${res.status}). Try a smaller file.`
+        );
+      }
+
+      let json: any;
+      try {
+        json = JSON.parse(raw);
+      } catch {
+        throw new Error(
+          "The import did not return a readable result. Try the file in smaller parts — around 12 universities each."
+        );
+      }
+
       if (!res.ok) throw new Error(json?.error ?? "Import failed");
       setResult(json);
       await load();
