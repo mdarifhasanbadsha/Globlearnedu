@@ -101,8 +101,16 @@ export function isRepeated(
 }
 
 /** What to send instead of a duplicate. */
+/**
+ * What to send instead of a repeat.
+ *
+ * The previous wording — "একই কথা আবার বললাম না ভাইয়া" — drew attention to the
+ * repetition and sounded like a machine scolding the student. A person who has
+ * already answered simply says something short and moves on.
+ */
 export const DUPLICATE_INSTEAD =
-  "একই কথা আবার বললাম না ভাইয়া 🙂 উপরের উত্তরটা কি কাজে লাগছে? আর কিছু জানতে চাইলে বলুন — অথবা চাইলে আপনার contact number-টা এখানে রেখে যেতে পারেন, আমাদের একজন ফ্রিতে 1:1 counselling-এ বিস্তারিত কথা বলে দেবেন।";
+  "একটু ভাঙিয়ে বলি ভাইয়া 🙂 আপনি ঠিক কোন বিষয়টা জানতে চান — খরচ, কোন বিশ্ববিদ্যালয়, নাকি ডকুমেন্ট? " +
+  "যেটা দরকার সেটাই বলব।";
 
 /**
  * Apply policy to a reply.

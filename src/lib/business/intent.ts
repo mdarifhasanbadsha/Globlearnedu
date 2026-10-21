@@ -50,7 +50,7 @@ export interface Classified {
 }
 
 const GREETING =
-  /^(?:(?:hi+|hello+|hey+|হ্যালো|হাই|salam|সালাম)(?:\s*(?:bhai|bhaiya|vai|ভাই|ভাইয়া|bro|sir|apu|আপু))?|assalamu?\s*alaikum|আসসালামু?\s*আলাইকুম|good\s*(?:morning|afternoon|evening|night)|(?:kemon|কেমন)\s*(?:achen|আছেন)|(?:ki|কি)\s*(?:obostha|অবস্থা))[\s!.,।]*$/i;
+  /^(?:(?:hi+|hello+|hlw+|helo|hlo+|heyy?|hey+|হ্যালো|হাই|salam|সালাম|assalamu?)(?:\s*(?:bhai|bhaiya|vai|ভাই|ভাইয়া|bro|sir|apu|আপু))?|assalamu?\s*alaikum|আসসালামু?\s*আলাইকুম|good\s*(?:morning|afternoon|evening|night)|(?:kemon|কেমন)\s*(?:achen|আছেন)|(?:ki|কি)\s*(?:obostha|অবস্থা))[\s!.,।]*$/i;
 
 const THANKS =
   /^(?:thanks?|thank\s*you|thx|ty|ধন্যবাদ|thanks\s*bro|tnx|ok\s*thanks|okay\s*thanks)[\s!.,।]*$/i;

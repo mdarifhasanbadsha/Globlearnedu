@@ -47,7 +47,15 @@ async function sendAction(psid: string, action: "typing_on" | "typing_off" | "ma
 // A student often types "vai", then "AI te bachelor", then "koto taka" in a
 // few seconds. Answering each one produces three robotic replies to one
 // thought. We wait for them to stop typing, then answer once.
-export const BATCH_QUIET_MS = 4_000;
+/**
+ * How long to wait before answering.
+ *
+ * Four seconds was too short: a student typing "Hlw", then "Hlw" again, then a
+ * real question got three separate replies, and two of them made no sense out
+ * of context. The owner's rule is that waiting 15-30 seconds and answering once
+ * is better than replying instantly three times.
+ */
+export const BATCH_QUIET_MS = 15_000;
 
 /**
  * How long to wait when a student is clearly in the middle of several messages.
