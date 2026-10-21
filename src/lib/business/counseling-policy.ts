@@ -230,6 +230,29 @@ export function checkNoInternals(reply: string): PolicyViolation[] {
 
 
 
+
+/**
+ * Never promise full funding for a March intake.
+ *
+ * The live reply told a March enquirer "Type A-তে টিউশন আর হোস্টেল দুটোই ফ্রি".
+ * March is mostly partial: the student pays a share. A student who plans around
+ * a free tuition and hostel package and then finds they owe money has been
+ * misled on the one thing that matters most.
+ */
+export function checkMarchFunding(reply: string, question?: string | null): PolicyViolation[] {
+  const askedMarch = /march|মার্চ/i.test(question ?? "");
+  if (!askedMarch) return [];
+
+  const promisesFullFunding =
+    /(?:টিউশন\s*আর\s*হোস্টেল\s*(?:দুটোই|দুটাই|সম্পূর্ণ)\s*ফ্রি|tuition\s*(?:and|&)\s*hostel\s*(?:both\s*)?free|fully\s*funded|সম্পূর্ণ\s*ফ্রি|Type\s*A[^\n]{0,40}ফ্রি)/i.test(
+      reply
+    );
+
+  return promisesFullFunding
+    ? [{ rule: "march_full_funding", detail: "quoted a funded package for March" }]
+    : [];
+}
+
 /**
  * Stiff or literally-translated phrasing.
  *
@@ -586,6 +609,7 @@ export function checkReplyPolicy(
   out.push(...checkNoDeadEnd(reply));
   out.push(...checkHopeKiller(reply));
   out.push(...checkWritingStyle(reply));
+  out.push(...checkMarchFunding(reply, opts.question));
 
   // Repeating "your number is with us" after it was already given reads
   // like a call-centre script and the student stops reading.

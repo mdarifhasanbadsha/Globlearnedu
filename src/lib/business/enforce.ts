@@ -202,6 +202,18 @@ function hopeFallback(original: string): string {
   );
 }
 
+/** What March funding actually is, when the model oversold it. */
+function marchFundingFallback(): string {
+  return (
+    "মার্চ ইনটেকে বেশিরভাগ ক্ষেত্রে **partial scholarship** ভাইয়া — টিউশন আর হোস্টেলের একটা অংশ " +
+    "আপনাকে দিতে হয়, বাকিটা বিশ্ববিদ্যালয় বহন করে।\n\n" +
+    "সম্পূর্ণ ফ্রি টিউশন আর হোস্টেলের প্যাকেজ সাধারণত সেপ্টেম্বর ইনটেকের সাথে আসে, আর সেটা " +
+    "প্রতিযোগিতামূলক। মার্চে যেটা পাওয়া যায় সেটা আংশিক — এটা জানা থাকলে হিসাবটা পরিষ্কার হয়।\n\n" +
+    "আপনার প্রোফাইল অনুযায়ী মার্চে কতটা পাওয়া যাবে, সেটা আমাদের টিম যাচাই করে জানাবে — " +
+    "চাইলে আপনার contact number-টা এখানে রেখে যেতে পারেন।"
+  );
+}
+
 export function enforceReply(
   reply: string,
   opts: {
@@ -222,6 +234,7 @@ export function enforceReply(
   // student still has no answer. This happened in production: a language-fee
   // question was answered with the team line and every figure disappeared.
   const PRIORITY = [
+    "march_full_funding",
     "hope_killing",
     "cost_incomplete",
     "cost_not_reassuring",
@@ -239,8 +252,10 @@ export function enforceReply(
   // First violation with a dedicated fallback wins, in priority order.
   for (const v of ordered) {
     const fb =
-      v.rule === "cost_incomplete"
-        ? costFallback(opts.question)
+      v.rule === "march_full_funding"
+        ? marchFundingFallback()
+        : v.rule === "cost_incomplete"
+          ? costFallback(opts.question)
         : v.rule === "hope_killing"
           ? hopeFallback(reply)
           : v.rule === "cost_not_reassuring"
