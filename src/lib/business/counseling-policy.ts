@@ -132,6 +132,24 @@ export function checkPriceQuality(reply: string, question?: string | null): Poli
   return out;
 }
 
+
+/**
+ * The student must never hear how we store information.
+ *
+ * "আমাদের ডেটাবেসে নেই" tells them nothing useful and reveals that a machine
+ * is reading a table. A person would say the team will confirm it.
+ */
+const INTERNAL_WORDS =
+  /ডেটাবেস|database|আমাদের রেকর্ড|our records|এন্ট্রি নেই|no entry|সিস্টেমে|in the system|আমার কাছে নেই|আমার কাছে আছে|নোট করে রেখেছি/i;
+
+export function checkNoInternals(reply: string): PolicyViolation[] {
+  const m = reply.match(INTERNAL_WORDS);
+  if (m) {
+    return [{ rule: "mentions_internals", detail: m[0] }];
+  }
+  return [];
+}
+
 /**
  * A wall of university names is unreadable and makes a student pick blindly.
  * At most three examples, never the whole database — which is also a resource
@@ -426,6 +444,7 @@ export function checkReplyPolicy(
   out.push(...checkDocumentList(reply));
   out.push(...checkPriceQuality(reply, opts.question));
   out.push(...checkUniversityListLength(reply));
+  out.push(...checkNoInternals(reply));
 
   // Repeating "your number is with us" after it was already given reads
   // like a call-centre script and the student stops reading.

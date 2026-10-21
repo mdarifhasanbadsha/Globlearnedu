@@ -83,14 +83,42 @@ export async function autoReplyToMessenger(
   }
 
   if (conv.aiState === "handoff_requested") {
-    // Offering a human must not silence the thread forever. If no staff
-    // member has actually taken over and the student keeps writing, the AI
-    // resumes so they are never left with silence.
+    // Wait for a human, but never silence the student forever: if nobody
+    // replies and they keep writing, the AI resumes after 2 minutes.
+    //
+    // The resume is guarded by a check that no staff message has been sent in
+    // the meantime. Without it the sequence was: AI offers a human -> a staff
+    // member replies -> two minutes pass -> AI resumes -> the student gets an
+    // automated answer underneath a real one.
     const since = conv.handoffAt ? new Date(conv.handoffAt).getTime() : 0;
     const RESUME_AFTER_MS = 2 * 60 * 1000;
 
     if (Date.now() - since < RESUME_AFTER_MS) {
       return { attempted: false, reason: "handoff pending, waiting for a human" };
+    }
+
+    // Did a human actually write anything? If so this thread belongs to them.
+    let staffSpoke = false;
+    try {
+      const rows: any[] = await db
+        .execute(
+          sql`select 1 from biz_messages
+              where conversation_id = ${conversationId}
+                and direction = 'out'
+                and author_kind = 'staff'
+              limit 1`
+        )
+        .then((r: any) => r?.rows ?? r ?? []);
+      staffSpoke = rows.length > 0;
+    } catch {
+      staffSpoke = false;
+    }
+
+    if (staffSpoke) {
+      await db.execute(
+        sql`update biz_conversations set ai_state = ${"human_owned"}, updated_at = now() where id = ${conversationId}`
+      );
+      return { attempted: false, reason: "a human has replied — AI stands down" };
     }
 
     await db
@@ -341,6 +369,46 @@ export async function autoReplyToMessenger(
     leadContext: facts,
     recap: conversationRecap(historyBeforeBurst),
   });
+
+  // ── is it time to stop asking and hand over? ──
+  // A conversation that keeps asking questions after ten turns is going in
+  // circles. Students said so directly: "bar bar question kore". Two triggers
+  // — ten turns, or unmistakable intent — close it and hand to a person.
+  let closing = false;
+  try {
+    const { decideTurn, closingInstruction, showsStrongIntent } = await import("@/lib/business/handover");
+    const turnRows: any[] = await db
+      .execute(
+        sql`select count(*)::int as n from biz_messages
+            where conversation_id = ${conversationId} and direction = 'in'`
+      )
+      .then((r: any) => r?.rows ?? r ?? []);
+    const studentTurns = Number(turnRows[0]?.n ?? 0);
+
+    const phoneRows: any[] = await db
+      .execute(
+        sql`select phone from biz_leads where conversation_id = ${conversationId} limit 1`
+      )
+      .then((r: any) => r?.rows ?? r ?? [])
+      .catch(() => []);
+
+    const decision = decideTurn({
+      studentTurns,
+      hasContact: Boolean(phoneRows[0]?.phone),
+      strongIntent: showsStrongIntent(burstText),
+    });
+
+    if (decision.close) {
+      closing = true;
+      const last = messages[messages.length - 1];
+      if (last?.role === "system") {
+        last.content += closingInstruction(decision.askContact);
+      }
+      console.log(`[messenger] closing turn: ${decision.reason}`);
+    }
+  } catch (e) {
+    console.error("[messenger] handover check failed:", (e as Error)?.message);
+  }
 
   // Read the quote defensively: the column only exists after the schema
   // catch-up has run, and the reply must work either way.
