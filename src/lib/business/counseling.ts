@@ -33,6 +33,7 @@ export interface KnowledgeFact {
   languageToDegree: string | null;
   feePaymentNote: string | null;
   requirements: unknown;
+  notes?: string | null;
 }
 
 /** Load a bounded slice of APPROVED knowledge relevant to the visitor. */
@@ -71,6 +72,7 @@ export async function loadApprovedKnowledge(
       languageToDegree: bizKnowledgeEntries.languageToDegree,
       feePaymentNote: bizKnowledgeEntries.feePaymentNote,
       requirements: bizKnowledgeEntries.requirements,
+      notes: bizKnowledgeEntries.notes,
     })
     .from(bizKnowledgeEntries)
     .where(
@@ -154,6 +156,30 @@ function periodLabel(period: string | null): string {
   return "(period not stated on the brochure — do not assume one)";
 }
 
+/** Pull the major list out of whichever field the importer used. */
+function extractMajors(f: {
+  notes?: string | null;
+  requirements?: unknown;
+  programName?: string | null;
+}): string[] {
+  const out: string[] = [];
+
+  // Brochure imports put "Majors: a, b, c" in notes.
+  const notes = f.notes ?? "";
+  const m = notes.match(/Majors:\s*([^\n]+)/i);
+  if (m) {
+    out.push(...m[1].split(/[,;]/).map((s) => s.trim()).filter(Boolean));
+  }
+
+  // Requirement imports put them in documents.
+  const req = f.requirements as any;
+  if (out.length === 0 && req && Array.isArray(req.documents)) {
+    out.push(...req.documents.map((s: any) => String(s).trim()).filter(Boolean));
+  }
+
+  return [...new Set(out)].slice(0, 40);
+}
+
 function formatFact(f: KnowledgeFact, i: number): string {
   const lines = [`[${i + 1}]`];
   if (f.universityName) lines.push(`University: ${f.universityName}`);
@@ -200,10 +226,26 @@ function formatFact(f: KnowledgeFact, i: number): string {
   if (f.languageToDegree) lines.push(`Language to degree progression: ${f.languageToDegree}`);
   if (f.feePaymentNote) lines.push(`Payment note: ${f.feePaymentNote}`);
 
-  const req = f.requirements;
-  if (req && typeof req === "object" && Object.keys(req as object).length > 0) {
-    lines.push(`Requirements: ${JSON.stringify(req)}`);
+  // Majors are what a student actually asks about, so they are stated plainly.
+  // Previously the whole requirements object was dumped as JSON, which buried
+  // the subject list and made every "which university for CST?" unanswerable.
+  const majors = extractMajors(f);
+  if (majors.length > 0) {
+    lines.push(`Majors: ${majors.join(", ")}`);
   }
+
+  const req = f.requirements;
+  if (req && typeof req === "object") {
+    const docs = (req as any).documents;
+    if (Array.isArray(docs) && docs.length > 0) {
+      lines.push(`Documents needed: ${docs.join("; ")}`);
+    }
+  }
+
+  if (f.notes) {
+    lines.push(`Notes: ${String(f.notes).replace(/\s+/g, " ").slice(0, 500)}`);
+  }
+
   return lines.join("\n");
 }
 
@@ -466,7 +508,9 @@ in the next reply — ask something else or answer what they asked.
 Never compare GPAs on different scales. Never judge scholarship chances from GPA alone.
 
 ═══ 16. PROGRAMMES ═══
-- Diploma: usually 3 years, age 17–25, September intake is main.
+- Diploma: usually 3 years, age 17–25, September intake is main. After a Diploma a student can
+  either go straight to a job or take a 2-year top-up Bachelor — mention this when a student
+  worries that a Diploma is a dead end, because it is not.
 - Bachelor: usually 4 years, age 17–25, September intake is main.
 - March intake is mostly language and foundation programmes.
 - International students apply to English-taught programmes — that is the default to describe.
@@ -487,7 +531,10 @@ them:
   - Type A — tuition free AND hostel free. The strongest; competitive.
   - Type B — tuition free; the student pays hostel (roughly 1,200–3,000 RMB for Diploma,
     1,200–5,000 RMB for Bachelor).
-  - Type C and Type D — partial support; the student carries most of the cost.
+  - Type C — student pays tuition + hostel, roughly 6,000-10,000 RMB in total.
+  - Type D — self-funded; tuition + hostel roughly 10,000-20,000 RMB in total.
+    These two are the realistic band for an average academic profile, so say them
+    plainly rather than implying everything is funded.
 
   Chinese language course:
   - Partial scholarship is common: tuition waived or reduced, the student self-funds the rest.

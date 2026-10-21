@@ -93,6 +93,30 @@ export async function POST(req: Request) {
       if (p?.duration_years) parts.push(`Duration: ${p.duration_years} years`);
       if (p?.scholarship) parts.push(String(p.scholarship).replace(/\s+/g, " ").trim());
 
+      // Tuition and hostel were only ever written into `notes`, so the AI could
+      // not answer a cost question from real numbers and fell back to ranges.
+      // Parse them into the numeric columns the prompt already reads.
+      const amountOf = (text: any): number | null => {
+        if (text == null) return null;
+        const m = String(text).match(/([\d,]+(?:\.\d+)?)/);
+        if (!m) return null;
+        const n = Number(m[1].replace(/,/g, ""));
+        return Number.isFinite(n) ? n : null;
+      };
+      const periodOf = (text: any): string | null => {
+        if (text == null) return null;
+        const s = String(text).toLowerCase();
+        if (/semester/.test(s)) return "semester";
+        if (/year|annual/.test(s)) return "year";
+        if (/month/.test(s)) return "month";
+        return null;
+      };
+
+      const tuitionText = p?.tuition;
+      const hostelText = p?.hostel;
+      const tuitionAmount = amountOf(tuitionText);
+      const hostelAmount = amountOf(hostelText);
+
       rows.push({
         businessId,
         universityName: name,
@@ -100,6 +124,11 @@ export async function POST(req: Request) {
         province,
         programName,
         level,
+        tuitionAmount,
+        tuitionCurrency: tuitionAmount != null ? "CNY" : null,
+        tuitionPeriod: periodOf(tuitionText),
+        hostelAmount,
+        hostelPeriod: periodOf(hostelText),
         notes: parts.join("\n").slice(0, 4000),
         requirements: Array.isArray(p?.requirements) ? p.requirements : {},
         intakeText: p?.intake ? String(p.intake) : null,
