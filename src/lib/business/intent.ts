@@ -20,6 +20,7 @@ export type Intent =
   | "thanks"
   | "goodbye"
   | "acknowledgement"
+  | "call_request"
   | "off_topic"
   | "manipulation"
   | "abuse"
@@ -173,6 +174,20 @@ export function classifyMessage(raw: string): Classified {
       reason: saidSalam ? "salam greeting" : "greeting",
     };
   }
+  // Wants to talk on the phone. Give the WhatsApp line immediately — this is a
+  // student ready to speak to a person, and a counselling paragraph wastes the
+  // one moment they were willing to call.
+  // static import at the top; classifyMessage is synchronous
+  if (isCallRequest(text)) {
+    const english = /[a-zA-Z]/.test(text) && !/[\u0980-\u09FF]/.test(text);
+    return {
+      intent: "call_request",
+      handled: true,
+      reply: callReply(english ? "en" : "bn"),
+      reason: "asked for a phone call",
+    };
+  }
+
   // A bare "ok" is the end of a thought, not a new question. Reply is null so
   // the caller stays quiet; a person does not answer an acknowledgement, and
   // answering it is what produced four identical paragraphs in production.
@@ -257,3 +272,5 @@ export function classifyMessage(raw: string): Classified {
 export function shouldStopSpending(strikeCount: number): boolean {
   return strikeCount >= 5;
 }
+
+import { isCallRequest, callReply } from "@/lib/business/call-request";

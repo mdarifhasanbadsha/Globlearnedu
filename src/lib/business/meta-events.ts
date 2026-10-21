@@ -14,7 +14,7 @@ import { bizConversations, bizMessages } from "@/lib/db/schema.business";
 import { getBusinessId } from "@/lib/business/config";
 import { VOICE_PLACEHOLDER } from "@/lib/business/voice";
 import { quotedFromEvent } from "@/lib/business/conversation-flow";
-import { and, eq, desc, gte, gt } from "drizzle-orm";
+import { and, eq, desc, gte, gt, sql } from "drizzle-orm";
 
 interface MetaMessage {
   mid?: string;
@@ -223,7 +223,39 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
           body = `[${kinds}]`;
         }
 
-        if (!body) continue;
+        // A student arriving from a Facebook ad or a "Send Message" button often
+        // sends NO text at all: the event carries only a referral or postback.
+        // Dropping those silently was the reason ad enquiries got no reply —
+        // the most valuable student of the day was the one we ignored, and
+        // nobody could see it because no conversation was even created.
+        if (!body) {
+          const referral = (ev as any).referral;
+          const adLabel =
+            (referral?.headline || referral?.ref || referral?.ad_title || "").toString().trim();
+          body = adLabel
+            ? `[ad click: ${adLabel}]`
+            : "[ad click — the student opened this chat from an ad]";
+          mediaKind = "ad_referral";
+          console.log(`[messenger] ad referral with no text — recorded as "${body}"`);
+        }
+
+        // Carry the ad context onto the conversation, so the team can see which
+        // campaign produced the lead even before any text arrives.
+        const referralForConv = (ev as any).referral;
+        if (referralForConv) {
+          try {
+            await db.execute(
+              sql`update biz_conversations
+                  set source_kind = coalesce(source_kind, ${"ad"}),
+                      source_ref = coalesce(source_ref, ${(referralForConv.ref ?? null) as any}),
+                      source_ad_id = coalesce(source_ad_id, ${(referralForConv.ad_id ?? null) as any}),
+                      updated_at = now()
+                  where id = ${convId}`
+            );
+          } catch {
+            /* attribution is a bonus; the reply matters more */
+          }
+        }
 
         await db.insert(bizMessages).values({
           businessId,
