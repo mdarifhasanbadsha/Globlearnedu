@@ -31,6 +31,8 @@ import {
   burstSettled,
   joinBurst,
   BATCH_QUIET_MS,
+  looksLikeBurst,
+  BURST_WAIT_MS,
   knownFacts,
   conversationRecap,
 } from "@/lib/business/conversation-flow";
@@ -73,6 +75,13 @@ export async function autoReplyToMessenger(
     return { attempted: false, reason: "ai paused by staff" };
   }
 
+  // A staff member has replied in this thread. The AI never comes back on its
+  // own — only a human can hand it back. Otherwise the student gets an
+  // automated answer on top of a real one, which is worse than silence.
+  if (conv.aiState === "human_owned") {
+    return { attempted: false, reason: "a human owns this conversation" };
+  }
+
   if (conv.aiState === "handoff_requested") {
     // Offering a human must not silence the thread forever. If no staff
     // member has actually taken over and the student keeps writing, the AI
@@ -103,6 +112,21 @@ export async function autoReplyToMessenger(
   if (opts.waitForQuiet !== false && !burstSettled(newest.createdAt)) {
     // Still typing. The client re-invokes shortly via the settle endpoint.
     return { attempted: false, reason: "student still typing" };
+  }
+
+  // Multiple messages in quick succession = one thought, delivered in pieces.
+  // Wait longer so they all get ONE answer. Answering each would repeat
+  // ourselves, and repeated replies are what make a system look broken.
+  // A single message is answered immediately.
+  if (
+    opts.waitForQuiet !== false &&
+    looksLikeBurst(burst) &&
+    Date.now() - new Date(newest.createdAt).getTime() < BURST_WAIT_MS
+  ) {
+    return {
+      attempted: false,
+      reason: `burst of ${burst.length} — waiting up to 30s for the rest`,
+    };
   }
 
   if (OPT_OUT.test(joinBurst(burst))) {

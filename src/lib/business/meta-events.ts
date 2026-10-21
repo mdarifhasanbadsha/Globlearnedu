@@ -378,12 +378,24 @@ async function afterInbound(args: {
       const first = await autoReplyToMessenger(conversationId, { waitForQuiet: false });
       if (first.attempted) {
         console.log(`[messenger] auto-reply ${first.sent ? "sent" : "skipped"}: ${first.reason}`);
-      } else if (first.reason === "student still typing") {
-        // Let the burst settle, then answer once. waitUntil keeps the
-        // Worker alive after the HTTP response so Meta does not retry.
+      } else if (first.reason === "student still typing" || /^burst of/.test(first.reason ?? "")) {
+        // Let the burst settle, then answer once.
+        //
+        // A single message is answered at once. When several arrive together
+        // we keep checking for up to 30 seconds so the whole burst becomes one
+        // reply — six questions must not become six answers.
         const settle = (async () => {
+          const { BURST_WAIT_MS } = await import("@/lib/business/conversation-flow");
+          const deadline = Date.now() + BURST_WAIT_MS + 5_000;
+
           await new Promise((r) => setTimeout(r, BATCH_QUIET_MS + 1500));
-          const outcome = await autoReplyToMessenger(conversationId, { waitForQuiet: true });
+
+          let outcome = await autoReplyToMessenger(conversationId, { waitForQuiet: true });
+          while (!outcome.attempted && Date.now() < deadline && /burst of/.test(outcome.reason ?? "")) {
+            await new Promise((r) => setTimeout(r, 5_000));
+            outcome = await autoReplyToMessenger(conversationId, { waitForQuiet: true });
+          }
+
           console.log(
             `[messenger] batched reply ${outcome.sent ? "sent" : "skipped"}: ${outcome.reason} ` +
               `(${outcome.batched ?? 0} messages)`

@@ -50,6 +50,31 @@ async function sendAction(psid: string, action: "typing_on" | "typing_off" | "ma
 export const BATCH_QUIET_MS = 4_000;
 
 /**
+ * How long to wait when a student is clearly in the middle of several messages.
+ *
+ * Four seconds is right for a single thought. But a student firing six
+ * questions in a row would get six answers, repeating themselves — which reads
+ * terribly. When more than one message arrives inside this window the reply is
+ * deliberately delayed, so the whole burst gets exactly ONE answer.
+ */
+export const BURST_WAIT_MS = 30_000;
+
+/**
+ * Did the student send more than one message recently? If so, wait longer
+ * before answering — they are mid-thought and will keep going.
+ */
+export function looksLikeBurst(
+  messages: { body: string; createdAt: Date }[],
+  now = new Date(),
+  windowMs = BURST_WAIT_MS
+): boolean {
+  if (messages.length < 2) return false;
+  const newest = new Date(messages[messages.length - 1].createdAt).getTime();
+  // Only a burst if the messages are close together in time.
+  return now.getTime() - newest < windowMs;
+}
+
+/**
  * The inbound messages that arrived in the same burst, oldest first.
  * Anything older than the quiet window belongs to an earlier thought.
  */

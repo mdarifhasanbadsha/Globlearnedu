@@ -4,7 +4,7 @@ import { bizConversations, bizMessages, bizAiRuns } from "@/lib/db/schema.busine
 import { getBusinessId } from "@/lib/business/config";
 import { requireBusinessUser } from "@/lib/business/guard";
 import { deepseekChat, estimateCostMicros, isDeepSeekConfigured } from "@/lib/business/deepseek";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -95,6 +95,23 @@ export async function POST(
       body,
     })
     .returning({ id: bizMessages.id });
+
+  // 1a. A staff member replying means a human owns this thread now. Pause the
+  // AI immediately and keep it paused until that person hands it back — the
+  // student must not get an AI answer on top of a human one.
+  // Deliberately NOT on "seen": reading a thread is not a commitment to reply,
+  // and pausing on sight would leave the student with no answer at all.
+  try {
+    await db.execute(
+      sql`update biz_conversations
+          set ai_state = ${"human_owned"},
+              handoff_at = coalesce(handoff_at, now()),
+              updated_at = now()
+          where id = ${id}`
+    );
+  } catch {
+    /* the staff message is saved either way */
+  }
 
   // 1b. Actually deliver it when this is a Messenger thread.
   // A saved-but-undelivered message is worse than an error, so the
