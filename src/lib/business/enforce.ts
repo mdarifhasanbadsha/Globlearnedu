@@ -134,6 +134,26 @@ function costFallback(question: string | null | undefined): string {
   );
 }
 
+/** The reassuring opener used when a first cost answer jumped to figures. */
+function reassuranceFallback(question: string | null | undefined): string {
+  const q = (question ?? "").toLowerCase();
+  const language = /language|চীনা ভাষা|ভাষা|chinese course/.test(q);
+
+  if (language) {
+    return (
+      "চায়না ল্যাঙ্গুয়েজ প্রোগ্রামের খরচ ভাবনার চেয়ে অনেক কম, ভাইয়া 🙂 " +
+      "টিউশন, হোস্টেল আর কয়েকটা একবারের খরচের মধ্যে ভাগ হয়, আর পুরো প্রসেসে আমরা পাশে থাকি।\n\n" +
+      "আপনি কি ৬ মাসের কোর্স ভাবছেন, নাকি ১ বছরের? সেটা বললে বাস্তব একটা ধারণা দিতে পারব।"
+    );
+  }
+
+  return (
+    "চায়নায় পড়াশোনা ভাবনার চেয়ে অনেক বেশি affordable ভাইয়া 🙂 " +
+    "খরচটা মূলত টিউশন, হোস্টেল আর কয়েকটা একবারের খরচের মধ্যে ভাগ হয়, আর পুরো প্রসেসে আমরা পাশে থাকি।\n\n" +
+    "আপনি কোন লেভেলে আর কোন সাবজেক্টে পড়তে চান? সেই অনুযায়ী বাস্তব একটা ধারণা দিতে পারব।"
+  );
+}
+
 export function enforceReply(
   reply: string,
   opts: {
@@ -155,6 +175,7 @@ export function enforceReply(
   // question was answered with the team line and every figure disappeared.
   const PRIORITY = [
     "cost_incomplete",
+    "cost_not_reassuring",
     "too_many_universities",
     "mentions_internals",
     "dead_end_wording",
@@ -168,7 +189,12 @@ export function enforceReply(
 
   // First violation with a dedicated fallback wins, in priority order.
   for (const v of ordered) {
-    const fb = v.rule === "cost_incomplete" ? costFallback(opts.question) : FALLBACKS[v.rule];
+    const fb =
+      v.rule === "cost_incomplete"
+        ? costFallback(opts.question)
+        : v.rule === "cost_not_reassuring"
+          ? reassuranceFallback(opts.question)
+          : FALLBACKS[v.rule];
     if (fb) {
       console.log(`[policy] replaced reply for ${v.rule} (${v.detail ?? ""})`);
       return { reply: fb, violations, replaced: true };
