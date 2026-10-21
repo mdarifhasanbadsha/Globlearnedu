@@ -173,6 +173,35 @@ function reassuranceFallback(question: string | null | undefined): string {
   );
 }
 
+/**
+ * Used when an answer explained why something might not be possible.
+ *
+ * The replacement keeps whatever useful content the reply had and re-frames the
+ * uncertainty as a next step, so the student leaves with a route rather than a
+ * closed door.
+ */
+function hopeFallback(original: string): string {
+  // Strip the sentences that carry the doubt; keep the rest if it has substance.
+  const sentences = original
+    .split(/(?<=[।.!?])\s+/)
+    .filter((s) => s.trim().length > 0);
+  const hopeful = sentences.filter(
+    (s) =>
+      !/(?:নিশ্চিত\s*করে\s*বলতে\s*পারছি\s*না|নিশ্চিত\s*নই|আমার\s*কাছে\s*নেই|জানা\s*নেই|কলেজভেদে\s*আলাদা|i\s*cannot\s*confirm|cannot\s*confirm)/i.test(
+        s
+      )
+  );
+
+  const kept = hopeful.join(" ").trim();
+
+  return (
+    (kept.length > 40 ? kept + "\n\n" : "") +
+    "তবে চিন্তার কিছু নেই ভাইয়া 🙂 আপনার প্রোফাইলটা দেখে আমাদের টিম যেসব কলেজে আপনার জন্য ভালো সুযোগ আছে " +
+    "সেগুলো বেছে দেবে, আর কী কী করলে অপশন আরও বাড়বে সেটাও জানাবে। " +
+    "চাইলে আপনার contact number-টা এখানে রেখে যেতে পারেন — আমাদের একজন ফ্রিতে 1:1 counselling-এ বিস্তারিত বলে দেবেন।"
+  );
+}
+
 export function enforceReply(
   reply: string,
   opts: {
@@ -193,6 +222,7 @@ export function enforceReply(
   // student still has no answer. This happened in production: a language-fee
   // question was answered with the team line and every figure disappeared.
   const PRIORITY = [
+    "hope_killing",
     "cost_incomplete",
     "cost_not_reassuring",
     "too_many_universities",
@@ -211,7 +241,9 @@ export function enforceReply(
     const fb =
       v.rule === "cost_incomplete"
         ? costFallback(opts.question)
-        : v.rule === "cost_not_reassuring"
+        : v.rule === "hope_killing"
+          ? hopeFallback(reply)
+          : v.rule === "cost_not_reassuring"
           ? reassuranceFallback(opts.question)
           : FALLBACKS[v.rule];
     if (fb) {

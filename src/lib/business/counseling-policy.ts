@@ -228,6 +228,22 @@ export function checkNoInternals(reply: string): PolicyViolation[] {
 }
 
 
+
+/**
+ * An answer that explains why something is impossible loses the student.
+ *
+ * "সেটা কলেজভেদে আলাদা — নিশ্চিত করে বলতে পারছি না" is factually safe and
+ * emotionally fatal: a 19-year-old reads it as "you are not eligible". The
+ * student asked whether it is possible, not for a guarantee.
+ */
+const HOPE_KILLER =
+  /(?:নিশ্চিত\s*করে\s*বলতে\s*পারছি\s*না|নিশ্চিত\s*নই|আমার\s*কাছে\s*নেই|জানা\s*নেই|এটা\s*কলেজভেদে\s*আলাদা|কলেজভেদে\s*আলাদা|সাধারণত\s*লেভেল\s*৪\s*চাওয়া\s*হয়|i\s*cannot\s*confirm|cannot\s*confirm\s*that|it\s*depends\s*on\s*the\s*college|they\s*usually\s*require|not\s*able\s*to\s*confirm)/i;
+
+export function checkHopeKiller(reply: string): PolicyViolation[] {
+  const m = reply.match(HOPE_KILLER);
+  return m ? [{ rule: "hope_killing", detail: m[0] }] : [];
+}
+
 /**
  * "We have nothing for you" loses the student on the spot.
  *
@@ -543,6 +559,7 @@ export function checkReplyPolicy(
   out.push(...checkUniversityListLength(reply));
   out.push(...checkNoInternals(reply));
   out.push(...checkNoDeadEnd(reply));
+  out.push(...checkHopeKiller(reply));
 
   // Repeating "your number is with us" after it was already given reads
   // like a call-centre script and the student stops reading.
