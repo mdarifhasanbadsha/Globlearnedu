@@ -43,9 +43,11 @@ export const bizConversations = pgTable(
     // Added by 0013 — quoted-message context for the batched reply.
     pendingQuote: text("pending_quote"),
     pendingQuoteAt: timestamp("pending_quote_at"),
+    // resting_until and strike_count are NOT declared here: they belong to
+    // migration 0014, which is not yet applied. A schema column missing from
+    // the database breaks every insert, so rest mode uses raw SQL guarded by
+    // try/catch and treats a missing column as 'not resting'.
     // Added by 0014 - cool-off after a conversation stops being productive.
-    restingUntil: timestamp("resting_until"),
-    strikeCount: integer("strike_count").notNull().default(0),
     // Follow-up columns (followup_stage, followup_due_at, followup_stage_at)
     // are deliberately NOT declared here. Drizzle's insert() lists every
     // declared column, so a schema column missing from the database breaks

@@ -14,8 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────
 
 import { db } from "@/lib/db";
-import { bizConversations } from "@/lib/db/schema.business";
-import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 export const REST_MINUTES = 15;
 
@@ -107,42 +106,36 @@ export function decideRest(
 /** Persist the state. All writes are best effort; they never block a reply. */
 export async function enterRest(conversationId: string): Promise<void> {
   try {
-    await db
-      .update(bizConversations)
-      .set({
-        restingUntil: restUntil(),
-        strikeCount: 0,
-        updatedAt: new Date(),
-      })
-      .where(eq(bizConversations.id, conversationId));
+    await db.execute(
+      sql`update biz_conversations set resting_until = ${new Date(
+        Date.now() + REST_MINUTES * 60_000
+      )} where id = ${conversationId}`
+    );
   } catch {
-    /* the reply still goes out */
+    /* column not applied yet — rest mode simply stays off */
   }
 }
 
 export async function leaveRest(conversationId: string): Promise<void> {
   try {
-    await db
-      .update(bizConversations)
-      .set({ restingUntil: null, strikeCount: 0, updatedAt: new Date() })
-      .where(eq(bizConversations.id, conversationId));
+    await db.execute(
+      sql`update biz_conversations set resting_until = null where id = ${conversationId}`
+    );
   } catch {
-    /* ignore */
+    /* nothing to clear */
   }
 }
 
 export async function bumpStrikes(conversationId: string, intent: string): Promise<number> {
   try {
-    const [row] = await db
-      .select({ strikeCount: bizConversations.strikeCount })
-      .from(bizConversations)
-      .where(eq(bizConversations.id, conversationId))
-      .limit(1);
-    const next = nextStrikeCount(row?.strikeCount ?? 0, intent);
-    await db
-      .update(bizConversations)
-      .set({ strikeCount: next, updatedAt: new Date() })
-      .where(eq(bizConversations.id, conversationId));
+    const rows: any[] = await db
+      .execute(sql`select strike_count from biz_conversations where id = ${conversationId} limit 1`)
+      .then((r: any) => r?.rows ?? r ?? []);
+    const current = Number(rows?.[0]?.strike_count ?? 0);
+    const next = nextStrikeCount(current, intent);
+    await db.execute(
+      sql`update biz_conversations set strike_count = ${next}, updated_at = now() where id = ${conversationId}`
+    );
     return next;
   } catch {
     return 0;
