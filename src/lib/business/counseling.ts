@@ -215,7 +215,25 @@ function formatFact(f: KnowledgeFact, i: number): string {
     lines.push(`NOT YET CONFIRMED for this program: ${missing.join(", ")}`);
   }
 
-  if (f.intakeText) lines.push(`Intake: ${f.intakeText}`);
+  // A March date for a degree must not reach the model as a confirmed option.
+  // NuIST showed "March 2027" in a brochure and the AI offered it as available;
+  // the owner confirmed that is wrong for degrees. Language keeps both months.
+  const levelKey = (f.level ?? "").toLowerCase();
+  const isLanguage = levelKey === "language";
+  if (f.intakeText) {
+    const marchOnly = /march/i.test(f.intakeText) && !/september/i.test(f.intakeText);
+    if (marchOnly && !isLanguage) {
+      lines.push(
+        "Intake: September is the main intake. A March option is NOT confirmed for this programme " +
+          "— the team must verify it. Do not offer March as available."
+      );
+    } else {
+      lines.push(`Intake: ${f.intakeText}`);
+    }
+  }
+  if (isLanguage) {
+    lines.push("Language programme intakes: March AND September are both available.");
+  }
   else if (Array.isArray(f.intakeMonths) && f.intakeMonths.length > 0) {
     lines.push(`Intakes: ${(f.intakeMonths as string[]).join(", ")}`);
   }
@@ -364,7 +382,8 @@ When you do give figures, they go in this order:
   3. One-off costs together: application fee, insurance, residence permit, medical checkup.
   4. Our service charge LAST, clearly labelled as ours.
   5. Then one short question.
-  Example: "টিউশন শুরু প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, হোস্টেল প্রায় ৩০০ CNY প্রতি মাসে। আমাদের সার্ভিস চার্জ আলাদা — Diploma/Bachelor-এ ৯৯,০০০ টাকা।"
+  Shape only — put the real figures in place of the markers, never copy one from this
+  prompt: "টিউশন শুরু <সর্বনিম্ন সংখ্যা> থেকে, হোস্টেল <সর্বনিম্ন> প্রতি মাসে। আমাদের সার্ভিস চার্জ আলাদা — <ওই লেভেলের চার্জ>।"
 
 RULES:
   - Never open with the service charge. It is our fee, not the cost of studying.
@@ -505,7 +524,14 @@ Never compare GPAs on different scales. Never judge scholarship chances from GPA
   either go straight to a job or take a 2-year top-up Bachelor — mention this when a student
   worries that a Diploma is a dead end, because it is not.
 - Bachelor: usually 4 years, age 17–25, September intake is main.
-- March intake is mostly language and foundation programmes.
+INTAKE — this rule overrides any date in the knowledge block
+- Bachelor, Master's, Diploma and PhD: **September is the main intake.** That is the answer.
+- Some universities do run a March intake for those degrees. You must NOT confirm one. Say the
+  main intake is September, that a March option may exist at some universities, and that the team
+  will confirm which — then ask for their contact so the team can reply. Never promise a March
+  seat for a degree programme, even if a brochure shows one: brochures are not a contract and a
+  wrong date costs a student a visa.
+- Chinese Language programme: BOTH March and September are available. Say both, plainly.
 - International students apply to English-taught programmes — that is the default to describe.
   Diploma programmes are commonly English-taught with Chinese alongside for daily life. Never tell
   a student their subject is taught in Chinese, and never say a Chinese foundation year is required,

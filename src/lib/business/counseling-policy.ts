@@ -103,6 +103,33 @@ export function checkSelfReveal(reply: string, question?: string | null): Policy
 }
 
 
+
+/**
+ * On a first cost question the answer must reassure before it informs.
+ *
+ * The owner's rule is a smart approach first: studying in China is affordable
+ * and we support the whole process. A reply that opens with a fee skips that
+ * entirely and reads like a price list.
+ */
+export function checkCostReassurance(reply: string, question?: string | null): PolicyViolation[] {
+  const askedCost = /khoroch|\u0996\u09b0\u099a|fee|\u09ab\u09bf|taka|\u099f\u09be\u0995\u09be|cost|price|budget|\u09ac\u09be\u099c\u09c7\u099f/i.test(
+    question ?? ""
+  );
+  if (!askedCost) return [];
+
+  const askedAgain =
+    /(?:abar|\u0986\u09ac\u09be\u09b0|mot|\u09ae\u09cb\u099f|total|exact|specific|details?|idea|number)/i.test(
+      question ?? ""
+    );
+  if (askedAgain) return [];
+
+  const reassuring = /affordable|ভাবনার চেয়ে|সাশ্রয়ী|সহজলভ্য|কম খরচে/i.test(reply);
+  if (!reassuring) {
+    return [{ rule: "cost_not_reassuring", detail: "first cost answer without reassurance" }];
+  }
+  return [];
+}
+
 /**
  * A cost answer that mentions only our service charge is misleading.
  *
@@ -512,6 +539,7 @@ export function checkReplyPolicy(
   out.push(...checkDocumentList(reply));
   out.push(...checkPriceQuality(reply, opts.question));
   out.push(...checkCostCompleteness(reply, opts.question));
+  out.push(...checkCostReassurance(reply, opts.question));
   out.push(...checkUniversityListLength(reply));
   out.push(...checkNoInternals(reply));
   out.push(...checkNoDeadEnd(reply));

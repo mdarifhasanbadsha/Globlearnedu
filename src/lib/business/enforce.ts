@@ -52,6 +52,11 @@ const GENERIC_FALLBACK =
  * moves the conversation forward instead.
  */
 export function isRepeated(reply: string, earlierReplies: string[]): boolean {
+  // Only meaningful when the student is asking the same thing again. Comparing a
+  // brand-new answer against old ones produced "I won't repeat myself" in reply
+  // to a fresh question — for example a file-opening question answered with the
+  // duplicate line because the wording overlapped an earlier cost answer.
+  if (earlierReplies.length === 0) return false;
   const norm = (s: string) =>
     s
       .toLowerCase()
