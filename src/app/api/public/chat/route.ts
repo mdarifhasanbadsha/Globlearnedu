@@ -361,6 +361,28 @@ async function handlePost(req: Request) {
     wantsHandoff = true;
   }
 
+  // Apply every policy rule before the student sees it.
+  //
+  // This is the only enforcement point, and it was missing: the rules existed
+  // but nothing ran them, which is how "আমাদের ডেটাবেসে ... নেই" kept reaching
+  // students after it was banned.
+  if (reply) {
+    const { enforceReply, isRepeated, DUPLICATE_INSTEAD } = await import("@/lib/business/enforce");
+    const enforced = enforceReply(reply, { question: message });
+    reply = enforced.reply;
+
+    // Do not send the same paragraph twice. A student asking twice should get
+    // something that moves them forward, not a copy.
+    const earlier = history
+      .filter((h) => h.direction === "out")
+      .map((h) => h.body)
+      .slice(-6);
+    if (isRepeated(reply, earlier)) {
+      console.log("[chat] duplicate answer replaced");
+      reply = DUPLICATE_INSTEAD;
+    }
+  }
+
   // Log usage honestly (cost unknown when prices are unset).
   await db.insert(bizAiRuns).values({
     businessId,

@@ -81,6 +81,10 @@ const ABUSE: RegExp[] = [
   /\b(?:fuck|f\*ck|shit|bastard|idiot|stupid|moron|retard|bitch|asshole)\b/i,
   /(?:খানকি|মাগি|শুয়োরের|কুত্তা|গাধা|বোকা|চোদ|বাল)/i,
   /(?:tui|তুই)\s*(?:ekta\s*)?(?:gadha|বোকা|pagol|পাগল)/i,
+  // "tumi ekta pagol bot" — an insult aimed at the assistant, not a question
+  // about it. Without this it matched the identity check and got a polite
+  // introduction instead of a calm reply to the insult.
+  /(?:pagol|পাগল|bokachoda|বোকা|gadha|গাধা)/i,
 ];
 
 /** Recognised topics. Anything outside these is off-topic. */

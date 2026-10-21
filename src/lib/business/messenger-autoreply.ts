@@ -490,6 +490,24 @@ export async function autoReplyToMessenger(
 
   if (!reply) return { attempted: false, reason: result.error ?? "AI returned no reply", batched: burst.length };
 
+  // Apply every policy rule before the student sees it — the same enforcement
+  // the web widget uses. Rules that are never executed are not rules.
+  {
+    const { enforceReply, isRepeated, DUPLICATE_INSTEAD } = await import("@/lib/business/enforce");
+    const enforced = enforceReply(reply, { question: burstText });
+    reply = enforced.reply;
+
+    // Never send the same paragraph twice in one thread.
+    const earlier = historyBeforeBurst
+      .filter((h) => h.direction === "out")
+      .map((h) => h.body)
+      .slice(-6);
+    if (isRepeated(reply, earlier)) {
+      console.log("[messenger] duplicate answer replaced");
+      reply = DUPLICATE_INSTEAD;
+    }
+  }
+
   // Never send junk. A bad reply is worse than a short wait.
   const usable = isUsableReply(reply, burstText);
   if (!usable.ok) {
