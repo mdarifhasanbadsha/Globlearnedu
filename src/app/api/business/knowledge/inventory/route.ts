@@ -29,12 +29,12 @@ export async function GET() {
 
     const byLevel: Record<string, number> = {};
     const byUni = new Map<string, { city: string | null; levels: string[] }>();
-
     for (const row of rows) {
       const n = Number(row.n ?? 0);
       byLevel[row.level ?? "none"] = (byLevel[row.level ?? "none"] ?? 0) + n;
       const key = String(row.university_name ?? "");
-      const entry = byUni.get(key) ?? { city: row.city ?? null, levels: [] };
+      const entry: { city: string | null; levels: string[] } =
+        byUni.get(key) ?? { city: row.city ?? null, levels: [] };
       entry.levels.push(`${row.level}(${n})`);
       if (!entry.city && row.city) entry.city = row.city;
       byUni.set(key, entry);
