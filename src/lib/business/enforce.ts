@@ -36,12 +36,6 @@ const FALLBACKS: Record<string, string> = {
     "ঠিক আছে ভাইয়া 🙂 আরও কিছু জানতে চাইলে বলুন।",
   // A price answer with only our fee would read as the cost of studying in
   // China. Replace it with the complete picture, lowest figures first.
-  cost_incomplete:
-    "চায়নায় পড়াশোনা ভাবনার চেয়ে অনেক বেশি affordable ভাইয়া 🙂\n\n" +
-    "টিউশন শুরু হয় প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, আর হোস্টেল প্রায় ৩০০ CNY থেকে প্রতি মাসে। " +
-    "এর বাইরে application fee, insurance আর medical checkup মিলিয়ে একবারে প্রায় ২,০০০–২,৫০০ CNY লাগে। " +
-    "আমাদের সার্ভিস চার্জ আলাদা — Diploma/Bachelor-এ ৯৯,০০০ টাকা, যাতে আবেদন থেকে ভিসা পর্যন্ত পুরো কাজটা আমরা দেখি।\n\n" +
-    "আপনি কোন লেভেলে আর কোন সাবজেক্টে পড়তে চান?",
 };
 
 /** A general replacement when no specific fallback exists. */
@@ -94,6 +88,47 @@ export const DUPLICATE_INSTEAD =
  * because swapping a good answer for a generic one is worse than a small
  * imperfection.
  */
+/** The language-course fee, since a language question has no tuition term. */
+function languageHint(question: string | null | undefined): string {
+  const q = (question ?? "").toLowerCase();
+  if (/language|চীনা ভাষা|ভাষা|chinese course/.test(q)) {
+    return (
+      "চায়না ল্যাঙ্গুয়েজ প্রোগ্রামের টিউশন শুরু হয় প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, " +
+      "হোস্টেল প্রায় ৩০০ CNY প্রতি মাসে।"
+    );
+  }
+  return (
+    "টিউশন শুরু হয় প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, আর হোস্টেল প্রায় ৩০০ CNY থেকে প্রতি মাসে।"
+  );
+}
+
+/** The complete cost answer, shaped by what was actually asked. */
+function costFallback(question: string | null | undefined): string {
+  const q = (question ?? "").toLowerCase();
+  const languageOnly = /language|চীনা ভাষা|ভাষা|chinese course/.test(q);
+
+  const tuitionLine = languageOnly
+    ? "চায়না ল্যাঙ্গুয়েজ প্রোগ্রামের টিউশন শুরু হয় প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, হোস্টেল প্রায় ৩০০ CNY প্রতি মাসে।"
+    : "টিউশন শুরু হয় প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, আর হোস্টেল প্রায় ৩০০ CNY থেকে প্রতি মাসে।";
+
+  const serviceLine = languageOnly
+    ? "আমাদের সার্ভিস চার্জ আলাদা — ৬ মাসের ল্যাঙ্গুয়েজ কোর্সে ৬৯,০০০ টাকা, ১ বছরে ৯৯,০০০ টাকা।"
+    : "আমাদের সার্ভিস চার্জ আলাদা — Diploma/Bachelor-এ ৯৯,০০০ টাকা, যাতে আবেদন থেকে ভিসা পর্যন্ত পুরো কাজটা আমরা দেখি।";
+
+  const closing = languageOnly
+    ? "আপনি কি ৬ মাসের কোর্স ভাবছেন নাকি ১ বছরের?"
+    : "আপনি কোন লেভেলে আর কোন সাবজেক্টে পড়তে চান?";
+
+  return (
+    "চায়নায় পড়াশোনা ভাবনার চেয়ে অনেক বেশি affordable ভাইয়া 🙂\n\n" +
+    tuitionLine +
+    " এর বাইরে application fee, insurance আর medical checkup মিলিয়ে একবারে প্রায় ২,০০০–২,৫০০ CNY লাগে। " +
+    serviceLine +
+    "\n\n" +
+    closing
+  );
+}
+
 export function enforceReply(
   reply: string,
   opts: {
@@ -108,9 +143,27 @@ export function enforceReply(
     return { reply, violations, replaced: false };
   }
 
-  // First violation with a dedicated fallback wins.
-  for (const v of violations) {
-    const fb = FALLBACKS[v.rule];
+  // Priority matters. A reply that withheld the numbers the student asked
+  // for must be replaced by one that supplies them, even if it also trips a
+  // wording rule — otherwise a generic "the team will tell you" wins and the
+  // student still has no answer. This happened in production: a language-fee
+  // question was answered with the team line and every figure disappeared.
+  const PRIORITY = [
+    "cost_incomplete",
+    "too_many_universities",
+    "mentions_internals",
+    "dead_end_wording",
+    "self_reveal",
+    "repeated_number_mention",
+  ];
+
+  const ordered = [...violations].sort(
+    (a, b) => PRIORITY.indexOf(a.rule) - PRIORITY.indexOf(b.rule)
+  );
+
+  // First violation with a dedicated fallback wins, in priority order.
+  for (const v of ordered) {
+    const fb = v.rule === "cost_incomplete" ? costFallback(opts.question) : FALLBACKS[v.rule];
     if (fb) {
       console.log(`[policy] replaced reply for ${v.rule} (${v.detail ?? ""})`);
       return { reply: fb, violations, replaced: true };
