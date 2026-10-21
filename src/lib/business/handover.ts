@@ -1,30 +1,35 @@
 // ─────────────────────────────────────────────────────────────────────
 // When to stop being the first responder.
 //
-// The owner's rule: after roughly ten turns the assistant should have the
-// student's contact and hand the thread to a person. A conversation that runs
-// past that is not making progress — it is going in circles, which is exactly
-// what students complained about ("bar bar question kore").
+// The owner's rule: a student should get ten exchanges before we ask for a
+// contact and hand them to a person. A conversation that keeps asking
+// questions past that is going in circles, which is what students complained
+// about ("bar bar question kore").
 //
-// Two triggers, both fixed in code rather than left to the model:
-//   1. The student has written MAX_AI_TURNS times and we still have no
-//      contact. Ask for the number once, then hand over.
-//   2. They show unmistakable intent (asked about fees, documents, intake,
-//      how to apply). Do not make a warm student answer more questions —
-//      say the team will take it from here.
+// The mistake this file now avoids: treating "how much does it cost" as
+// intent. That is the FIRST question of every enquiry, not a decision to
+// proceed — and acting on it asked for a phone number three messages in, which
+// drives a new student away before they have learned anything.
 // ─────────────────────────────────────────────────────────────────────
 
 /** Turns after which the assistant must be closing, not still asking. */
 export const MAX_AI_TURNS = 10;
 
-/** Fewer turns are enough when the intent is unmistakable. */
-export const INTENT_TURNS = 3;
+/**
+ * A student who says they want to proceed is handed over early — but only
+ * after enough real conversation for the team to have something to work with.
+ */
+export const MIN_TURNS_FOR_HANDOVER = 6;
 
-/** Phrases that mean the student is serious, not browsing. */
+/**
+ * Phrases that mean the student has decided to go ahead, as opposed to
+ * gathering information. Deliberately narrow: fee, documents, intake and
+ * "kivabe" are excluded because every enquiry starts with them.
+ */
 const STRONG_INTENT =
-  /(?:koto\s*taka|fee|ফি|খরচ|khoroch|documents|ডকুমেন্ট|কাগজ|apply|আবেদন|admission\s*nite|ভর্তি|intake|ইনটেক|kobe\s*start|কবে\s*শুরু|scholarship|স্কলারশিপ|passport|পাসপোর্ট|kivabe|কিভাবে|process|প্রসেস|deadline|ডেডলাইন)/i;
+  /(?:apply\s*(?:korte\s*chai|kortesi|korchi)|আবেদন\s*কর|admission\s*(?:nibo|nite\s*chai|নিব|নিতে\s*চাই)|enroll|shuru\s*korte\s*chai|শুরু\s*করতে\s*চাই|processed|প্রসেস\s*শুরু|documents?\s*ready|ডকুমেন্ট\s*রেডি|passport\s*(?:ache|আছে))/i;
 
-/** Did the student express clear intent to proceed? */
+/** Did the student say they want to proceed? */
 export function showsStrongIntent(message: string): boolean {
   return STRONG_INTENT.test(message.trim());
 }
@@ -48,9 +53,8 @@ export interface TurnDecision {
 /**
  * Decide what this turn should do.
  *
- * `studentTurns` counts how many messages the student has sent, not how many
- * replies we sent — a student firing six lines is still one turn of effort for
- * them, but their engagement is real.
+ * `studentTurns` counts the student's messages, not our replies — a student
+ * sending six lines in one burst is one turn of effort for them.
  */
 export function decideTurn(args: {
   studentTurns: number;
@@ -59,16 +63,8 @@ export function decideTurn(args: {
 }): TurnDecision {
   const { studentTurns, hasContact, strongIntent } = args;
 
-  if (hasContact) {
-    // Contact already captured: the job is to hand over, not to ask more.
-    return {
-      close: studentTurns >= INTENT_TURNS || strongIntent,
-      askContact: false,
-      reason: "contact already captured",
-    };
-  }
-
-  if (studentTurns >= MAX_AI_TURNS) {
+  // Ten turns without a contact is going in circles: close and ask, once.
+  if (!hasContact && studentTurns >= MAX_AI_TURNS) {
     return {
       close: true,
       askContact: true,
@@ -76,11 +72,13 @@ export function decideTurn(args: {
     };
   }
 
-  if (strongIntent && studentTurns >= INTENT_TURNS) {
+  // They said they want to proceed. Hand over, but only after a real
+  // conversation — never on the first few messages.
+  if (strongIntent && studentTurns >= MIN_TURNS_FOR_HANDOVER) {
     return {
       close: true,
-      askContact: true,
-      reason: `strong intent after ${studentTurns} turns — handing over`,
+      askContact: !hasContact,
+      reason: "student wants to proceed — handing over",
     };
   }
 
