@@ -47,7 +47,27 @@ export interface AutoReplyOutcome {
   batched?: number;
 }
 
-const OPT_OUT = /(stop|unsubscribe|don'?t message|message koro na|মেসেজ করবেন না|বন্ধ করুন)/i;
+/**
+ * A real request to stop being messaged.
+ *
+ * This used to be a substring search for "stop", so a student writing
+ * "stop thinking koren na, ami diploma vabsilam" or "non-stop flight ache?"
+ * silently switched the assistant off for the rest of the thread — which is
+ * exactly the "AI replied once then went quiet" behaviour reported live.
+ *
+ * An opt-out has to BE the message, not appear inside one: the whole message
+ * must be a short request to stop.
+ */
+const OPT_OUT = new RegExp(
+  "^(?:" +
+    "\\s*(?:please\\s*)?(?:stop|unsubscribe|opt\\s*out)\\s*[.!]?\\s*|" +
+    "\\s*(?:don'?t|do\\s*not)\\s*(?:message|contact|text)\\s*(?:me)?\\s*[.!]?\\s*|" +
+    "\\s*message\\s*(?:koro|koren|diben)?\\s*na\\s*[.!]?\\s*|" +
+    "\\s*(?:আর\\s*)?(?:মেসেজ|মেসেজ\\s*করবেন|নক)\\s*করবেন\\s*না\\s*[.!]?\\s*|" +
+    "\\s*(?:আর\\s*মেসেজ\\s*দিবেন\\s*না|বন্ধ\\s*করুন)\\s*[.!]?\\s*" +
+  ")$",
+  "i"
+);
 
 export async function autoReplyToMessenger(
   conversationId: string,
@@ -572,6 +592,21 @@ export async function autoReplyToMessenger(
     body: reply,
     messageId: saved?.id,
   });
+
+  // Only pause for a real request for a human.
+  //
+  // The model sets wants_human_handoff whenever it cannot confirm something,
+  // and that pause lasts two minutes — so a student asking two questions in a
+  // row got one answer and then silence. Verify the student actually asked for
+  // a person before standing down.
+  const askedForHuman =
+    /(?:manus|মানুষ|কাউন্সেলর|counselor|counsellor|staff|agent|talk to (?:a|someone)|কথা বলতে চাই|assign|representative)/i.test(
+      burstText
+    );
+  if (wantsHandoff && !askedForHuman) {
+    console.log("[messenger] handoff ignored — the student did not ask for a human");
+    wantsHandoff = false;
+  }
 
   if (wantsHandoff) {
     // Start the contact follow-up: half an hour from now we ask whether the

@@ -363,6 +363,17 @@ async function handlePost(req: Request) {
     reply = parsed.reply;
     wantsHandoff = parsed.wantsHumanHandoff;
     extracted = sanitizeExtracted(parsed.extracted);
+
+    // A pause only makes sense if the student asked for a person. The model
+    // flags uncertainty as a handoff, and that silence costs the next question.
+    if (
+      wantsHandoff &&
+      !/(?:manus|মানুষ|কাউন্সেলর|counselor|counsellor|staff|agent|talk to (?:a|someone)|কথা বলতে চাই|representative)/i.test(
+        message
+      )
+    ) {
+      wantsHandoff = false;
+    }
   }
 
   // A visitor must never be left with an empty bubble. If the provider
