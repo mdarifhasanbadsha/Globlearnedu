@@ -150,6 +150,24 @@ export function checkNoInternals(reply: string): PolicyViolation[] {
   return [];
 }
 
+
+/**
+ * "We have nothing for you" loses the student on the spot.
+ *
+ * The sample the model is given is not our whole database, so an absent
+ * university means "not in this excerpt", never "we cannot help". The honest
+ * and useful sentence is that we have many good options and the team will give
+ * the details. Blocking the dead-end wording is safer than trusting each reply
+ * to phrase it well.
+ */
+const DEAD_END =
+  /(?:এন্ট্রি\s*নেই|এন্ট্রি\s*নাই|তথ্য\s*নেই\s*—|আমাদের\s*কাছে\s*নেই|কোনো\s*অপশন\s*নেই|কোনো\s*বিশ্ববিদ্যালয়\s*নেই|no\s+options|do(?:es)?\s+not\s+have\s+(?:any|that)|nothing\s+available|we\s+have\s+nothing)/i;
+
+export function checkNoDeadEnd(reply: string): PolicyViolation[] {
+  const m = reply.match(DEAD_END);
+  return m ? [{ rule: "dead_end_wording", detail: m[0] }] : [];
+}
+
 /**
  * A wall of university names is unreadable and makes a student pick blindly.
  * At most three examples, never the whole database — which is also a resource
@@ -445,6 +463,7 @@ export function checkReplyPolicy(
   out.push(...checkPriceQuality(reply, opts.question));
   out.push(...checkUniversityListLength(reply));
   out.push(...checkNoInternals(reply));
+  out.push(...checkNoDeadEnd(reply));
 
   // Repeating "your number is with us" after it was already given reads
   // like a call-centre script and the student stops reading.
