@@ -81,7 +81,14 @@ export async function POST(req: Request) {
     // only the message is exposed, never a stack trace or env value.
     console.error("[chat] unhandled:", e?.message);
     return NextResponse.json(
-      { error: "Chat failed", detail: String(e?.message ?? e).slice(0, 300) },
+      {
+        error: "Chat failed",
+        // Drizzle wraps the driver error, and the wrapper text alone hides
+        // which column or table actually failed. The cause message is the
+        // one that names it, so both are surfaced (and truncated).
+        detail: String(e?.message ?? e).slice(0, 300),
+        cause: String((e as any)?.cause?.message ?? "").slice(0, 300),
+      },
       { status: 500 }
     );
   }
