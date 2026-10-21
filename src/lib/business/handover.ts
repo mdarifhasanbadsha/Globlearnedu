@@ -122,8 +122,10 @@ export function closingInstruction(askContact: boolean): string {
  */
 export const ANSWER_FIRST_INSTRUCTION =
   "\n\nANSWER THE QUESTION THEY ASKED, FIRST.\n" +
-  "- Read their message and answer that specific thing in your first sentence.\n" +
-  "- Do not open with university availability, fees or your own caveats unless that is what was " +
-  "asked.\n" +
-  "- Never repeat a sentence you already sent earlier in this conversation. If they ask the same " +
-  "thing again, add something new or move them forward — do not resend the same answer.";
+  "- Your first sentence answers exactly what they asked. Nothing comes before it.\n" +
+  "- Their question decides the topic. Ask about hostel cost and the first sentence is about\n" +
+  "  hostel cost — not universities, not documents, not what we lack.\n" +
+  "- Do not open with university availability or your own caveats unless that is what was asked.\n" +
+  "- Never repeat a sentence you already sent. If they ask again, add something new or move\n" +
+  "  them forward — never resend the same answer.\n" +
+  "- Example: they ask about hostel cost. Lead with the hostel figure, then anything else.";

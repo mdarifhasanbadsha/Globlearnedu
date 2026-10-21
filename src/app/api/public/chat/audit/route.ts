@@ -33,7 +33,35 @@ export async function GET() {
 
     const missing = declared.filter((c) => !present.includes(c));
 
+
+      // Proof that the policy layer is actually wired in production.
+      //
+      // The rules existed for a week without being executed, so this endpoint
+      // reports what enforcement does with deliberately bad input. If
+      // enforcementOk is false, the deployed code is stale.
+      let enforcement: any = null;
+      try {
+        const { enforceReply } = await import("@/lib/business/enforce");
+        const cases = [
+          "আমাদের ডেটাবেসে Diploma-র এন্ট্রি নেই।",
+          "We do not have any universities for that.",
+          "আমাদের কাছে কোনো অপশন নেই।",
+          "CST-তে Bachelor — ঠিক আছে। আপনার HSC রেজাল্ট কত?",
+        ];
+        const rows = cases.map((input) => {
+          const e = enforceReply(input);
+          return { input, replaced: e.replaced, output: e.reply.slice(0, 120) };
+        });
+        enforcement = {
+          ok: rows[0].replaced && rows[1].replaced && rows[2].replaced && !rows[3].replaced,
+          rows,
+        };
+      } catch (e: any) {
+        enforcement = { ok: false, error: String(e?.message ?? e).slice(0, 160) };
+      }
+
     return NextResponse.json({
+      enforcement,
       totalInDatabase: present.length,
       missingFromDatabase: missing,
       ok: missing.length === 0,
