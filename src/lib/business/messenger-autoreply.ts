@@ -519,7 +519,11 @@ export async function autoReplyToMessenger(
       .filter((h) => h.direction === "out")
       .map((h) => h.body)
       .slice(-6);
-    if (isRepeated(reply, earlier)) {
+    const earlierQuestions = historyBeforeBurst
+      .filter((h) => h.direction === "in")
+      .map((h) => h.body)
+      .slice(-6);
+    if (isRepeated(reply, earlier, burstText, earlierQuestions)) {
       console.log("[messenger] duplicate answer replaced");
       reply = DUPLICATE_INSTEAD;
     }

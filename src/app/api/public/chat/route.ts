@@ -398,7 +398,11 @@ async function handlePost(req: Request) {
       .filter((h) => h.direction === "out")
       .map((h) => h.body)
       .slice(-6);
-    if (isRepeated(reply, earlier)) {
+    const earlierQuestions = history
+      .filter((h) => h.direction === "in")
+      .map((h) => h.body)
+      .slice(-6);
+    if (isRepeated(reply, earlier, message, earlierQuestions)) {
       console.log("[chat] duplicate answer replaced");
       reply = DUPLICATE_INSTEAD;
     }

@@ -51,12 +51,18 @@ const GENERIC_FALLBACK =
  * clearest sign of a machine, so a duplicate is replaced with a short line that
  * moves the conversation forward instead.
  */
-export function isRepeated(reply: string, earlierReplies: string[]): boolean {
-  // Only meaningful when the student is asking the same thing again. Comparing a
-  // brand-new answer against old ones produced "I won't repeat myself" in reply
-  // to a fresh question — for example a file-opening question answered with the
-  // duplicate line because the wording overlapped an earlier cost answer.
+export function isRepeated(
+  reply: string,
+  earlierReplies: string[],
+  currentQuestion?: string | null,
+  earlierQuestions?: string[] | null
+): boolean {
+  // Comparing the TEXT alone was wrong: three different questions — intake,
+  // file opening, a repeat of cost — all received "I won't repeat myself"
+  // because the answers happened to share wording with an earlier one. A
+  // duplicate only matters when the student is genuinely asking the same thing.
   if (earlierReplies.length === 0) return false;
+
   const norm = (s: string) =>
     s
       .toLowerCase()
@@ -67,17 +73,28 @@ export function isRepeated(reply: string, earlierReplies: string[]): boolean {
   const now = norm(reply);
   if (now.length < 25) return false;
 
+  const words = (s: string) => new Set(norm(s).split(" ").filter(Boolean));
+  const overlap = (x: Set<string>, y: Set<string>) => {
+    let shared = 0;
+    for (const w of x) if (y.has(w)) shared++;
+    return shared / Math.max(x.size, y.size, 1);
+  };
+
+  const askedSame =
+    currentQuestion && earlierQuestions && earlierQuestions.length > 0
+      ? (() => {
+          const q = words(currentQuestion);
+          return earlierQuestions.some((e) => overlap(q, words(e)) > 0.6);
+        })()
+      : true;
+
+  if (!askedSame) return false;
+
   return earlierReplies.some((r) => {
     const before = norm(r);
     if (!before) return false;
     if (before === now) return true;
-    // Near-duplicate: most of the words overlap.
-    const a = new Set(now.split(" "));
-    const b = new Set(before.split(" "));
-    let shared = 0;
-    for (const w of a) if (b.has(w)) shared++;
-    const ratio = shared / Math.max(a.size, b.size);
-    return ratio > 0.85;
+    return overlap(words(reply), words(r)) > 0.85;
   });
 }
 
