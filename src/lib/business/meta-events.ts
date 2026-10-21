@@ -420,14 +420,30 @@ async function afterInbound(args: {
         // A single message is answered at once. When several arrive together
         // we keep checking for up to 30 seconds so the whole burst becomes one
         // reply — six questions must not become six answers.
-        const settle = (async () => {
+        // Run the wait inline.
+        //
+        // This previously spawned the delay as a detached promise and relied on
+        // globalThis.ctx.waitUntil to keep the Worker alive. That global does not
+        // exist in OpenNext on Cloudflare — ctx is passed to the handler — so the
+        // promise was dropped the moment the response returned, the Worker was
+        // torn down, and the student got NO reply at all. Three live threads show
+        // exactly that: inbound messages, zero outbound.
+        //
+        // Awaiting inline keeps the Worker alive for the duration. It costs a
+        // longer webhook response, which Meta tolerates; silence is the worse
+        // failure.
+        {
           const { BURST_WAIT_MS } = await import("@/lib/business/conversation-flow");
           const deadline = Date.now() + BURST_WAIT_MS + 5_000;
 
           await new Promise((r) => setTimeout(r, BATCH_QUIET_MS + 1500));
 
           let outcome = await autoReplyToMessenger(conversationId, { waitForQuiet: true });
-          while (!outcome.attempted && Date.now() < deadline && /burst of/.test(outcome.reason ?? "")) {
+          while (
+            !outcome.attempted &&
+            Date.now() < deadline &&
+            /burst of|still typing/.test(outcome.reason ?? "")
+          ) {
             await new Promise((r) => setTimeout(r, 5_000));
             outcome = await autoReplyToMessenger(conversationId, { waitForQuiet: true });
           }
@@ -436,11 +452,7 @@ async function afterInbound(args: {
             `[messenger] batched reply ${outcome.sent ? "sent" : "skipped"}: ${outcome.reason} ` +
               `(${outcome.batched ?? 0} messages)`
           );
-        })();
-
-        const exec = (globalThis as any).ctx?.waitUntil;
-        if (typeof exec === "function") exec.call((globalThis as any).ctx, settle);
-        else void settle;
+        }
       } else {
         console.log(`[messenger] auto-reply skipped: ${first.reason}`);
       }

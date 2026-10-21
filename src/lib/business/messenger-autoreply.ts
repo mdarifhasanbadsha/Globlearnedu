@@ -509,12 +509,20 @@ export async function autoReplyToMessenger(
 
   // Apply every policy rule before the student sees it — the same enforcement
   // the web widget uses. Rules that are never executed are not rules.
-  {
+  // Policy and duplicate handling must never be able to stop a reply.
+  //
+  // They run inside try/catch and log: a rule that throws would otherwise leave
+  // the student with silence, which is far worse than sending one imperfect
+  // answer. Three live threads got no reply at all this way.
+  try {
     const { enforceReply, isRepeated, DUPLICATE_INSTEAD } = await import("@/lib/business/enforce");
-    const enforced = enforceReply(reply, { question: burstText });
+    const enforced = enforceReply(reply, {
+      question: burstText,
+      level: facts?.degree_level ?? null,
+      numberAlreadyKnown: Boolean(facts?.phone),
+    });
     reply = enforced.reply;
 
-    // Never send the same paragraph twice in one thread.
     const earlier = historyBeforeBurst
       .filter((h) => h.direction === "out")
       .map((h) => h.body)
@@ -527,6 +535,8 @@ export async function autoReplyToMessenger(
       console.log("[messenger] duplicate answer replaced");
       reply = DUPLICATE_INSTEAD;
     }
+  } catch (e) {
+    console.error("[messenger] policy step failed, sending original reply:", (e as Error)?.message);
   }
 
   // Never send junk. A bad reply is worse than a short wait.
