@@ -166,7 +166,7 @@ export function knownFacts(history: { direction: string; body: string }[]): Reco
     [/master'?s?|মাস্টার্স|মাস্টার/i, "Master's"],
     [/diploma|ডিপ্লোমা|ডিপ্লোমাতে|ডিপ্লোমার/i, "Diploma"],
     [/bachelor|ব্যাচেলর|স্নাতক/i, "Bachelor"],
-    [/language|ল্যাঙ্গুয়েজ|ভাষা/i, "Chinese Language"],
+    [/language|ল্যাঙ্গুয়েজ|ভাষা/i, "Language"],
   ];
 
   // The LAST thing the student said decides. A student who says
@@ -182,12 +182,27 @@ export function knownFacts(history: { direction: string; body: string }[]): Reco
     if (h.direction !== "in") continue;
 
     // Negation inside this message: "X korbo na", "not X".
+    // "diploma korbo na, bachelor korbo" has BOTH words; the negated one must be
+    // dropped and the affirmatively chosen one kept.
     const negated = h.body.match(
       /(diploma|ডিপ্লোমা|bachelor|ব্যাচেলর|master'?s?|মাস্টার|phd|পিএইচডি)\s*(?:korte|kore|korbo|lagbe|chai)?\s*na\b|(?:not|no)\s+(diploma|bachelor|master'?s?|phd)/i
     );
     if (negated) {
       const word = (negated[1] ?? negated[2] ?? "").toLowerCase();
       rejected = /dip/i.test(word) ? "Diploma" : /bach/i.test(word) ? "Bachelor" : word;
+
+      // Do not `continue`: the same sentence often chooses something else.
+      // "diploma korbo na, bachelor korbo" negates Diploma AND selects Bachelor,
+      // and stopping here lost the choice the student actually made.
+      const rest = h.body.replace(new RegExp(negated[0], "gi"), " ");
+      let chosen: string | null = null;
+      for (const [rx, label] of levelPatterns) {
+        if (new RegExp(rx.source, "gi").test(rest)) chosen = label;
+      }
+      if (chosen && chosen !== rejected) {
+        known.degree_level = chosen;
+        break;
+      }
       continue;
     }
 

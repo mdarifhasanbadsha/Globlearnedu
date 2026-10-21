@@ -26,6 +26,8 @@ const CHANGES: [string, string][] = [
   ["biz_conversations.resting_until", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "resting_until" timestamp`],
   ["biz_conversations.strike_count", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "strike_count" integer DEFAULT 0 NOT NULL`],
   ["biz_conversations.followup_stage", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "followup_stage" varchar(20)`],
+  ["biz_conversations.needs_review", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "needs_review" boolean DEFAULT false NOT NULL`],
+  ["biz_conversations.last_ai_reply_at", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "last_ai_reply_at" timestamp`],
   ["biz_conversations.followup_due_at", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "followup_due_at" timestamp`],
   ["biz_conversations.followup_stage_at", `ALTER TABLE "biz_conversations" ADD COLUMN IF NOT EXISTS "followup_stage_at" timestamp`],
   ["biz_lead_notes", `CREATE TABLE IF NOT EXISTS "biz_lead_notes" (

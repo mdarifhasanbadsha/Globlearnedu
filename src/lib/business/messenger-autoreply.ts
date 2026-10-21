@@ -527,6 +527,13 @@ export async function autoReplyToMessenger(
     })
     .returning({ id: bizMessages.id });
 
+  // The student wrote in and the AI answered. Leave a flag so a staff member can
+  // see that someone is waiting, instead of the thread looking handled.
+  {
+    const { markNeedsReview } = await import("@/lib/business/needs-review");
+    await markNeedsReview(conversationId);
+  }
+
   const sent = await sendMessengerText({
     businessId,
     conversationId,

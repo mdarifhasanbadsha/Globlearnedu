@@ -41,6 +41,15 @@ export async function GET(
 
   if (!conv) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
 
+  // Opening the thread means a human has seen it: drop the "needs review" flag
+  // the AI left behind.
+  try {
+    const { clearNeedsReview } = await import("@/lib/business/needs-review");
+    await clearNeedsReview(id);
+  } catch {
+    /* the messages matter more than the badge */
+  }
+
   const rows = await loadThread(businessId, id);
   return NextResponse.json({
     messages: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),

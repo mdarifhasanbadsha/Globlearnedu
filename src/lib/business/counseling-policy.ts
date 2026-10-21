@@ -112,15 +112,29 @@ export function checkSelfReveal(reply: string, question?: string | null): Policy
  * our fee is one line among them.
  */
 export function checkCostCompleteness(reply: string, question?: string | null): PolicyViolation[] {
-  const askedCost = /khoroch|খরচ|fee|ফি|taka|টাকা|cost|price|charge|চার্জ|budget|বাজেট/i.test(
+  const askedCost = /khoroch|খরচ|fee|ফি|taka|টাকা|cost|price|charge|চার্জ|budget|বাজেট|koto|কত/i.test(
     question ?? ""
   );
   if (!askedCost) return [];
 
   const hasAmount = /[০-৯]{2,3}[,٬]?[০-৯]{3}|\d{2,3},\d{3}/.test(reply);
-  if (!hasAmount) return [];
 
-  const mentionsTuition = /tuition|টিউশন/i.test(reply);
+  // The staged rule is deliberate: the FIRST cost question is answered with
+  // reassurance and one question, no figures. Only once the student pushes for
+  // numbers must the answer contain them. Firing on the first reply would fight
+  // the rule we wrote for exactly that case.
+  const wantsFigures =
+    /(?:abar|আবার|mot|মোট|total|exact|specific|details?|idea|number|koto\s*hobe|koto\s*lagbe|bolen|বলেন|din|দিন)/i.test(
+      question ?? ""
+    );
+
+  if (!hasAmount) {
+    return wantsFigures
+      ? [{ rule: "cost_incomplete", detail: "figures asked for, none given" }]
+      : [];
+  }
+
+  const mentionsTuition = /tuition|টিউশন|ল্যাঙ্গুয়েজ|language\s+course/i.test(reply);
   const mentionsHostel = /hostel|হোস্টেল|dorm|আবাসন/i.test(reply);
 
   if (!mentionsTuition && !mentionsHostel) {

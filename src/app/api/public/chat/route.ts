@@ -368,7 +368,15 @@ async function handlePost(req: Request) {
   // students after it was banned.
   if (reply) {
     const { enforceReply, isRepeated, DUPLICATE_INSTEAD } = await import("@/lib/business/enforce");
-    const enforced = enforceReply(reply, { question: message });
+    // The level and whether a number is already on file decide which rules can
+    // fire. Without them, "your number is with us" could not be caught because
+    // the check never learned that the number was known.
+    const factsForPolicy = knownFacts([...history, { direction: "in", body: message }]);
+    const enforced = enforceReply(reply, {
+      question: message,
+      level: factsForPolicy?.degree_level ?? null,
+      numberAlreadyKnown: Boolean(factsForPolicy?.phone),
+    });
     reply = enforced.reply;
 
     // Do not send the same paragraph twice. A student asking twice should get
@@ -397,6 +405,14 @@ async function handlePost(req: Request) {
   });
 
   if (reply) {
+    // Same flag on the web channel: a student wrote in and the AI answered.
+    try {
+      const { markNeedsReview } = await import("@/lib/business/needs-review");
+      await markNeedsReview(conversationId);
+    } catch {
+      /* the reply matters more than the flag */
+    }
+
     await db.insert(bizMessages).values({
       businessId,
       conversationId,
