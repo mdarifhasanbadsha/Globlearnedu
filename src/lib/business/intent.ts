@@ -126,6 +126,25 @@ const SELF_QUERY =
  * wrongly dismissing a real student is far worse than paying for a few extra
  * tokens.
  */
+
+/**
+ * Is this message genuinely English, or Bangla typed in Latin letters?
+ *
+ * Banglish is full of Bangla function words (korte, parbo, kemon, bhai, taka)
+ * and those never appear in English. If any are present, it is Banglish and the
+ * reply must be in Bangla.
+ */
+const BANGLISH_MARKERS =
+  /\b(?:korte|korbo|korben|kore|koro|kemon|kemne|kivabe|kibhabe|parbo|parben|parchi|hobe|hoy|ache|achhe|nai|nei|bhai|vai|vaiya|koto|kotha|kothay|taka|din|den|bolen|bolbo|ekta|apni|apnader|amar|tomar|tar|kemon|lagbe|lagche|jante|chen|chai|valo|bhalo|dhonnobad|salam|assalamu|bujhlam|bujhte)\b/i;
+
+function looksEnglish(text: string): boolean {
+  const hasBangla = /[\u0980-\u09FF]/.test(text);
+  if (hasBangla) return false;
+  if (BANGLISH_MARKERS.test(text)) return false;
+  const latin = (text.match(/[a-zA-Z]/g) ?? []).length;
+  return latin > 0;
+}
+
 export function classifyMessage(raw: string): Classified {
   const text = raw.trim();
   const low = text.toLowerCase();
@@ -183,7 +202,13 @@ export function classifyMessage(raw: string): Classified {
   // one moment they were willing to call.
   // static import at the top; classifyMessage is synchronous
   if (isCallRequest(text)) {
-    const english = /[a-zA-Z]/.test(text) && !/[\u0980-\u09FF]/.test(text);
+    // Banglish must get Bangla, not English.
+    //
+    // This used to treat any Latin-script message as English, so "call korte
+    // parbo?" — pure Banglish — was answered in English while the whole
+    // conversation had been Bangla. A message counts as English only when it
+    // reads as English words, not as Bangla typed in Latin letters.
+    const english = looksEnglish(text);
     return {
       intent: "call_request",
       handled: true,
