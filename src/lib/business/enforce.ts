@@ -80,14 +80,16 @@ export function isRepeated(
     return shared / Math.max(x.size, y.size, 1);
   };
 
-  const askedSame =
-    currentQuestion && earlierQuestions && earlierQuestions.length > 0
-      ? (() => {
-          const q = words(currentQuestion);
-          return earlierQuestions.some((e) => overlap(q, words(e)) > 0.6);
-        })()
-      : true;
+  // If we cannot see the earlier questions, we cannot tell whether this is a
+  // repeat — and guessing "yes" replaced live answers with "I won't repeat
+  // myself", including a first-time "CST te kon university ache?". Absent
+  // evidence, let the answer through.
+  if (!currentQuestion || !earlierQuestions || earlierQuestions.length === 0) {
+    return false;
+  }
 
+  const q = words(currentQuestion);
+  const askedSame = earlierQuestions.some((e) => overlap(q, words(e)) > 0.6);
   if (!askedSame) return false;
 
   return earlierReplies.some((r) => {
