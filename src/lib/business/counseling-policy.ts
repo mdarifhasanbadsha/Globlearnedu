@@ -102,6 +102,33 @@ export function checkSelfReveal(reply: string, question?: string | null): Policy
   return out;
 }
 
+
+/**
+ * A cost answer that mentions only our service charge is misleading.
+ *
+ * In production a student asking "Chinese Language Program-er khoroch koto?"
+ * received 69,000 / 99,000 and nothing else, which reads as the price of
+ * studying in China. Tuition, hostel and the one-off costs are the real answer;
+ * our fee is one line among them.
+ */
+export function checkCostCompleteness(reply: string, question?: string | null): PolicyViolation[] {
+  const askedCost = /khoroch|খরচ|fee|ফি|taka|টাকা|cost|price|charge|চার্জ|budget|বাজেট/i.test(
+    question ?? ""
+  );
+  if (!askedCost) return [];
+
+  const hasAmount = /[০-৯]{2,3}[,٬]?[০-৯]{3}|\d{2,3},\d{3}/.test(reply);
+  if (!hasAmount) return [];
+
+  const mentionsTuition = /tuition|টিউশন/i.test(reply);
+  const mentionsHostel = /hostel|হোস্টেল|dorm|আবাসন/i.test(reply);
+
+  if (!mentionsTuition && !mentionsHostel) {
+    return [{ rule: "cost_incomplete", detail: "service charge only, no tuition or hostel" }];
+  }
+  return [];
+}
+
 /**
  * A price answered as a bare number reads like a shopkeeper, not a counsellor.
  * The reply must give the figure AND say what it covers, so the number means
@@ -461,6 +488,7 @@ export function checkReplyPolicy(
   out.push(...checkSelfReveal(reply, opts.question));
   out.push(...checkDocumentList(reply));
   out.push(...checkPriceQuality(reply, opts.question));
+  out.push(...checkCostCompleteness(reply, opts.question));
   out.push(...checkUniversityListLength(reply));
   out.push(...checkNoInternals(reply));
   out.push(...checkNoDeadEnd(reply));

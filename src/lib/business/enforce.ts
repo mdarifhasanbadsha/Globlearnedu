@@ -34,6 +34,14 @@ const FALLBACKS: Record<string, string> = {
     "আমাদের টিম আপনার প্রোফাইল দেখে সবচেয়ে ভালো কয়েকটা অপশন বের করে জানিয়ে দেবে ভাইয়া 🙂 আরও কিছু জানতে চাইলে বলুন।",
   repeated_number_mention:
     "ঠিক আছে ভাইয়া 🙂 আরও কিছু জানতে চাইলে বলুন।",
+  // A price answer with only our fee would read as the cost of studying in
+  // China. Replace it with the complete picture, lowest figures first.
+  cost_incomplete:
+    "চায়নায় পড়াশোনা ভাবনার চেয়ে অনেক বেশি affordable ভাইয়া 🙂\n\n" +
+    "টিউশন শুরু হয় প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, আর হোস্টেল প্রায় ৩০০ CNY থেকে প্রতি মাসে। " +
+    "এর বাইরে application fee, insurance আর medical checkup মিলিয়ে একবারে প্রায় ২,০০০–২,৫০০ CNY লাগে। " +
+    "আমাদের সার্ভিস চার্জ আলাদা — Diploma/Bachelor-এ ৯৯,০০০ টাকা, যাতে আবেদন থেকে ভিসা পর্যন্ত পুরো কাজটা আমরা দেখি।\n\n" +
+    "আপনি কোন লেভেলে আর কোন সাবজেক্টে পড়তে চান?",
 };
 
 /** A general replacement when no specific fallback exists. */

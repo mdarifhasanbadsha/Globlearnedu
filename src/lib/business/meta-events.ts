@@ -407,7 +407,11 @@ async function afterInbound(args: {
       // Immediate feedback: "typing…" appears while they are still typing.
       await sendTypingOn(psid);
 
-      const first = await autoReplyToMessenger(conversationId, { waitForQuiet: false });
+      // The typing indicator shows immediately, but the REPLY must respect the
+      // burst window: a student firing five lines should get one answer, not five.
+      // This used to pass waitForQuiet: false, which skipped both the quiet check
+      // and the burst check, so every line was answered on arrival.
+      const first = await autoReplyToMessenger(conversationId, { waitForQuiet: true });
       if (first.attempted) {
         console.log(`[messenger] auto-reply ${first.sent ? "sent" : "skipped"}: ${first.reason}`);
       } else if (first.reason === "student still typing" || /^burst of/.test(first.reason ?? "")) {
