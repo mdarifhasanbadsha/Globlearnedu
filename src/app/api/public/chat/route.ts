@@ -311,6 +311,19 @@ async function handlePost(req: Request) {
       sys.content += ANSWER_FIRST_INSTRUCTION;
 
       const studentTurns = history.filter((h) => h.direction === "in").length;
+
+      // Count how often cost has come up, so the first ask stays reassuring and
+      // only a repeat produces figures.
+      let costAsks = 0;
+      for (const h of [...history, { direction: "in" as const, body: message }]) {
+        if (h.direction === "in" && /khoroch|খরচ|fee|ফি|taka|টাকা|cost|price|budget|বাজেট/i.test(h.body)) {
+          costAsks++;
+        }
+      }
+      if (costAsks > 0) {
+        const { costTurnInstruction } = await import("@/lib/business/handover");
+        sys.content += costTurnInstruction(costAsks);
+      }
       const decision = decideTurn({
         studentTurns,
         hasContact: Boolean(knownFacts(history)?.phone),

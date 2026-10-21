@@ -387,7 +387,24 @@ export async function autoReplyToMessenger(
     // repeat a sentence already sent. The owner's test showed replies opening
     // with university talk no matter what had been asked.
     const sysMsg = messages[messages.length - 1];
-    if (sysMsg?.role === "system") sysMsg.content += ANSWER_FIRST_INSTRUCTION;
+    if (sysMsg?.role === "system") {
+      sysMsg.content += ANSWER_FIRST_INSTRUCTION;
+
+      // The first cost question stays reassuring; a repeat gets figures.
+      let costAsks = 0;
+      for (const h of [...allHistory, { direction: "in", body: burstText }]) {
+        if (
+          h.direction === "in" &&
+          /khoroch|খরচ|fee|ফি|taka|টাকা|cost|price|budget|বাজেট/i.test(h.body)
+        ) {
+          costAsks++;
+        }
+      }
+      if (costAsks > 0) {
+        const { costTurnInstruction } = await import("@/lib/business/handover");
+        sysMsg.content += costTurnInstruction(costAsks);
+      }
+    }
 
     const turnRows: any[] = await db
       .execute(

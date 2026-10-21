@@ -117,6 +117,15 @@ export function checkCostCompleteness(reply: string, question?: string | null): 
   );
   if (!askedCost) return [];
 
+  // A question about ONE named fee is not a "total cost" question, and replacing
+  // its answer with a full cost breakdown loses what was asked. "file opening
+  // charge koto?" must be answered about the file opening charge.
+  const specificFee =
+    /file\s*opening|ফাইল ওপেনিং|registration|রেজিস্ট্রেশন|insurance|ইনস্যুরেন্স|service\s*charge|সার্ভিস চার্জ|application\s*fee|আবেদন ফি/i.test(
+      question ?? ""
+    );
+  if (specificFee) return [];
+
   const hasAmount = /[০-৯]{2,3}[,٬]?[০-৯]{3}|\d{2,3},\d{3}/.test(reply);
 
   // The staged rule is deliberate: the FIRST cost question is answered with

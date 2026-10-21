@@ -129,3 +129,30 @@ export const ANSWER_FIRST_INSTRUCTION =
   "- Never repeat a sentence you already sent. If they ask again, add something new or move\n" +
   "  them forward — never resend the same answer.\n" +
   "- Example: they ask about hostel cost. Lead with the hostel figure, then anything else.";
+
+/**
+ * Instructions for a cost question, based on how often it has been asked.
+ *
+ * The owner's rule: the first time, be smart — reassure and ask what they want;
+ * only when they ask again, or press for specifics, give figures. Sending the
+ * same instruction every turn let the model quote 99,000 straight away.
+ */
+export function costTurnInstruction(askCount: number): string {
+  if (askCount <= 1) {
+    return (
+      "\n\nCOST QUESTION \u2014 THIS IS THE FIRST TIME THEY ASKED.\n" +
+      "- Do NOT give any figure yet. Not a range, not a service charge, nothing.\n" +
+      "- Say studying in China is affordable and that we support the whole process.\n" +
+      "- Say the cost splits into tuition, hostel and a few one-off costs \u2014 without numbers.\n" +
+      "- Ask ONE question that lets a real number follow (level or subject)."
+    );
+  }
+  return (
+    "\n\nCOST QUESTION \u2014 THEY HAVE ASKED AGAIN, SO GIVE NUMBERS NOW.\n" +
+    "- Tuition from the LOWEST figure in the knowledge block, with its period.\n" +
+    "- Hostel from the lowest figure, with its period.\n" +
+    "- One-off costs together (application fee, insurance, medical checkup).\n" +
+    "- Our service charge LAST, labelled as ours.\n" +
+    "- If they asked for the total, add it up and say \"\u09ae\u09cb\u099f \u09ae\u09cb\u099f\u09be\u09ae\u09c1\u099f\u09bf\" with the range."
+  );
+}
