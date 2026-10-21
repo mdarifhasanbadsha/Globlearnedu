@@ -1,53 +1,35 @@
 // ─────────────────────────────────────────────────────────────────────
 // Rule selection.
 //
-// The full counselling prompt is ~5,800 tokens. Sending it on every message
-// burned the owner's API budget and — more importantly — buried the model in
-// 28 competing rule sections, which is what made replies repetitive and
-// robotic.
-//
-// Core rules always ship. Everything else is included only when the student's
-// message actually touches that topic, so the prompt stays short and the
-// rules that matter are the ones the model can see.
+// The rulebook is ~3,500 tokens. Sending all of it on every message wastes the
+// owner's budget and buries the model in competing rules — which is what made
+// replies repetitive. Core rules always ship; the rest are included only when
+// the message touches that topic.
 // ─────────────────────────────────────────────────────────────────────
 
-/** Sections that must always be present. */
-export const CORE_SECTIONS = new Set([
-  "WHO YOU ARE",
-  "LANGUAGE",
-  "GROUNDING",
-  "COUNSELING FLOW",
-  "HANDOFF",
-  "SOUND LIKE A PERSON",
-  "NEVER SEND A BROKEN",
-  "EXTRACTION RULE",
-  // Not topic-specific: never inventing a benefit applies to every business
-  // answer, and getting it wrong costs a student real money.
-  "NEVER INVENT A FACILITY",
-  "PAYMENT POLICY",
-]);
+/** Sections that must always be present, by number. */
+export const CORE_NUMBERS = new Set(["1", "2", "3", "4", "5", "7", "8", "10", "13", "14"]);
 
 export interface Section {
   title: string;
   body: string;
-  /** Included when the message matches any of these. */
-  triggers?: RegExp;
+  /** The original heading line, so it can be re-emitted verbatim. */
+  raw?: string;
+  /** The number in front of the title, when there is one. */
+  num?: string;
 }
 
-/**
- * Split a prompt into titled sections. A section starts at a line beginning
- * with an ALL-CAPS title and ends at the next one.
- */
+/** A section starts at a ═══ numbered heading and ends at the next one. */
 export function splitSections(prompt: string): Section[] {
   const lines = prompt.split("\n");
   const sections: Section[] = [];
   let cur: Section | null = null;
 
   for (const line of lines) {
-    const m = line.match(/^([A-Z][A-Z0-9 ,\-—\/'’]{3,})(?:$| —)/);
-    if (m && line.length < 90) {
+    const m = line.match(/^\u2550+\s*(\d+)\.\s*(.+?)\s*\u2550+\s*$/);
+    if (m) {
       if (cur) sections.push(cur);
-      cur = { title: m[1].trim(), body: "" };
+      cur = { title: `${m[1]}. ${m[2]}`, body: "", raw: line, num: m[1] };
     } else if (cur) {
       cur.body += line + "\n";
     }
@@ -56,25 +38,26 @@ export function splitSections(prompt: string): Section[] {
   return sections;
 }
 
-/** Topics that pull in an otherwise optional section. */
+/**
+ * Topics that pull in an otherwise optional section, keyed by section number.
+ */
 const TRIGGERS: Record<string, RegExp> = {
-  "DOCUMENT CHECKLISTS": /document|documents|ডকুমেন্ট|কাগজ|checklist|transcript|certificate|passport|পাসপোর্ট|ভিসা|visa|ielts|ভিডিও/i,
-  "GL EDUCATION SERVICE CHARGES": /charge|fee|ফি|খরচ|taka|টাকা|price|package|প্যাকেজ|service|সার্ভিস|payment|পেমেন্ট|cost|budget|বাজেট|file|ফাইল|opening|ওপেনিং|চার্জ/i,
-  "OFFICE, ADDRESS AND CONTACT": /office|অফিস|address|ঠিকানা|location|লোকেশন|map|where|কোথায়|contact|যোগাযোগ|phone|নম্বর|visit|আসতে/i,
-  "MONEY RULE": /fee|tuition|hostel|টাকা|taka|cny|rmb|semester|yearly|বছর|সেমিস্টার|cost|খরচ|payment/i,
-  "SCHOLARSHIPS": /scholarship|স্কলারশিপ|fund|funding|free|ফ্রি|type a|type b|type c|type d|টাকা লাগবে না|বিনা খরচ/i,
-  "DOCUMENT": /document|ডকুমেন্ট|কাগজ|checklist/i,
-  "CSCA": /csca/i,
-  "GRADE HANDLING": /gpa|\d\.\d{1,2}|result|রেজাল্ট|grade|গ্রেড|hsc|ssc|পাশ|marks/i,
-  "TEACHING LANGUAGE": /language|ভাষা|english|চীনা|chinese medium|ইংরেজি|medium/i,
-  "PROGRAMME FACTS": /diploma|bachelor|master|phd|program|প্রোগ্রাম|duration|কত বছর|intake|ইনটেক|september|march/i,
-  "RECOMMENDING A UNIVERSITY": /universit|বিশ্ববিদ্যালয়|কোন কলেজ|college|option|অপশন|suggest|সাজেস্ট|কোথায় পড়তে/i,
-  "HOW TO PRESENT UNIVERSITIES": /universit|বিশ্ববিদ্যালয়|option|অপশন|suggest/i,
-  "HOW TO USE THE KNOWLEDGE BLOCK": /universit|tuition|fee|intake|deadline|knowledge/i,
-  "VOICE NOTES": /\[voice message\]/i,
-  "REPLYING TO AN OLDER MESSAGE": /./,
-  "SEVERAL SHORT MESSAGES AT ONCE": /./,
+  // Documents
+  "9": /document|ডকুমেন্ট|কাগজ|checklist|transcript|certificate|passport|পাসপোর্ট|ielts|ভিডিও/i,
+  // Universities
+  "11": /universit|বিশ্ববিদ্যালয়|college|কলেজ|option|অপশন|suggest|সাজেস্ট|কোথায় পড়তে/i,
+  // Office and contact
+  "12": /office|অফিস|address|ঠিকানা|location|লোকেশন|map|কোথায়|contact|যোগাযোগ|phone|নম্বর|visit|আসতে/i,
+  // Grades
+  "15": /gpa|\d\.\d{1,2}|result|রেজাল্ট|grade|গ্রেড|hsc|ssc|পাশ|marks/i,
+  // Programmes, funding, intake, CSCA
+  "16": /diploma|ডিপ্লোমা|bachelor|ব্যাচেলর|master|মাস্টার|phd|program|প্রোগ্রাম|duration|কত বছর|intake|ইনটেক|september|march|csca|scholarship|স্কলারশিপ|language|ভাষা/i,
+  // "AI" means the subject
+  "6": /\bai\b|এআই/i,
 };
+
+/** Sections that are needed on every turn. */
+const ALWAYS = new Set(["17", "18", "19"]);
 
 /**
  * Build the system prompt for one message: core sections plus only the
@@ -91,23 +74,23 @@ export function selectPromptSections(
 
   let out = "";
   for (const s of sections) {
-    const titleKey = s.title.split(" —")[0].trim();
-    const isCore = [...CORE_SECTIONS].some((k) => titleKey.startsWith(k));
-    const trigger = TRIGGERS[titleKey];
-    const needsIt = isCore || !trigger || trigger.test(message);
+    const num = s.num ?? "";
+    const trigger = TRIGGERS[num];
+    const needsIt =
+      CORE_NUMBERS.has(num) || ALWAYS.has(num) || !trigger || trigger.test(message);
 
     if (needsIt) {
-      out += (s.title ? `${s.title}${s.body}` : s.body);
-      included.push(titleKey);
+      out += (s.raw ? `${s.raw}\n${s.body}` : s.body);
+      included.push(s.title);
     } else {
-      dropped.push(titleKey);
+      dropped.push(s.title);
     }
   }
 
-  // Anything before the first titled section is preamble and always kept.
-  const firstTitle = prompt.search(/^[A-Z][A-Z0-9 ,\-—\/'’]{3,}(?:$| —)/m);
-  const preamble = firstTitle > 0 ? prompt.slice(0, firstTitle) : "";
-  if (!out.startsWith(preamble) && preamble) out = preamble + out;
+  // Anything before the first heading is preamble and always kept.
+  const firstHeading = prompt.search(/^\u2550+\s*\d+\./m);
+  const preamble = firstHeading > 0 ? prompt.slice(0, firstHeading) : "";
+  if (preamble && !out.startsWith(preamble)) out = preamble + out;
 
   return { prompt: out + extraContext, included, dropped };
 }
