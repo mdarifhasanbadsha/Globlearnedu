@@ -85,18 +85,45 @@ export function decideTurn(args: {
   return { close: false, askContact: false, reason: "still gathering" };
 }
 
-/** Instructions added to the prompt when a turn must close. */
+/**
+ * Instructions added when this turn should wrap up.
+ *
+ * The owner's rule: never demand a number. Answer what they asked, then — only
+ * in a special case — mention that we offer free one-to-one counselling and
+ * they may leave a contact if they wish. It is an invitation with a way out,
+ * not a condition for being helped.
+ */
 export function closingInstruction(askContact: boolean): string {
-  const ask = askContact
-    ? "\n- Ask for their WhatsApp number in ONE short sentence, naturally, as the last line."
+  const invite = askContact
+    ? "\n- Then, as a SEPARATE short line at the very end, invite them gently — this is optional and " +
+      "they must be able to ignore it:\n" +
+      '  "চাইলে আপনার contact number-টা এখানে রেখে যেতে পারেন — আমরা 1:1 counselling-টা ফ্রিতে ' +
+      'দিই, আমাদের একজন বিস্তারিত কথা বলে দেবেন।"\n' +
+      "- Never phrase it as a requirement, never repeat it if you have already asked, and never say " +
+      "the number is already with us."
     : "";
   return (
-    "\n\nTHIS TURN MUST CLOSE THE CONVERSATION.\n" +
-    "- Do NOT ask about anything else. No more questions about subject, results, intake or documents.\n" +
-    "- Give the useful answer you already have, in 2-3 sentences.\n" +
-    "- Say plainly that our team will give the rest of the information directly: " +
-    '"বাকি বিস্তারিত আমাদের টিম আপনাকে জানিয়ে দেবে।"' +
-    ask +
-    "\n- Never keep collecting information the student already gave."
+    "\n\nANSWER, THEN WRAP UP — in this order.\n" +
+    "- FIRST answer what they actually asked. That answer comes first, in 2-3 sentences, and it must " +
+    "be about their question — not about universities or fees if they asked about something else.\n" +
+    "- Do NOT ask any more questions about subject, results, intake or documents.\n" +
+    "- Say what happens next: our team will give the remaining detail directly — " +
+    '"বাকি বিস্তারিত আমাদের টিম আপনাকে জানিয়ে দেবেন।"' +
+    invite
   );
 }
+
+/**
+ * Instructions for a turn that should simply answer well.
+ *
+ * Used every turn, not only the closing one: a reply must lead with the thing
+ * they asked. The most common complaint from the owner's test was an answer
+ * that opened with university talk no matter what the question was.
+ */
+export const ANSWER_FIRST_INSTRUCTION =
+  "\n\nANSWER THE QUESTION THEY ASKED, FIRST.\n" +
+  "- Read their message and answer that specific thing in your first sentence.\n" +
+  "- Do not open with university availability, fees or your own caveats unless that is what was " +
+  "asked.\n" +
+  "- Never repeat a sentence you already sent earlier in this conversation. If they ask the same " +
+  "thing again, add something new or move them forward — do not resend the same answer.";

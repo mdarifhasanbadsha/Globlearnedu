@@ -299,6 +299,32 @@ async function handlePost(req: Request) {
     recap: conversationRecap(history),
   });
 
+  // Same guidance the Messenger path gets: answer their question first, never
+  // repeat yourself, and — once the conversation is long enough — wrap up with
+  // a gentle, optional invitation instead of demanding a phone number.
+  try {
+    const { decideTurn, closingInstruction, ANSWER_FIRST_INSTRUCTION } = await import(
+      "@/lib/business/handover"
+    );
+    const sys = messages[messages.length - 1];
+    if (sys?.role === "system") {
+      sys.content += ANSWER_FIRST_INSTRUCTION;
+
+      const studentTurns = history.filter((h) => h.direction === "in").length;
+      const decision = decideTurn({
+        studentTurns,
+        hasContact: Boolean(knownFacts(history)?.phone),
+        strongIntent: false,
+      });
+      if (decision.close) {
+        sys.content += closingInstruction(decision.askContact);
+        console.log(`[chat] closing turn: ${decision.reason}`);
+      }
+    }
+  } catch {
+    /* guidance is additive; the reply must go out regardless */
+  }
+
   // Generous ceiling: the model emits reasoning tokens before the JSON reply.
   //
   // jsonMode is deliberately OFF here. With response_format=json_object the

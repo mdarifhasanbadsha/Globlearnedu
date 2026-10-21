@@ -376,7 +376,19 @@ export async function autoReplyToMessenger(
   // — ten turns, or unmistakable intent — close it and hand to a person.
   let closing = false;
   try {
-    const { decideTurn, closingInstruction, showsStrongIntent } = await import("@/lib/business/handover");
+    const {
+      decideTurn,
+      closingInstruction,
+      showsStrongIntent,
+      ANSWER_FIRST_INSTRUCTION,
+    } = await import("@/lib/business/handover");
+
+    // Every turn: answer the question they actually asked, first, and never
+    // repeat a sentence already sent. The owner's test showed replies opening
+    // with university talk no matter what had been asked.
+    const sysMsg = messages[messages.length - 1];
+    if (sysMsg?.role === "system") sysMsg.content += ANSWER_FIRST_INSTRUCTION;
+
     const turnRows: any[] = await db
       .execute(
         sql`select count(*)::int as n from biz_messages
