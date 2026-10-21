@@ -417,17 +417,9 @@ export async function autoReplyToMessenger(
     // Start the contact follow-up: half an hour from now we ask whether the
     // team actually called. A promise to call must be checked, not assumed.
     const { firstDueAt } = await import("@/lib/business/followup-engine");
-    await db
-      .update(bizConversations)
-      .set({
-        aiState: "handoff_requested",
-        handoffAt: new Date(),
-        followupStage: "awaiting_call",
-        followupDueAt: firstDueAt(),
-        followupStageAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(bizConversations.id, conversationId));
+    await db.execute(
+      sql`update biz_conversations set followup_stage = ${'awaiting_call'}, followup_due_at = ${firstDueAt()}, followup_stage_at = now(), ai_state = ${'handoff_requested'}, updated_at = now() where id = ${conversationId}`
+    );
     console.log("[messenger] follow-up scheduled in 30 minutes");
   }
 

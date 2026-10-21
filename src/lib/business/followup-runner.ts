@@ -97,29 +97,16 @@ export async function runDueFollowups(businessId: string, now = new Date()): Pro
     try {
       if (msg.handOff) {
         // Final message: the AI is finished with this thread.
-        await db
-          .update(bizConversations)
-          .set({
-            followupStage: "handed_off",
-            followupDueAt: null,
-            followupStageAt: now,
-            aiState: "paused",
-            updatedAt: now,
-          })
-          .where(eq(bizConversations.id, conv.id));
+        await db.execute(
+      sql`update biz_conversations set followup_stage = ${'handed_off'}, followup_due_at = null, followup_stage_at = now(), ai_state = ${'paused'}, updated_at = now() where id = ${conv.id}`
+    );
         result.finished++;
       } else {
         // awaiting_call -> awaiting_number after the student answers; the
         // runner only advances to the next scheduled nudge for final_wait.
-        await db
-          .update(bizConversations)
-          .set({
-            followupStage: stage === "awaiting_number" ? "final_wait" : stage,
-            followupDueAt: stage === "awaiting_number" ? secondDueAt(now) : null,
-            followupStageAt: now,
-            updatedAt: now,
-          })
-          .where(eq(bizConversations.id, conv.id));
+        await db.execute(
+      sql`update biz_conversations set followup_stage = ${stage === 'awaiting_number' ? 'final_wait' : stage}, followup_due_at = ${stage === 'awaiting_number' ? secondDueAt(now) : null}, followup_stage_at = now(), updated_at = now() where id = ${conv.id}`
+    );
       }
     } catch {
       /* the message went out; the stage catches up next run */

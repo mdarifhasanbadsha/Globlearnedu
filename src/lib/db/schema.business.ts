@@ -46,10 +46,12 @@ export const bizConversations = pgTable(
     // Added by 0014 - cool-off after a conversation stops being productive.
     restingUntil: timestamp("resting_until"),
     strikeCount: integer("strike_count").notNull().default(0),
-    // Added by 0015 - post-handoff contact follow-up.
-    followupStage: varchar("followup_stage", { length: 20 }),
-    followupDueAt: timestamp("followup_due_at"),
-    followupStageAt: timestamp("followup_stage_at"),
+    // Follow-up columns (followup_stage, followup_due_at, followup_stage_at)
+    // are deliberately NOT declared here. Drizzle's insert() lists every
+    // declared column, so a schema column missing from the database breaks
+    // every conversation insert and takes chat down completely. The
+    // follow-up engine uses raw SQL for them instead, and an admin can call
+    // /api/business/setup/migrate to add them.
     lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

@@ -79,16 +79,9 @@ export async function handleFollowupAnswer(args: {
   };
 
   const advance = async (next: FollowupStage, dueAt: Date | null) => {
-    await db
-      .update(bizConversations)
-      .set({
-        followupStage: next,
-        followupDueAt: dueAt,
-        followupStageAt: new Date(),
-        aiState: next === "handed_off" ? "paused" : "handoff_requested",
-        updatedAt: new Date(),
-      })
-      .where(eq(bizConversations.id, conversationId));
+    await db.execute(
+      sql`update biz_conversations set followup_stage = ${next}, followup_due_at = ${dueAt}, followup_stage_at = now(), ai_state = ${next === 'handed_off' ? 'paused' : 'handoff_requested'}, updated_at = now() where id = ${conversationId}`
+    );
   };
 
   // They told us the team did call. The promise was kept — stop entirely.
