@@ -235,7 +235,10 @@ function marchFundingFallback(): string {
  * depend on anything we have failed to look up, so repeating it is correct and
  * useful; it was only the long generic paragraph that needed avoiding.
  */
-export function repeatedAnswerFallback(question: string | null | undefined): string {
+export function repeatedAnswerFallback(
+  question: string | null | undefined,
+  knownLevel?: string | null
+): string {
   const q = (question ?? "").toLowerCase();
 
   if (/language|\u09b2\u09cd\u09af\u09be\u0999\u09cd\u0997\u09c1\u09df\u09c7\u099c|\u09ad\u09be\u09b7\u09be/.test(q)) {
@@ -245,16 +248,27 @@ export function repeatedAnswerFallback(question: string | null | undefined): str
       "৬ মাস না ১ বছর — কোনটা ভাবছেন?"
     );
   }
-  if (/khoroch|\u0996\u09b0\u099a|fee|\u09ab\u09bf|cost|taka|\u099f\u09be\u0995\u09be/.test(q)) {
+  if (/khoroch|খরচ|fee|ফি|cost|taka|টাকা/.test(q)) {
+    if (knownLevel) {
+      const isMaster = /master/i.test(knownLevel);
+      const fee = isMaster ? "১,২০,০০০" : "৯৯,০০০";
+      return (
+        `ভাইয়া, ${knownLevel}-এ আমাদের সার্ভিস চার্জ ${fee} টাকা 🙂 ` +
+        "টিউশন শুরু প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, হোস্টেল মাসে ৩০০ CNY থেকে। " +
+        "কোন সাবজেক্টে পড়তে চান?"
+      );
+    }
     return (
       "ভাইয়া, Diploma আর Bachelor-এ আমাদের সার্ভিস চার্জ ৯৯,০০০ টাকা, Master's-এ ১,২০,০০০ টাকা 🙂 " +
       "টিউশন শুরু প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, হোস্টেল মাসে ৩০০ CNY থেকে। " +
       "আপনি কোন লেভেলে যাচ্ছেন?"
     );
   }
+
   return (
-    "ভাইয়া, প্রশ্নটা আবার বলছি 🙂 আপনি কোন লেভেলে আর কোন সাবজেক্টে পড়তে চান — " +
-    "সেটা জানালে ঠিকঠাক উত্তর দিতে পারব।"
+    knownLevel
+    ? `ভাইয়া, ${knownLevel} ধরে নিয়েই বলছি 🙂 কোন সাবজেক্টে পড়তে চান, সেটা বললে ঠিকঠাক জানাতে পারব।`
+    : "ভাইয়া, প্রশ্নটা আবার বলছি 🙂 আপনি কোন লেভেলে আর কোন সাবজেক্টে পড়তে চান — সেটা জানালে ঠিকঠাক উত্তর দিতে পারব।"
   );
 }
 

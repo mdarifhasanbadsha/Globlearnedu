@@ -430,7 +430,10 @@ async function handlePost(req: Request) {
       ).length;
       const { repeatedAnswerFallback } = await import("@/lib/business/enforce");
       console.log(`[chat] duplicate answer replaced (repeat #${repeats + 1})`);
-      reply = repeats >= 1 ? repeatedAnswerFallback(message) : DUPLICATE_INSTEAD;
+      reply =
+        repeats >= 1
+          ? repeatedAnswerFallback(message, factsForPolicy?.degree_level ?? null)
+          : DUPLICATE_INSTEAD;
     }
   }
 

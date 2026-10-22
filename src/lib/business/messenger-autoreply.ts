@@ -557,7 +557,10 @@ export async function autoReplyToMessenger(
       ).length;
       const { repeatedAnswerFallback } = await import("@/lib/business/enforce");
       console.log(`[messenger] duplicate answer replaced (repeat #${repeats + 1})`);
-      reply = repeats >= 1 ? repeatedAnswerFallback(burstText) : DUPLICATE_INSTEAD;
+      reply =
+        repeats >= 1
+          ? repeatedAnswerFallback(burstText, facts?.degree_level ?? null)
+          : DUPLICATE_INSTEAD;
     }
   } catch (e) {
     console.error("[messenger] policy step failed, sending original reply:", (e as Error)?.message);
