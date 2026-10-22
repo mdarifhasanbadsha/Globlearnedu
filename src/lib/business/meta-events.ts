@@ -128,25 +128,7 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
           // outbound message here". Comparing against the latest row also
           // avoids depending on clock skew between Meta and Neon, which is
           // why the timestamp-window version let duplicates through.
-          // A staff reply of ANY kind pauses the AI, including a voice note.
-     //
-     // This only ran when the echo had text, so a staff member replying with a
-     // voice message left the thread marked AI-active and the assistant answered
-     // on top of a real person. A human speaking is a human speaking whether it
-     // is typed or recorded.
-     try {
-       await db.execute(
-         sql`update biz_conversations
-             set ai_state = ${"human_owned"},
-                 handoff_at = coalesce(handoff_at, now()),
-                 updated_at = now()
-             where id = ${convId}`
-       );
-     } catch {
-       /* the echo still gets stored below */
-     }
-
-     if (body.trim().length > 0) {
+if (body.trim().length > 0) {
             const [last] = await db
               .select({ body: bizMessages.body })
               .from(bizMessages)
@@ -169,6 +151,26 @@ export async function routeMetaEvent(payload: unknown): Promise<number> {
                 meta: { source: "messenger_echo", mid: msg.mid ?? null },
               });
               stored++;
+
+              // Only a genuinely new human message pauses the AI.
+              //
+              // Meta echoes back EVERY outgoing message, including the ones the
+              // assistant itself just sent. Pausing before the duplicate check
+              // meant each AI reply marked the thread human_owned and switched
+              // itself off for the rest of the conversation — after which the
+              // student's next message got no answer at all. Every thread in the
+              // live diagnose report was human_owned because of this.
+              try {
+                await db.execute(
+                  sql`update biz_conversations
+                      set ai_state = ${"human_owned"},
+                          handoff_at = coalesce(handoff_at, now()),
+                          updated_at = now()
+                      where id = ${convId}`
+                );
+              } catch {
+                /* the reply still gets stored */
+              }
             }
           }
           continue;

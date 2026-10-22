@@ -51,11 +51,12 @@ async function sendAction(psid: string, action: "typing_on" | "typing_off" | "ma
  * How long to wait before answering.
  *
  * Four seconds was too short: a student typing "Hlw", then "Hlw" again, then a
- * real question got three separate replies, and two of them made no sense out
- * of context. The owner's rule is that waiting 15-30 seconds and answering once
- * is better than replying instantly three times.
+ * real question got three separate replies. Fifteen seconds caught the burst but
+ * risks the Cloudflare Worker being torn down mid-wait, which loses the reply
+ * entirely — worse than answering twice. Eight seconds catches a real burst and
+ * leaves room for the model call inside the request budget.
  */
-export const BATCH_QUIET_MS = 15_000;
+export const BATCH_QUIET_MS = 8_000;
 
 /**
  * How long to wait when a student is clearly in the middle of several messages.

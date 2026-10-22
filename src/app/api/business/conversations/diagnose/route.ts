@@ -118,3 +118,57 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ count: out.length, conversations: out });
 }
+
+/**
+ * Unfreeze threads the echo bug marked human_owned.
+ *
+ * A thread is only safe to release if no STAFF message exists in it — those are
+ * genuine handovers and must stay with the human. Threads whose only "staff"
+ * messages came from our own echo are reset to active.
+ */
+export async function POST(req: Request) {
+  const guard = await requireBusinessUser();
+  if ("error" in guard) return guard.error;
+
+  const businessId = getBusinessId();
+  const url = new URL(req.url);
+  const only = url.searchParams.get("id");
+
+  const rowsOf = async (q: ReturnType<typeof sql>): Promise<any[]> => {
+    try {
+      const r: any = await db.execute(q);
+      return r?.rows ?? r ?? [];
+    } catch {
+      return [];
+    }
+  };
+
+  // Threads marked human_owned with no real staff reply in them.
+  const stuck = await rowsOf(sql`
+    select c.id
+    from biz_conversations c
+    where c.business_id = ${businessId}
+      and c.ai_state = 'human_owned'
+      ${only ? sql`and c.id = ${only}` : sql``}
+      and not exists (
+        select 1 from biz_messages m
+        where m.conversation_id = c.id
+          and m.author_kind = 'staff'
+          and m.direction = 'out'
+      )
+  `);
+
+  let released = 0;
+  for (const row of stuck) {
+    try {
+      await db.execute(
+        sql`update biz_conversations set ai_state = ${"active"}, updated_at = now() where id = ${row.id}`
+      );
+      released++;
+    } catch {
+      /* keep going */
+    }
+  }
+
+  return NextResponse.json({ examined: stuck.length, released });
+}
