@@ -286,7 +286,7 @@ export function classifyMessage(raw: string): Classified {
       intent: "off_topic",
       handled: true,
       reply:
-        "এটা আমার কাজ না ভাইয়া 😄 তবে চায়নায় পড়াশোনা নিয়ে আমি পুরোপুরি আছি — খরচ, কোন বিশ্ববিদ্যালয়, স্কলারশিপ বা ডকুমেন্ট, যা জানতে চান বলুন।",
+        "এই বিষয়ে আমি সাহায্য করতে পারব না, তবে চায়নায় পড়াশোনা নিয়ে জানতে চাইলে বলুন।",
       reason: "outside counselling scope",
     };
   }
