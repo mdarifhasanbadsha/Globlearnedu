@@ -715,6 +715,18 @@ export function buildCounselingMessages(args: BuildPromptArgs): DeepSeekMessage[
       ? `\n\nKNOWN ABOUT THIS STUDENT — already confirmed. This is the CURRENT truth, not history:
 ${JSON.stringify(leadContext, null, 1)}
 
+${
+  leadContext.degree_level
+    ? `THE STUDENT IS ON ${String(leadContext.degree_level).toUpperCase()}. Every answer is about that
+level. Do NOT ask "কোন লেভেলে?" — they told you. Do not name another level beside it.`
+    : ""
+}
+${
+  leadContext.subject_interest
+    ? `THEIR SUBJECT IS ${String(leadContext.subject_interest).toUpperCase()}. Do not ask which subject.`
+    : ""
+}
+
 Rules for using these facts:
 - If subject_interest is present, do not ask which subject. Talk about THAT subject.
 - If degree_level is present, do not ask which level, and NEVER name another level alongside it.
