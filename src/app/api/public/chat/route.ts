@@ -12,7 +12,7 @@ import {
 } from "@/lib/business/counseling";
 import { isRateLimited, newGuestToken, isValidGuestToken } from "@/lib/business/chat-guard";
 import { loadActiveStyleGuide, formatStyleGuide } from "@/lib/business/style";
-import { eq, and, asc, sql } from "drizzle-orm";
+import { eq, desc, and, asc, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -268,12 +268,20 @@ async function handlePost(req: Request) {
   }
 
   // Bounded history + approved knowledge only.
-  const history = await db
+  // The MOST RECENT 60, not the first 60.
+  //
+  // orderBy asc with limit 60 returns the beginning of a long thread and drops
+  // everything after it — so once a conversation passed 60 messages the AI could
+  // no longer see what the student had just said, and re-asked questions it had
+  // already had answered. Fetch newest first, then reverse for the prompt.
+  const recent = await db
     .select({ direction: bizMessages.direction, body: bizMessages.body })
     .from(bizMessages)
     .where(eq(bizMessages.conversationId, conversationId))
-    .orderBy(asc(bizMessages.createdAt))
+    .orderBy(desc(bizMessages.createdAt))
     .limit(60);
+
+  const history = recent.reverse();
 
   // Scope knowledge to the student's level once it is known, so a Bachelor
   // student is never shown Diploma material.
