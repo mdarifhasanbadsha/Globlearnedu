@@ -74,6 +74,27 @@ async function conversationForPsid(businessId: string, psid: string): Promise<st
   return created.id;
 }
 
+/**
+ * Has this exact Meta message already been stored?
+ *
+ * Meta redelivers a webhook when it does not get a fast 2xx — which happens
+ * whenever the reply takes longer than its patience. Without this check every
+ * redelivery became a second copy of the student's message AND a second answer:
+ * one question appeared four times in the thread and was answered four times.
+ * The mid is unique per message, so it is the correct key.
+ */
+async function alreadyStored(mid: string | null | undefined): Promise<boolean> {
+  if (!mid) return false;
+  try {
+    const rows: any[] = await db
+      .execute(sql`select 1 from biz_messages where meta->>'mid' = ${mid} limit 1`)
+      .then((r: any) => r?.rows ?? r ?? []);
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 async function storeMessage(args: {
   businessId: string;
   conversationId: string;
@@ -248,6 +269,13 @@ if (body.trim().length > 0) {
         // Dropping those silently was the reason ad enquiries got no reply —
         // the most valuable student of the day was the one we ignored, and
         // nobody could see it because no conversation was even created.
+        // A redelivered webhook must not become a second message. Meta retries
+        // when the reply is slow, and each retry was stored and answered again.
+        if (await alreadyStored(msg.mid)) {
+          console.log(`[messenger] duplicate delivery ignored (mid ${msg.mid})`);
+          continue;
+        }
+
         if (!body) {
           const referral = (ev as any).referral;
           const adLabel =

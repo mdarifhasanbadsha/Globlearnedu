@@ -414,8 +414,15 @@ async function handlePost(req: Request) {
       .map((h) => h.body)
       .slice(-6);
     if (isRepeated(reply, earlier, message, earlierQuestions)) {
-      console.log("[chat] duplicate answer replaced");
-      reply = DUPLICATE_INSTEAD;
+      // The first repeat gets the short nudge. A second repeat of the same
+      // question gets the actual answer — repeating the nudge would be the very
+      // behaviour it exists to prevent.
+      const repeats = earlierQuestions.filter(
+        (q) => q.trim().toLowerCase() === message.trim().toLowerCase()
+      ).length;
+      const { repeatedAnswerFallback } = await import("@/lib/business/enforce");
+      console.log(`[chat] duplicate answer replaced (repeat #${repeats + 1})`);
+      reply = repeats >= 1 ? repeatedAnswerFallback(message) : DUPLICATE_INSTEAD;
     }
   }
 

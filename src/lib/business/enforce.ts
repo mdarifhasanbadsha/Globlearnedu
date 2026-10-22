@@ -222,6 +222,42 @@ function marchFundingFallback(): string {
   );
 }
 
+
+/**
+ * The same question, asked again and again.
+ *
+ * When a student repeats a question the duplicate guard replaced the answer with
+ * a short line — sensible once. Sending that line four times to four identical
+ * messages is worse than the repetition it was meant to prevent: the thread reads
+ * like a machine arguing with itself.
+ *
+ * The second time, answer the question properly. Our service charge does not
+ * depend on anything we have failed to look up, so repeating it is correct and
+ * useful; it was only the long generic paragraph that needed avoiding.
+ */
+export function repeatedAnswerFallback(question: string | null | undefined): string {
+  const q = (question ?? "").toLowerCase();
+
+  if (/language|\u09b2\u09cd\u09af\u09be\u0999\u09cd\u0997\u09c1\u09df\u09c7\u099c|\u09ad\u09be\u09b7\u09be/.test(q)) {
+    return (
+      "ভাইয়া, চীনা ল্যাঙ্গুয়েজ কোর্সের সার্ভিস চার্জ ৬ মাসে ৬৯,০০০ টাকা, ১ বছরে ৯৯,০০০ টাকা 🙂 " +
+      "টিউশন আর হোস্টেল এর বাইরে, সেটা বিশ্ববিদ্যালয়ভেদে আলাদা। " +
+      "৬ মাস না ১ বছর — কোনটা ভাবছেন?"
+    );
+  }
+  if (/khoroch|\u0996\u09b0\u099a|fee|\u09ab\u09bf|cost|taka|\u099f\u09be\u0995\u09be/.test(q)) {
+    return (
+      "ভাইয়া, Diploma আর Bachelor-এ আমাদের সার্ভিস চার্জ ৯৯,০০০ টাকা, Master's-এ ১,২০,০০০ টাকা 🙂 " +
+      "টিউশন শুরু প্রতি সেমিস্টারে প্রায় ২,০০০ CNY থেকে, হোস্টেল মাসে ৩০০ CNY থেকে। " +
+      "আপনি কোন লেভেলে যাচ্ছেন?"
+    );
+  }
+  return (
+    "ভাইয়া, প্রশ্নটা আবার বলছি 🙂 আপনি কোন লেভেলে আর কোন সাবজেক্টে পড়তে চান — " +
+    "সেটা জানালে ঠিকঠাক উত্তর দিতে পারব।"
+  );
+}
+
 export function enforceReply(
   reply: string,
   opts: {
