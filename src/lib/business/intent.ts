@@ -161,7 +161,7 @@ export function classifyMessage(raw: string): Classified {
       intent: "abuse",
       handled: true,
       reply:
-        "ভাইয়া, আমি আপনার প্রশ্নের উত্তর দিতে প্রস্তুত — তবে একটু ভদ্র ভাষায় বললে ভালো হয়। 🙏 চায়না পড়াশোনা নিয়ে কী জানতে চান?",
+        "হাহা ঠিক আছে ভাইয়া 😄 আপনি যাই বলেন, চায়নায় পড়াশোনার ব্যাপারে আমি সব জানিয়ে দিতে পারি। এখন বলুন — কী নিয়ে জানতে চান?",
       reason: "abusive language",
     };
   }
@@ -171,7 +171,7 @@ export function classifyMessage(raw: string): Classified {
       intent: "manipulation",
       handled: true,
       reply:
-        "এই বিষয়ে আমি সাহায্য করতে পারব না — তবে চায়না পড়াশোনা, ভর্তি, স্কলারশিপ বা খরচ নিয়ে যেকোনো প্রশ্নে আমি আছি। বলুন, কী জানতে চান?",
+        "ওটা আমি পারি না ভাইয়া 😄 তবে চায়নায় পড়াশোনা, স্কলারশিপ, ডকুমেন্ট বা খরচ — এগুলো নিয়ে আপনার যা প্রশ্ন আছে, সব বলতে পারেন।",
       reason: "attempt to break scope",
     };
   }
@@ -244,7 +244,7 @@ export function classifyMessage(raw: string): Classified {
     return {
       intent: "thanks",
       handled: true,
-      reply: "আপনাকেও ধন্যবাদ! 🙂 আর কিছু জানতে চাইলে নির্দ্বিধায় বলবেন।",
+      reply: "ভালো থাকেন ভাইয়া 🙂 আপনার কথা মনে রাখছি — পড়াশোনা নিয়ে কিছু দরকার হলে সরাসরি লিখবেন।",
       reason: "thanks",
     };
   }
@@ -257,7 +257,7 @@ export function classifyMessage(raw: string): Classified {
       intent: "self_query",
       handled: true,
       reply:
-        "আমি GL Education-এর কাউন্সেলর টিমের একজন 🙂 চায়নায় পড়াশোনা আর ভর্তির ব্যাপারে আপনাকে সাহায্য করাই আমার কাজ। সরাসরি কারও সাথে কথা বলতে চাইলে এই নম্বরে কল করতে পারেন — +8801901923239। বলুন, কী জানতে চান?",
+        "আমি আহসান, GL Education-এ কাউন্সেলর হিসেবে কাজ করি 🙂 চায়নায় ভর্তি নিয়ে আপনার যেটা দরকার, বলে রাখবেন। কোন লেভেলে বা কোন সাবজেক্টে পড়তে চান?",
       reason: "question about the assistant",
     };
   }
@@ -286,7 +286,7 @@ export function classifyMessage(raw: string): Classified {
       intent: "off_topic",
       handled: true,
       reply:
-        "এটা আমি করে দিতে পারব না ভাইয়া 🙂 আমি GL Education-এর কাউন্সেলর — চায়নায় পড়াশোনা, ভর্তি, খরচ আর স্কলারশিপ নিয়ে সাহায্য করি। ওই ব্যাপারে কিছু জানতে চাইলে বলুন, আমি পূর্ণ সাহায্য করব।",
+        "এটা আমার কাজ না ভাইয়া 😄 তবে চায়নায় পড়াশোনা নিয়ে আমি পুরোপুরি আছি — খরচ, কোন বিশ্ববিদ্যালয়, স্কলারশিপ বা ডকুমেন্ট, যা জানতে চান বলুন।",
       reason: "outside counselling scope",
     };
   }

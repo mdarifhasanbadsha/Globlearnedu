@@ -40,14 +40,13 @@ export function isCallRequest(message: string): boolean {
 export function callReply(lang: "bn" | "en"): string {
   if (lang === "en") {
     return (
-      `You can reach our consultant on WhatsApp any time: ${WHATSAPP_NUMBER} ` +
-      `(${WHATSAPP_LINK}). Message there and our consultant will reply within 24 hours — ` +
-      `that line is for both calls and messages. If you prefer, tell me here what you want to discuss and I'll note it for them.`
+      `Of course — talking is easier anyway. Call or WhatsApp me on ${WHATSAPP_NUMBER} and speak to a consultant directly. ` +
+      `What time works for you, so I can make sure someone is ready?`
     );
   }
   return (
-    `আপনি সরাসরি আমাদের WhatsApp-এ যোগাযোগ করতে পারেন: ${WHATSAPP_NUMBER} ` +
-    `(${WHATSAPP_LINK})। ওই নম্বরেই call আর message দুটোই করা যায়, আর আমাদের Consultant ২৪ ঘণ্টার মধ্যে response দিবেন। ` +
-    `চাইলে এখানেই বলুন কী নিয়ে কথা বলতে চান — আমি টিমের জন্য লিখে রাখছি।`
+    `একদম ভাইয়া, সরাসরি কথা বললে অনেক সহজ 🙂 এই নম্বরেই call বা WhatsApp করতে পারেন — ${WHATSAPP_NUMBER}। ` +
+    `আপনার জন্য কখন সুবিধা, সকালে নাকি বিকেলে?`
   );
 }
+

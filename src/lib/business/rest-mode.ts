@@ -24,7 +24,7 @@ export const REST_MINUTES = 15;
  * call, which keeps the door open and is honest.
  */
 export const REST_REPLY =
-  "দুঃখিত ভাইয়া, এই আলোচনায় আমি আপনাকে আর ভালোভাবে সাহায্য করতে পারছি না। ভর্তি, খরচ বা স্কলারশিপ নিয়ে সত্যিই কিছু জানার থাকলে আমাদের অফিসে সরাসরি কথা বলতে পারেন — +8801901923239 (Call/WhatsApp)। 🙏";
+  "ঠিক আছে ভাইয়া, আমি অনলাইনেই আছি 🙂 পড়াশোনা নিয়ে সত্যিই কিছু জানতে চাইলে পরে নক দেবেন — তখন সময় নিয়ে ভালোভাবে কথা বলব।";
 
 /** How many non-genuine turns before we step away. */
 export const REST_AFTER_STRIKES = 4;
