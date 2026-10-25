@@ -21,6 +21,12 @@
     "META_VERIFY_TOKEN": "gl_edu_wh_2027",
     "META_PAGE_ID": "110755801517914",
     "META_GRAPH_VERSION": "v26.0",
-    "BUSINESS_TIMEZONE": "Asia/Dhaka"
+    "BUSINESS_TIMEZONE": "Asia/Dhaka",
+    // Auto-reply is OFF for the Page.
+    //
+    // Students still land in the inbox and every message is still stored, so no
+    // enquiry is lost — the team answers by hand. Remove this line (or set it
+    // to anything other than "off") to switch the AI back on.
+    "META_AUTOREPLY": "off"
   }
 }
