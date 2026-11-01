@@ -1191,5 +1191,596 @@ const mathematics2: MockExam = {
   ]
 };
 
-export const MOCK_EXAMS: Record<string,MockExam> = { "mathematics-1": mathematics1, "mathematics-2": mathematics2 };
+
+const mathematics3: MockExam = {
+  subject: "mathematics", testNumber: 3, title: "Mathematics — Original Mock Examination 3",
+  durationMinutes: 60, totalMarks: 100,
+  instructions: [
+    "This is an original practice paper written for this collection. It is not a past CSCA paper and is not endorsed by the China Scholarship Council.",
+    "Each question has four options, of which only one option is correct.",
+    "Answer every question. There is no penalty for an incorrect answer.",
+    "The paper contains 48 questions and must be completed in 60 minutes (about 75 seconds per question).",
+    "A calculator is not required. Numerical answers are exact or given to a sensible precision."
+  ],
+  questions: [
+  {
+    "prompt": "The POPULATION variance of the data set 10, 12, 14, 16 is:",
+    "options": [
+      "5",
+      "6",
+      "20",
+      "2.5"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The mean is 13. The squared deviations are 9, 1, 1 and 9, with sum 20. Divide by the population size 4: variance = 20/4 = 5."
+  },
+  {
+    "prompt": "Two spheres have radii in the ratio 1 : 5. The ratio of their volumes is:",
+    "options": [
+      "1 : 125",
+      "1 : 5",
+      "3 : 15",
+      "1 : 25"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Sphere volume is proportional to the cube of the radius. The volume ratio is 1³ : 5³ = 1 : 125."
+  },
+  {
+    "prompt": "Two items are drawn without replacement from 4 items, of which 2 are of a particular type. The probability that both drawn items are of that type is:",
+    "options": [
+      "0",
+      "2/6",
+      "1/2",
+      "1/6"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "There is one favourable pair among the six possible pairs: C(2,2)/C(4,2) = 1/6."
+  },
+  {
+    "prompt": "Find the sum of the first 3 terms of the geometric series with first term 16 and common ratio 1/4.",
+    "options": [
+      "64/3",
+      "1/4",
+      "−21",
+      "21"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The first three terms are 16, 4 and 1. Their sum is 16 + 4 + 1 = 21."
+  },
+  {
+    "prompt": "A frequency distribution is: value 3 occurs 3 times, value 4 occurs once, value 5 occurs once, and value 6 occurs 5 times. Find the mean.",
+    "options": [
+      "12",
+      "10",
+      "9/2",
+      "24/5"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The total is 3(3) + 4(1) + 5(1) + 6(5) = 48. There are 10 observations, so the mean is 48/10 = 24/5."
+  },
+  {
+    "prompt": "The intersection point of the lines x + 2y = 7 and 3x − y = 7 is:",
+    "options": [
+      "(3, 2)",
+      "(2, 3)",
+      "(4, 1)",
+      "(−3, −2)"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "From 3x − y = 7, y = 3x − 7. Substituting into x + 2y = 7 gives 7x = 21, so x = 3 and y = 2."
+  },
+  {
+    "prompt": "The set [−4, 3] ∩ [−1, 7] is:",
+    "options": [
+      "(−1, 3)",
+      "[3, −1]",
+      "[−4, 7]",
+      "[−1, 3]"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The intersection contains values common to both intervals, from −1 to 3 inclusive: [−1, 3]."
+  },
+  {
+    "prompt": "A sequence is defined by u₁ = 2, u₂ = 5 and uₙ₊₂ = 2uₙ₊₁ − uₙ. The value of u₅ is:",
+    "options": [
+      "11",
+      "14",
+      "8",
+      "28"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The recurrence gives u₃ = 2(5) − 2 = 8, u₄ = 2(8) − 5 = 11 and u₅ = 2(11) − 8 = 14."
+  },
+  {
+    "prompt": "X is normally distributed with mean 50 and standard deviation 5. About what percentage of values lies between 35 and 65?",
+    "options": [
+      "about 100%",
+      "about 68%",
+      "about 99.7%",
+      "about 95%"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The interval is 50 ± 15, which is three standard deviations from the mean. By the empirical 68–95–99.7 rule, about 99.7% lies within three standard deviations."
+  },
+  {
+    "prompt": "Express the line y = (5/2)x + 6 in the general form ax + by + d = 0 with integer coefficients.",
+    "options": [
+      "5x − 2y + 6 = 0",
+      "5x + 2y + 12 = 0",
+      "5x − 2y + 12 = 0",
+      "2x − 5y + 6 = 0"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Multiply by 2: 2y = 5x + 12. Rearranging gives 5x − 2y + 12 = 0."
+  },
+  {
+    "prompt": "Find the centre and radius of the circle x² + y² − 12x − 6y + 11 = 0.",
+    "options": [
+      "(6, 3) and radius 34",
+      "(−6, −3) and radius √34",
+      "(6, 3) and radius √34",
+      "(12, 6) and radius √34"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Complete the squares: (x − 6)² + (y − 3)² = 36 + 9 − 11 = 34. The centre is (6, 3) and the radius is √34."
+  },
+  {
+    "prompt": "The solution set of −7 < −1 − 4x < 3 is:",
+    "options": [
+      "−1 < x < 3/2",
+      "−1 ≤ x ≤ 3/2",
+      "3/2 < x < −1",
+      "−3/2 < x < 1"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Add 1 to obtain −6 < −4x < 4. Dividing by −4 reverses both inequalities: 3/2 > x > −1, or −1 < x < 3/2."
+  },
+  {
+    "prompt": "How many subsets, including the empty set and the set itself, does a set with 10 elements have?",
+    "options": [
+      "1024",
+      "20",
+      "100",
+      "1023"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "A set with n elements has 2ⁿ subsets. Here 2¹⁰ = 1024."
+  },
+  {
+    "prompt": "The domain of f(x) = ln(x − 4) + 1/(x − 9) is:",
+    "options": [
+      "[4, 9) ∪ (9, +∞)",
+      "(4, 9]",
+      "(4, 9) ∪ (9, +∞)",
+      "(4, +∞)"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The logarithm requires x − 4 > 0, so x > 4. The denominator also requires x ≠ 9. The domain is (4, 9) ∪ (9, +∞)."
+  },
+  {
+    "prompt": "The directrix of the parabola x² = 8y is:",
+    "options": [
+      "y = −2",
+      "y = −8",
+      "y = 2",
+      "x = −2"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Compare x² = 4ay with x² = 8y, giving a = 2. The directrix is y = −a = −2."
+  },
+  {
+    "prompt": "The domain of f(x) = √(5x − 3) is:",
+    "options": [
+      "x > 3/5",
+      "x ≤ 3/5",
+      "x ≥ 3/5",
+      "x ≥ −3/5"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The radicand must be non-negative: 5x − 3 ≥ 0, so x ≥ 3/5."
+  },
+  {
+    "prompt": "A = {1, 2, 3, 4} and B = {3, 4, 5, 6}. The symmetric difference A △ B = (A − B) ∪ (B − A) is:",
+    "options": [
+      "{1, 2, 5, 6}",
+      "{1, 2}",
+      "{1, 2, 3, 4, 5, 6}",
+      "{3, 4}"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The elements in exactly one of the sets are 1, 2, 5 and 6. Thus A △ B = {1, 2, 5, 6}."
+  },
+  {
+    "prompt": "Which interval represents the set of all real x with x < 5?",
+    "options": [
+      "(5, +∞)",
+      "[5, 5]",
+      "(−∞, 5)",
+      "(−∞, 5]"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "All real numbers less than 5 are included, but 5 is excluded. The interval is (−∞, 5)."
+  },
+  {
+    "prompt": "A cylinder has radius 3 cm and height 10 cm. Its volume, in terms of π, is:",
+    "options": [
+      "90π cm³",
+      "60π cm³",
+      "91π cm³",
+      "30π cm³"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The volume is πr²h = π(3²)(10) = 90π cm³."
+  },
+  {
+    "prompt": "A fair 12-sided die numbered 1 to 12 is rolled. The probability of obtaining a prime number is:",
+    "options": [
+      "1/12",
+      "4/12",
+      "6/12",
+      "5/12"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The primes from 1 to 12 are 2, 3, 5, 7 and 11. There are 5 favourable outcomes out of 12, so the probability is 5/12."
+  },
+  {
+    "prompt": "Find the dot product of the vectors u = (8, −2) and v = (3, 5).",
+    "options": [
+      "34",
+      "−240",
+      "15",
+      "14"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The dot product is 8(3) + (−2)(5) = 24 − 10 = 14."
+  },
+  {
+    "prompt": "The vectors u = (k, 2) and v = (3, −3) are perpendicular. The value of k is:",
+    "options": [
+      "−2",
+      "−6",
+      "6",
+      "2"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Perpendicular vectors have zero dot product: 3k + 2(−3) = 0. Hence 3k − 6 = 0 and k = 2."
+  },
+  {
+    "prompt": "Find the points of intersection of the line x = 7 with the circle x² + y² = 625.",
+    "options": [
+      "(7, 24) only",
+      "(7, 25) and (7, −25)",
+      "(7, 24) and (7, −24)",
+      "(24, 7) and (−24, 7)"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Substitute x = 7: 49 + y² = 625, so y² = 576 and y = ±24. The points are (7, 24) and (7, −24)."
+  },
+  {
+    "prompt": "Find the angle between the vectors u = (10, 0) and v = (6, 6).",
+    "options": [
+      "90°",
+      "45°",
+      "60°",
+      "30°"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The dot product is 60 and the magnitudes are 10 and 6√2. Thus cos θ = 60/(60√2) = 1/√2, so θ = 45°."
+  },
+  {
+    "prompt": "A survey of 10 students found that 2 students read exactly 20 books. What is the relative frequency of students who read 20 books?",
+    "options": [
+      "5",
+      "2",
+      "1/55",
+      "1/5"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Relative frequency = frequency ÷ total observations = 2/10 = 1/5."
+  },
+  {
+    "prompt": "Find the minimum value of f(x) = 3x² − 6x + 1.",
+    "options": [
+      "1",
+      "−2",
+      "−1",
+      "2"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Complete the square: f(x) = 3(x − 1)² − 2. Since the squared term is non-negative, the minimum value is −2."
+  },
+  {
+    "prompt": "Every value in a data set is multiplied by 5. The median of the new set is:",
+    "options": [
+      "increased by 5",
+      "multiplied by 5",
+      "multiplied by 25",
+      "unchanged"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Multiplying every observation by a positive constant multiplies the median by the same constant. The new median is 5 times the original median."
+  },
+  {
+    "prompt": "Express (1 + 6i) − (3 + 2i) in the form a + bi.",
+    "options": [
+      "−2 + 4i",
+      "−2 − 4i",
+      "−2 + 8i",
+      "4 + 4i"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Subtract real and imaginary parts separately: (1 − 3) + (6 − 2)i = −2 + 4i."
+  },
+  {
+    "prompt": "Given a = log₃ 2, b = log₃ 5 and c = log₃ 9, which ordering is correct?",
+    "options": [
+      "c < b < a",
+      "a < b < c",
+      "a < c < b",
+      "b < a < c"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Because the logarithm with base 3 is increasing, compare 2, 5 and 9: 2 < 5 < 9. Therefore a < b < c."
+  },
+  {
+    "prompt": "Find the distance between A(−1, 2, 0) and B(2, 6, 4) in three-dimensional space.",
+    "options": [
+      "√41",
+      "5",
+      "41",
+      "11"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The distance is √[(2 + 1)² + (6 − 2)² + (4 − 0)²] = √(9 + 16 + 16) = √41."
+  },
+  {
+    "prompt": "In a geometric sequence, a₁ = 5 and a₄ = 40. The value of a₆ is:",
+    "options": [
+      "5/2",
+      "160",
+      "161",
+      "159"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Since a₄ = a₁r³, 40 = 5r³ and r³ = 8, so r = 2. Then a₆ = 5(2⁵) = 160."
+  },
+  {
+    "prompt": "How many different ways can 3 students from a group of 6 be arranged in a line, if order matters?",
+    "options": [
+      "720",
+      "120",
+      "216",
+      "20"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The number of ordered arrangements is ⁶P₃ = 6 × 5 × 4 = 120."
+  },
+  {
+    "prompt": "The value of sin(θ + 3π) is:",
+    "options": [
+      "−sin θ",
+      "cos θ",
+      "−cos θ",
+      "sin θ"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Using the period 2π, sin(θ + 3π) = sin(θ + π) = −sin θ."
+  },
+  {
+    "prompt": "Solve the equation 2ˣ = 1024.",
+    "options": [
+      "x = 9",
+      "x = 512",
+      "x = 11",
+      "x = 10"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Since 1024 = 2¹⁰, the equation gives x = 10."
+  },
+  {
+    "prompt": "The function f is defined by f(x) = 2 for x < 0 and f(x) = x + 2 for x ≥ 0. Its range is:",
+    "options": [
+      "y = 2 only",
+      "all real y",
+      "y > 2",
+      "y ≥ 2"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "For x < 0, the value is 2. For x ≥ 0, x + 2 takes every value from 2 upwards. The range is y ≥ 2."
+  },
+  {
+    "prompt": "Find the value of i⁵, where i² = −1.",
+    "options": [
+      "1",
+      "−1",
+      "i",
+      "−i"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Powers of i repeat every four powers. i⁵ = i⁴i = 1·i = i."
+  },
+  {
+    "prompt": "Using the definition of the derivative, find f′(3) for f(x) = x⁴.",
+    "options": [
+      "324",
+      "108",
+      "81",
+      "27"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Differentiating x⁴ gives f′(x) = 4x³. Hence f′(3) = 4(27) = 108."
+  },
+  {
+    "prompt": "The domain of f(x) = ln(x − 4) + √(9 − x) is:",
+    "options": [
+      "{x | x > 4}",
+      "{x | x ≤ 9}",
+      "{x | 4 ≤ x ≤ 9}",
+      "{x | 4 < x ≤ 9}"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The logarithm requires x > 4, while the square root requires x ≤ 9. Their intersection is 4 < x ≤ 9."
+  },
+  {
+    "prompt": "Five arithmetic means are inserted between 10 and 40. The arithmetic mean closest to 10 is:",
+    "options": [
+      "35",
+      "25",
+      "40",
+      "15"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "There are 7 terms from 10 to 40, so the common difference is (40 − 10)/6 = 5. The first inserted mean is 10 + 5 = 15."
+  },
+  {
+    "prompt": "In set notation, what does the symbol ∈ mean?",
+    "options": [
+      "Is a subset of",
+      "Is not an element of",
+      "Is an element of",
+      "Is equal to"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The symbol ∈ means “is an element of” or “belongs to” a set."
+  },
+  {
+    "prompt": "If f(x) = √x and g(x) = x − 7, the domain of the composite function f(g(x)) is:",
+    "options": [
+      "x ≥ 0",
+      "x ≥ 7",
+      "x ≤ 7",
+      "all real x"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The composite is √(x − 7). Its radicand must be non-negative, so x − 7 ≥ 0 and x ≥ 7."
+  },
+  {
+    "prompt": "The value of (2 − 2i)(1 + 3i) is:",
+    "options": [
+      "8 − 4i",
+      "8 + 4",
+      "8 + 4i",
+      "−4 + 4i"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Expand: 2 + 6i − 2i − 6i². Since i² = −1, the result is 8 + 4i."
+  },
+  {
+    "prompt": "Which number is the largest of 3/4, 5/7, 2/3 and 7/10?",
+    "options": [
+      "2/3",
+      "3/4",
+      "5/7",
+      "7/10"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Compare the values: 3/4 = 0.75, 5/7 ≈ 0.714, 2/3 ≈ 0.667 and 7/10 = 0.7. The largest is 3/4."
+  },
+  {
+    "prompt": "In three dimensions, the distance between (1, 2, 2) and (4, 6, 14) is:",
+    "options": [
+      "√25",
+      "169",
+      "13",
+      "√19"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The distance is √[(4 − 1)² + (6 − 2)² + (14 − 2)²] = √(9 + 16 + 144) = √169 = 13."
+  },
+  {
+    "prompt": "A solid is enlarged so that every length is multiplied by 9. Its surface area is multiplied by:",
+    "options": [
+      "81",
+      "729",
+      "18",
+      "9"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Surface area scales with the square of the linear scale factor. The multiplier is 9² = 81."
+  },
+  {
+    "prompt": "For the function y = 4 sin(4x), the amplitude and minimum positive period respectively are:",
+    "options": [
+      "4 and π/2",
+      "5 and 2π/3",
+      "4 and 2π",
+      "3 and π/4"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The amplitude is |4| = 4. The period is 2π/4 = π/2."
+  },
+  {
+    "prompt": "Without a calculator, find the exact value of cos 210°.",
+    "options": [
+      "√3/2",
+      "−√3/2",
+      "1/2",
+      "−1/2"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "210° = 180° + 30°. Cosine is negative in the third quadrant, so cos 210° = −cos 30° = −√3/2."
+  },
+  {
+    "prompt": "The inverse function of f(x) = 3ˣ is:",
+    "options": [
+      "f⁻¹(x) = x³",
+      "f⁻¹(x) = 1/3ˣ",
+      "f⁻¹(x) = logₓ 3",
+      "f⁻¹(x) = log₃ x, x > 0"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Set y = 3ˣ, interchange x and y, then solve x = 3ʸ. Thus y = log₃ x, with x > 0."
+  }
+]
+};
+
+export const MOCK_EXAMS: Record<string,MockExam> = { "mathematics-1": mathematics1, "mathematics-2": mathematics2, "mathematics-3": mathematics3 };
 export function getMockExam(key:string):MockExam|undefined { const exam=MOCK_EXAMS[key]; return exam && exam.questions.length>0 ? exam : undefined; }
