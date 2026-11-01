@@ -1782,5 +1782,596 @@ const mathematics3: MockExam = {
 ]
 };
 
-export const MOCK_EXAMS: Record<string,MockExam> = { "mathematics-1": mathematics1, "mathematics-2": mathematics2, "mathematics-3": mathematics3 };
+
+const mathematics4: MockExam = {
+  subject: "mathematics", testNumber: 4, title: "Mathematics — Original Mock Examination 4",
+  durationMinutes: 60, totalMarks: 100,
+  instructions: [
+    "This is an original practice paper written for this collection. It is not a past CSCA paper and is not endorsed by the China Scholarship Council.",
+    "Each question has four options, of which only one option is correct.",
+    "Answer every question. There is no penalty for an incorrect answer.",
+    "The paper contains 48 questions and must be completed in 60 minutes (about 75 seconds per question).",
+    "A calculator is not required. Numerical answers are exact or given to a sensible precision."
+  ],
+  questions: [
+  {
+    "prompt": "Find the x-intercept and the y-intercept of the line 2x + 3y = 6.",
+    "options": [
+      "(0, 3) and (2, 0)",
+      "(2, 0) and (0, 3)",
+      "(3, 0) and (0, 2)",
+      "(6, 0) and (0, 6)"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Set y = 0 to obtain x = 3. Set x = 0 to obtain y = 2. The x-intercept is (3, 0) and the y-intercept is (0, 2)."
+  },
+  {
+    "prompt": "Find the eccentricity of the hyperbola x²/81 − y²/144 = 1.",
+    "options": [
+      "5/4",
+      "5/3",
+      "4/3",
+      "3/5"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "For this hyperbola, a² = 81 and b² = 144. Thus c² = a² + b² = 225, so c = 15 and the eccentricity is c/a = 15/9 = 5/3."
+  },
+  {
+    "prompt": "The domain of f(x) = √(2x − 5) is:",
+    "options": [
+      "x > 5/2",
+      "x ≥ −5/2",
+      "x ≤ 5/2",
+      "x ≥ 5/2"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The radicand must be non-negative: 2x − 5 ≥ 0, so x ≥ 5/2."
+  },
+  {
+    "prompt": "The equation of the circle with centre (0, −3) and radius 6 is:",
+    "options": [
+      "x² + (y + 3)² = 36",
+      "(x − 1)² + (y + 3)² = 36",
+      "x² + (y + 3)² = 6",
+      "x² + (y + 3)² = 12"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "A circle with centre (h, k) and radius r has equation (x − h)² + (y − k)² = r². Substituting (0, −3) and r = 6 gives x² + (y + 3)² = 36."
+  },
+  {
+    "prompt": "Express the line y = (3/7)x + 1 in the general form ax + by + d = 0 with integer coefficients.",
+    "options": [
+      "3x − 7y + 1 = 0",
+      "7x − 3y + 1 = 0",
+      "3x − 7y + 7 = 0",
+      "3x + 7y + 7 = 0"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Multiply by 7: 7y = 3x + 7. Rearranging gives 3x − 7y + 7 = 0."
+  },
+  {
+    "prompt": "The value of log₁₆ 8 is:",
+    "options": [
+      "1",
+      "3/5",
+      "4/3",
+      "3/4"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Write 16 = 2⁴ and 8 = 2³. Then log₁₆ 8 = log₂⁴(2³) = 3/4."
+  },
+  {
+    "prompt": "A fair six-sided die is rolled once. Find the probability of obtaining a number at most 2.",
+    "options": [
+      "2/3",
+      "1/3",
+      "1/2",
+      "1/6"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The favourable outcomes are 1 and 2, so the probability is 2/6 = 1/3."
+  },
+  {
+    "prompt": "The function f(x) = 9xⁿ is even, where n is a positive integer. The smallest possible value of n is:",
+    "options": [
+      "4",
+      "1",
+      "3",
+      "2"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "For f(x) = 9xⁿ to be even, f(−x) must equal f(x), which requires n to be even. The smallest positive even integer is 2."
+  },
+  {
+    "prompt": "Find the equation of the line through (2, 0) perpendicular to the line y = 5x + 7.",
+    "options": [
+      "y = −5x + 10",
+      "y = 5x − 10",
+      "y = −(1/5)x + 2/5",
+      "y = −(1/5)x − 2/5"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The given slope is 5, so a perpendicular line has slope −1/5. Through (2, 0): y = −(1/5)(x − 2) = −x/5 + 2/5."
+  },
+  {
+    "prompt": "Solve the equation log₁₀ x = 3.",
+    "options": [
+      "x = 3/10",
+      "x = 59049",
+      "x = 1000",
+      "x = 30"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "By the definition of logarithms, log₁₀ x = 3 means x = 10³ = 1000."
+  },
+  {
+    "prompt": "In an arithmetic sequence, a₂ = 7 and a₅ = 19. The value of a₁₅ is:",
+    "options": [
+      "59",
+      "60",
+      "63",
+      "3"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "From a₅ − a₂ = 3d = 19 − 7 = 12, the common difference is d = 4. Then a₁₅ = a₂ + 13d = 7 + 52 = 59."
+  },
+  {
+    "prompt": "The solution set of x² − 11x + 24 > 0 is:",
+    "options": [
+      "x > 8",
+      "x < 3",
+      "x < 3 or x > 8",
+      "3 < x < 8"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Factor: (x − 3)(x − 8) > 0. The product is positive outside the roots, so x < 3 or x > 8."
+  },
+  {
+    "prompt": "Find the surface area of a sphere of radius 9 cm, in terms of π.",
+    "options": [
+      "81π cm²",
+      "18π cm²",
+      "972π cm²",
+      "324π cm²"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The surface area is 4πr² = 4π(9²) = 324π cm²."
+  },
+  {
+    "prompt": "Find the distance between the points A(1, 2) and B(4, 6).",
+    "options": [
+      "5",
+      "25",
+      "√73",
+      "7"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The distance is √[(4 − 1)² + (6 − 2)²] = √(9 + 16) = 5."
+  },
+  {
+    "prompt": "Find the lengths of the major and minor axes of the ellipse x²/100 + y²/36 = 1, where a > b.",
+    "options": [
+      "100 and 36",
+      "20 and 12",
+      "10 and 6",
+      "12 and 20"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The semi-major and semi-minor axes are a = √100 = 10 and b = √36 = 6. Their full lengths are 2a = 20 and 2b = 12."
+  },
+  {
+    "prompt": "Every value in a data set is increased by 4. The range of the new set is:",
+    "options": [
+      "increased by 4",
+      "multiplied by 4",
+      "reduced by 4",
+      "unchanged"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Adding the same constant to every observation shifts the minimum and maximum equally. Their difference, the range, is unchanged."
+  },
+  {
+    "prompt": "A normally distributed variable has mean 90 and standard deviation 15. Find the z-score of x = 100.",
+    "options": [
+      "20/3",
+      "−2/3",
+      "2/3",
+      "2/45"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The z-score is (x − μ)/σ = (100 − 90)/15 = 10/15 = 2/3."
+  },
+  {
+    "prompt": "Let A = {2, 4, 6, 8} and B = {4, 8, 12}. Which statement is correct?",
+    "options": [
+      "A ∩ B = {4, 8}",
+      "A ∪ B = {2, 4, 6, 8}",
+      "A ∩ B = {2, 6}",
+      "A ∪ B = {4, 8}"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The intersection contains elements present in both sets. These are 4 and 8, so A ∩ B = {4, 8}."
+  },
+  {
+    "prompt": "A box contains 2 white and 6 black balls. Two balls are drawn at random without replacement. The probability that both are white is:",
+    "options": [
+      "1/28",
+      "1/16",
+      "1/64",
+      "1/4"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The probability is (2/8)(1/7) = 2/56 = 1/28."
+  },
+  {
+    "prompt": "Find the dot product of the vectors u = (2, 3) and v = (4, 5).",
+    "options": [
+      "120",
+      "23",
+      "22",
+      "−7"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The dot product is 2(4) + 3(5) = 8 + 15 = 23."
+  },
+  {
+    "prompt": "The minimum positive period of the function y = sin(4x) is:",
+    "options": [
+      "π",
+      "2π",
+      "π/2",
+      "π/4"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "For sin(kx), the period is 2π/|k|. With k = 4, the minimum positive period is 2π/4 = π/2."
+  },
+  {
+    "prompt": "The value of log₄ 8 is:",
+    "options": [
+      "3/2",
+      "3",
+      "2/3",
+      "2"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Let 4ˣ = 8. Since (2²)ˣ = 2³, 2x = 3 and x = 3/2."
+  },
+  {
+    "prompt": "A function is defined by f(x) = 2x − 3 for x < 1 and f(x) = x² − 6 for x ≥ 1. The value of f(4) is:",
+    "options": [
+      "10",
+      "22",
+      "11",
+      "5"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Since 4 ≥ 1, use the second rule: f(4) = 4² − 6 = 10."
+  },
+  {
+    "prompt": "Which of the following functions is even?",
+    "options": [
+      "f(x) = x + sin x",
+      "f(x) = 2x² + cos x",
+      "f(x) = 2ˣ",
+      "f(x) = 2x³ + x"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The functions x² and cos x are both even, so their sum 2x² + cos x is even."
+  },
+  {
+    "prompt": "The function f(x) = √(x − 1) + 2 has domain x ≥ 1. The domain of its inverse f⁻¹ is:",
+    "options": [
+      "x > 2",
+      "x ≥ 1",
+      "x ≥ 0",
+      "x ≥ 2"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The domain of the inverse equals the range of the original function. Since √(x − 1) ≥ 0, the range of f is y ≥ 2."
+  },
+  {
+    "prompt": "The value of sin(θ + 5π) is:",
+    "options": [
+      "−sin θ",
+      "sin θ",
+      "cos θ",
+      "−cos θ"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Since 5π is an odd multiple of π, sin(θ + 5π) = −sin θ."
+  },
+  {
+    "prompt": "For positive real numbers a and b with ab = 400, the minimum possible value of a + b is:",
+    "options": [
+      "41",
+      "40",
+      "20",
+      "400"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "By AM–GM, a + b ≥ 2√(ab) = 2√400 = 40. Equality occurs when a = b = 20."
+  },
+  {
+    "prompt": "The solution set of |x + 1| > 4 is:",
+    "options": [
+      "x < −5 or x > 3",
+      "x < 3",
+      "x > −5",
+      "−5 < x < 3"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "For |x + 1| > 4, either x + 1 > 4 or x + 1 < −4. Thus x > 3 or x < −5."
+  },
+  {
+    "prompt": "A fair coin is tossed 5 times. The probability of obtaining exactly 3 heads is:",
+    "options": [
+      "5/16",
+      "3/5",
+      "2/5",
+      "1/32"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "There are C(5,3) = 10 sequences with exactly 3 heads out of 2⁵ = 32 equally likely sequences. The probability is 10/32 = 5/16."
+  },
+  {
+    "prompt": "The domain of f(x) = ln(x − 3) + √(8 − x) is:",
+    "options": [
+      "{x | 3 < x ≤ 8}",
+      "{x | x > 3}",
+      "{x | 3 ≤ x ≤ 8}",
+      "{x | x ≤ 8}"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The logarithm requires x > 3 and the square root requires x ≤ 8. Their intersection is 3 < x ≤ 8."
+  },
+  {
+    "prompt": "The solution set of (x + 2)/(x + 4) ≥ 0 is:",
+    "options": [
+      "x ≤ −4 or x > −2",
+      "−4 ≤ x < −2",
+      "x ≥ −2",
+      "x < −4 or x ≥ −2"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The critical values are −4 (excluded) and −2 (included). A sign analysis gives positive values on x < −4 and x ≥ −2."
+  },
+  {
+    "prompt": "For an arithmetic sequence with first term 7 and common difference 5, the sum of the first 10 terms is:",
+    "options": [
+      "300",
+      "295",
+      "288",
+      "70"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "S₁₀ = 10/2[2(7) + 9(5)] = 5(14 + 45) = 295."
+  },
+  {
+    "prompt": "Find the range of the data set 5, 5, 6, 6, 30.",
+    "options": [
+      "25",
+      "5",
+      "30",
+      "35"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The range is the maximum minus the minimum: 30 − 5 = 25."
+  },
+  {
+    "prompt": "Does the point (7, 3) lie on the circle (x − 2)² + (y − 3)² = 25?",
+    "options": [
+      "No — the point lies inside the circle.",
+      "No — the distance from the centre is 25.",
+      "Yes — (7, 3) is on the circle because (7 − 2)² + (3 − 3)² = 25.",
+      "Yes — every point with integer coordinates lies on the circle."
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Substitution gives (7 − 2)² + (3 − 3)² = 25 + 0 = 25. Therefore the point lies on the circle."
+  },
+  {
+    "prompt": "The lines 3x + ky − 4 = 0 and 6x + 5y + 1 = 0 are parallel. Find k.",
+    "options": [
+      "5/2",
+      "−5/2",
+      "90",
+      "18/5"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Their slopes are −3/k and −6/5. Equating slopes gives −3/k = −6/5, so 15 = 6k and k = 5/2."
+  },
+  {
+    "prompt": "The solution set of the inequality 6 − 4x > 7 is:",
+    "options": [
+      "x > 1/4",
+      "x < −1/4",
+      "x > −1/4",
+      "x < 1/4"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Subtract 6 to obtain −4x > 1. Dividing by −4 reverses the inequality, giving x < −1/4."
+  },
+  {
+    "prompt": "Solve the equation 5ˣ = 125.",
+    "options": [
+      "x = 25",
+      "x = 2",
+      "x = 3",
+      "x = 4"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Since 125 = 5³, the equation 5ˣ = 5³ gives x = 3."
+  },
+  {
+    "prompt": "In a group of 40 people, 20 have property A and 18 have property B; 12 have both. A person is chosen at random from those who have property B. Find the probability that this person also has property A.",
+    "options": [
+      "3/10",
+      "1/2",
+      "3/5",
+      "2/3"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "This is a conditional probability: P(A | B) = number with both A and B divided by number with B = 12/18 = 2/3."
+  },
+  {
+    "prompt": "Given cos θ = 1/3, the value of cos 2θ is:",
+    "options": [
+      "−7/9",
+      "1/9",
+      "7/9",
+      "2/3"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Use cos 2θ = 2cos²θ − 1 = 2(1/9) − 1 = −7/9."
+  },
+  {
+    "prompt": "The inverse of the function y = 4x − 1 is:",
+    "options": [
+      "y = (x + 1)/4",
+      "y = 4x + 1",
+      "y = (x − 1)/4",
+      "y = 1/(4x − 1)"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Interchange x and y: x = 4y − 1. Solving for y gives y = (x + 1)/4."
+  },
+  {
+    "prompt": "Find the limit of the sequence uₙ = √(n + 8) − √n as n → ∞.",
+    "options": [
+      "8",
+      "+∞",
+      "0",
+      "√8"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Rationalising gives 8/[√(n + 8) + √n]. The denominator tends to infinity, so the limit is 0."
+  },
+  {
+    "prompt": "The mean of the data set 3, 6, 9, 12 is:",
+    "options": [
+      "9",
+      "8",
+      "7",
+      "7.5"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The mean is (3 + 6 + 9 + 12)/4 = 30/4 = 7.5."
+  },
+  {
+    "prompt": "Find the magnitude of the vector v = (8, 15).",
+    "options": [
+      "23",
+      "289",
+      "√161",
+      "17"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The magnitude is √(8² + 15²) = √(64 + 225) = √289 = 17."
+  },
+  {
+    "prompt": "Find the centre and radius of the circle x² + y² − 8x − 8y − 9 = 0.",
+    "options": [
+      "(8, 8) and radius √41",
+      "(4, 4) and radius √41",
+      "(4, 4) and radius 41",
+      "(−4, −4) and radius √41"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Complete the squares: (x − 4)² + (y − 4)² = 16 + 16 + 9 = 41. The centre is (4, 4) and the radius is √41."
+  },
+  {
+    "prompt": "An ellipse centred at the origin has major axis length 12 and minor axis length 8, with the major axis along the x-axis. Its equation is:",
+    "options": [
+      "x²/36 + y²/16 = 1",
+      "x²/16 + y²/36 = 1",
+      "x²/6 + y²/4 = 1",
+      "x²/144 + y²/64 = 1"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The semi-major and semi-minor axes are a = 6 and b = 4. With the major axis along x, the equation is x²/36 + y²/16 = 1."
+  },
+  {
+    "prompt": "The solution set of |5x| < 10 is:",
+    "options": [
+      "{x | x > −2}",
+      "{x | −2 ≤ x ≤ 2}",
+      "{x | −2 < x < 2}",
+      "{x | x < 2}"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Divide by 5: |x| < 2. Therefore −2 < x < 2."
+  },
+  {
+    "prompt": "Given a = (2, −1) and b = (−1, 3), the vector 2a − b is:",
+    "options": [
+      "(5, −5)",
+      "(−5, 5)",
+      "(4, −2)",
+      "(3, 1)"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "2a = (4, −2). Subtracting b gives (4 − (−1), −2 − 3) = (5, −5)."
+  },
+  {
+    "prompt": "The ellipse x²/169 + y²/25 = 1 has its major axis along the x-axis. Its foci are:",
+    "options": [
+      "(0, ±12)",
+      "(±13, 0)",
+      "(±12, 0)",
+      "(±5, 0)"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Here a² = 169 and b² = 25. Thus c² = a² − b² = 144, so c = 12 and the foci are (±12, 0)."
+  }
+]
+};
+
+export const MOCK_EXAMS: Record<string,MockExam> = { "mathematics-1": mathematics1, "mathematics-2": mathematics2, "mathematics-3": mathematics3, "mathematics-4": mathematics4 };
 export function getMockExam(key:string):MockExam|undefined { const exam=MOCK_EXAMS[key]; return exam && exam.questions.length>0 ? exam : undefined; }
