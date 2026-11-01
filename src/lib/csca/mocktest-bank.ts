@@ -2373,5 +2373,596 @@ const mathematics4: MockExam = {
 ]
 };
 
-export const MOCK_EXAMS: Record<string,MockExam> = { "mathematics-1": mathematics1, "mathematics-2": mathematics2, "mathematics-3": mathematics3, "mathematics-4": mathematics4 };
+
+const mathematics5: MockExam = {
+  subject: "mathematics", testNumber: 5, title: "Mathematics — Original Mock Examination 5",
+  durationMinutes: 60, totalMarks: 100,
+  instructions: [
+    "This is an original practice paper written for this collection. It is not a past CSCA paper and is not endorsed by the China Scholarship Council.",
+    "Each question has four options, of which only one option is correct.",
+    "Answer every question. There is no penalty for an incorrect answer.",
+    "The paper contains 48 questions and must be completed in 60 minutes (about 75 seconds per question).",
+    "A calculator is not required. Numerical answers are exact or given to a sensible precision."
+  ],
+  questions: [
+  {
+    "prompt": "The slope of the line through A(0, 4) and B(5, −6) is:",
+    "options": [
+      "1/2",
+      "−1/2",
+      "−2",
+      "2"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The slope is (−6 − 4)/(5 − 0) = −10/5 = −2."
+  },
+  {
+    "prompt": "The range of the function f(x) = √(x − 5) + 1 is:",
+    "options": [
+      "y ≥ 0",
+      "y > 1",
+      "y ≥ 6",
+      "y ≥ 1"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Since √(x − 5) ≥ 0 for x ≥ 5, the smallest output is 1. The range is y ≥ 1."
+  },
+  {
+    "prompt": "The range of the function f(x) = 6/(x + 2) is:",
+    "options": [
+      "All real y except y = 0",
+      "All real y except y = −2",
+      "All real y",
+      "All real y except y = 6"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The numerator is non-zero, so 6/(x + 2) can never equal 0. Every other real output is possible. Thus the range is ℝ \\ {0}."
+  },
+  {
+    "prompt": "The POPULATION variance of the data set 1, 3, 5, 7 is:",
+    "options": [
+      "6",
+      "5",
+      "20",
+      "2.5"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The mean is 4. The squared deviations sum to 9 + 1 + 1 + 9 = 20. Population variance = 20/4 = 5."
+  },
+  {
+    "prompt": "The set [2, 9] ∪ [5, 12] is:",
+    "options": [
+      "[2, 12]",
+      "(2, 12)",
+      "[2, 9]",
+      "[5, 9]"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The intervals overlap from 5 to 9, so their union covers every value from 2 to 12, including both endpoints: [2, 12]."
+  },
+  {
+    "prompt": "The circle (x − 8)² + (y − 2)² = 4 is described by which statement?",
+    "options": [
+      "The circle touches the y-axis.",
+      "The circle does not meet either axis.",
+      "The circle touches the x-axis.",
+      "The circle passes through the origin."
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The centre is (8, 2) and the radius is 2. Its distance from the x-axis is 2, equal to the radius, so it touches the x-axis."
+  },
+  {
+    "prompt": "Find the coordinates of the midpoint of the segment joining P(1, 2, 3) and Q(5, 6, 9).",
+    "options": [
+      "(2, 2, 3)",
+      "(3, 4, 6)",
+      "(4, 5, 7)",
+      "(6, 8, 12)"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Average each coordinate: ((1 + 5)/2, (2 + 6)/2, (3 + 9)/2) = (3, 4, 6)."
+  },
+  {
+    "prompt": "A fair six-sided die is rolled once. Find the probability of obtaining an even number.",
+    "options": [
+      "2/3",
+      "1/2",
+      "1/6",
+      "1/3"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The even outcomes are 2, 4 and 6. The probability is 3/6 = 1/2."
+  },
+  {
+    "prompt": "In an arithmetic sequence, a₁ = 3 and a₆ = 23. The value of a₂₀ is:",
+    "options": [
+      "79",
+      "3",
+      "80",
+      "83"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Since a₆ − a₁ = 5d = 20, d = 4. Therefore a₂₀ = 3 + 19(4) = 79."
+  },
+  {
+    "prompt": "The set {x : x² = −4, x ∈ ℝ} is:",
+    "options": [
+      "The set of all real numbers",
+      "{2, −2}",
+      "The empty set, since no real number squares to a negative number",
+      "{4, −4}"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "For every real x, x² ≥ 0. Thus x² = −4 has no real solution, and the set is empty."
+  },
+  {
+    "prompt": "Find the equation of the tangent to the curve y = x² + 7x at the point where x = 1.",
+    "options": [
+      "y = 9x + 8",
+      "y = 9x − 1",
+      "y = 2x + 8",
+      "y = 9x + 1"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "At x = 1, y = 8. The derivative is 2x + 7, so the tangent slope is 9. Using point-slope form: y − 8 = 9(x − 1), giving y = 9x − 1."
+  },
+  {
+    "prompt": "The gradient of the tangent to y = 4x³ at the point where x = 1 is:",
+    "options": [
+      "5",
+      "3",
+      "12",
+      "4"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Differentiate: dy/dx = 12x². At x = 1, the gradient is 12."
+  },
+  {
+    "prompt": "A bag contains 4 red and 1 blue ball. A ball is drawn, its colour is noted, and it is replaced. This is done twice. The probability that a red ball is drawn every time is:",
+    "options": [
+      "1/25",
+      "4/5",
+      "16/25",
+      "3/5"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "With replacement, each draw has probability 4/5 of red and the draws are independent. The probability is (4/5)² = 16/25."
+  },
+  {
+    "prompt": "Evaluate log₁₆ 2.",
+    "options": [
+      "1/4",
+      "4",
+      "5/4",
+      "−3"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Since 16 = 2⁴, log₁₆ 2 = 1/4."
+  },
+  {
+    "prompt": "A normally distributed variable has mean 70 and standard deviation 5. Find the z-score of x = 80.",
+    "options": [
+      "−2",
+      "16",
+      "2",
+      "2/5"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The z-score is (80 − 70)/5 = 10/5 = 2."
+  },
+  {
+    "prompt": "The solution set of the system x > −2, x ≥ 1, x < 6, x ≤ 8 is:",
+    "options": [
+      "x < 6",
+      "1 ≤ x < 6",
+      "1 > x < 6",
+      "−2 < x < 8"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The intersection of all four conditions is x ≥ 1 and x < 6. Thus the solution is 1 ≤ x < 6."
+  },
+  {
+    "prompt": "Which of the following membership statements is true?",
+    "options": [
+      "−√9 ∉ ℚ",
+      "−√9 ∉ ℝ",
+      "−√9 ∈ ℤ",
+      "−√9 ∈ ℕ"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "−√9 = −3, which is an integer. It is also rational and real, but it is not a natural number."
+  },
+  {
+    "prompt": "In a geometric sequence, a₁ = 2 and a₄ = 54. The value of a₅ is:",
+    "options": [
+      "163",
+      "2/3",
+      "161",
+      "162"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Since a₄ = a₁r³, 54 = 2r³, so r³ = 27 and r = 3. Then a₅ = 54(3) = 162."
+  },
+  {
+    "prompt": "Find the POPULATION standard deviation of the data set 1, 2, 3, 4, 5.",
+    "options": [
+      "2√2",
+      "√2",
+      "3",
+      "2"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The mean is 3. The squared deviations sum to 4 + 1 + 0 + 1 + 4 = 10. Population variance = 10/5 = 2, so the population standard deviation is √2."
+  },
+  {
+    "prompt": "Which of these functions decreases on the interval (0, +∞)?",
+    "options": [
+      "y = 3x",
+      "y = x²",
+      "y = x³",
+      "y = log₀.₅ x"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "A logarithmic function with base between 0 and 1 is strictly decreasing on its positive domain. Since 0 < 0.5 < 1, log₀.₅ x decreases."
+  },
+  {
+    "prompt": "Find the equation of the line through the points (2, −1) and (4, 3).",
+    "options": [
+      "y = 2x + 5",
+      "y = −2x − 5",
+      "y = 2x − 5",
+      "y = 2x − 1"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The slope is (3 − (−1))/(4 − 2) = 2. Using (2, −1): y + 1 = 2(x − 2), so y = 2x − 5."
+  },
+  {
+    "prompt": "The focus of the parabola y² = 4x is:",
+    "options": [
+      "(4, 0)",
+      "(1, 0)",
+      "(0, 1)",
+      "(2, 1)"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Compare y² = 4ax with y² = 4x, giving a = 1. The focus is (a, 0) = (1, 0)."
+  },
+  {
+    "prompt": "Find the limit of the sequence uₙ = √(n + 7) − √n as n → ∞.",
+    "options": [
+      "+∞",
+      "7",
+      "0",
+      "√7"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Rationalising gives 7/[√(n + 7) + √n], which tends to 0 as n tends to infinity."
+  },
+  {
+    "prompt": "The range of the function f(x) = 6(x + 1)² − 9 is:",
+    "options": [
+      "y ≥ −3",
+      "All real y",
+      "y ≥ −9",
+      "y ≤ −9"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Since (x + 1)² ≥ 0, the minimum value is −9 at x = −1. The range is y ≥ −9."
+  },
+  {
+    "prompt": "Given z = 5 + 12i, find the value of z · z̄, where z̄ is the complex conjugate of z.",
+    "options": [
+      "120",
+      "−119",
+      "169i",
+      "169"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "z z̄ = (5 + 12i)(5 − 12i) = 5² + 12² = 25 + 144 = 169."
+  },
+  {
+    "prompt": "Given f(x) = 4x² + 3x³, find f′(2).",
+    "options": [
+      "16",
+      "52",
+      "40",
+      "104"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "Differentiate: f′(x) = 8x + 9x². Therefore f′(2) = 16 + 36 = 52."
+  },
+  {
+    "prompt": "The solution set of −2 < 2 − 3x < 8 is:",
+    "options": [
+      "−2 < x < 4/3",
+      "4/3 < x < −2",
+      "−2 ≤ x ≤ 4/3",
+      "−4/3 < x < 2"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "From −2 < 2 − 3x, we get x < 4/3. From 2 − 3x < 8, we get x > −2. Together: −2 < x < 4/3."
+  },
+  {
+    "prompt": "Two independent events A and B have P(A) = 0.3 and P(B) = 0.5. The value of P(A ∩ B) is:",
+    "options": [
+      "0.2",
+      "0.075",
+      "0.15",
+      "0.8"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "For independent events, P(A ∩ B) = P(A)P(B) = 0.3 × 0.5 = 0.15."
+  },
+  {
+    "prompt": "Find the modulus of the complex number z = 20 + 21i.",
+    "options": [
+      "29",
+      "√41",
+      "841",
+      "41"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The modulus is √(20² + 21²) = √(400 + 441) = √841 = 29."
+  },
+  {
+    "prompt": "Given |z| = 2, the maximum value of |z + 3i| is:",
+    "options": [
+      "5",
+      "6",
+      "1",
+      "2"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "By the triangle inequality, |z + 3i| ≤ |z| + |3i| = 2 + 3 = 5. Equality is possible when z points in the positive imaginary direction, so the maximum is 5."
+  },
+  {
+    "prompt": "The asymptotes of the hyperbola x²/100 − y²/25 = 1 are:",
+    "options": [
+      "y = ±5x",
+      "y = ±(25/100)x",
+      "y = ±(5/10)x",
+      "y = ±(10/5)x"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "For x²/a² − y²/b² = 1, the asymptotes are y = ±(b/a)x. Here a = 10 and b = 5, so y = ±(1/2)x."
+  },
+  {
+    "prompt": "A cylinder has radius 6 cm and height 3 cm. Its volume, in terms of π, is:",
+    "options": [
+      "36π cm³",
+      "108π cm³",
+      "109π cm³",
+      "18π cm³"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The volume is πr²h = π(6²)(3) = 108π cm³."
+  },
+  {
+    "prompt": "The domain of f(x) = √(9 − x) + 1/(x − 4) is:",
+    "options": [
+      "x ≤ 9",
+      "x ≤ 9 and x ≠ 4",
+      "x < 9 and x ≠ 4",
+      "x ≥ 4 and x ≤ 9"
+    ],
+    "answerIndex": 1,
+    "marks": 2.0833333333333335,
+    "explanation": "The square root requires x ≤ 9, and the denominator requires x ≠ 4. The domain is all x ≤ 9 except x = 4."
+  },
+  {
+    "prompt": "Find the POPULATION variance of the data set 1, 3, 5, 7.",
+    "options": [
+      "5",
+      "20",
+      "6",
+      "20/3"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The mean is 4. The squared deviations sum to 9 + 1 + 1 + 9 = 20. Population variance = 20/4 = 5."
+  },
+  {
+    "prompt": "The inverse function of f(x) = (3x − 1)/(x − 1), where x ≠ 1, is:",
+    "options": [
+      "(x − 1)/(x − 3), x ≠ 3",
+      "(x + 1)/(x + 3)",
+      "(x − 3)/(x − 1)",
+      "(3x − 1)/(x + 1)"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Set y = (3x − 1)/(x − 1). Then yx − y = 3x − 1, so x(y − 3) = y − 1 and x = (y − 1)/(y − 3). Hence f⁻¹(x) = (x − 1)/(x − 3), with x ≠ 3."
+  },
+  {
+    "prompt": "Find the value of i¹⁵, where i² = −1.",
+    "options": [
+      "−1",
+      "i",
+      "−i",
+      "1"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Powers of i repeat every four. Since 15 leaves remainder 3 when divided by 4, i¹⁵ = i³ = −i."
+  },
+  {
+    "prompt": "Express the line y = (3/2)x + 1 in the general form ax + by + d = 0 with integer coefficients.",
+    "options": [
+      "3x − 2y + 1 = 0",
+      "2x − 3y + 1 = 0",
+      "3x − 2y + 2 = 0",
+      "3x + 2y + 2 = 0"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Multiply by 2: 2y = 3x + 2. Rearranging gives 3x − 2y + 2 = 0."
+  },
+  {
+    "prompt": "Two spheres have radii in the ratio 3 : 8. The ratio of their volumes is:",
+    "options": [
+      "9 : 64",
+      "3 : 8",
+      "9 : 24",
+      "27 : 512"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Sphere volumes scale with the cube of the radius. The volume ratio is 3³ : 8³ = 27 : 512."
+  },
+  {
+    "prompt": "The solution set of (x − 4)/(x + 2) ≥ 0 is:",
+    "options": [
+      "x < −2 or x ≥ 4",
+      "x ≥ 4",
+      "−2 ≤ x < 4",
+      "x ≤ −2 or x > 4"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The critical values are −2 (excluded) and 4 (included). A sign analysis gives positive values for x < −2 and x ≥ 4."
+  },
+  {
+    "prompt": "How many different arrangements can be formed from the 3 distinct letters of the word CAT?",
+    "options": [
+      "6",
+      "27",
+      "3",
+      "9"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The three distinct letters can be arranged in 3! = 3 × 2 × 1 = 6 ways."
+  },
+  {
+    "prompt": "The universal set is U = {1, 2, 3, 4, 5, 6, 7, 8, 9} and A = {2, 4, 6, 8}. The complement of A in U is:",
+    "options": [
+      "{1, 3, 5, 7, 9}",
+      "{1, 2, 3, 4}",
+      "{1, 3, 5, 7}",
+      "{2, 4, 6, 8}"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "The complement consists of elements in U that are not in A: {1, 3, 5, 7, 9}."
+  },
+  {
+    "prompt": "Identify the conic described by the equation y² = 12x.",
+    "options": [
+      "A parabola with focus (3, 0) and directrix x = −3",
+      "A parabola with focus (12, 0) and directrix x = −12",
+      "A parabola opening upward with focus (0, 3)",
+      "A circle of radius 3"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "Compare y² = 4ax with y² = 12x, giving a = 3. The focus is (3, 0) and the directrix is x = −3."
+  },
+  {
+    "prompt": "The domain of the function f(x) = x³ − 2x is:",
+    "options": [
+      "All real numbers",
+      "x ≥ 0",
+      "x ≠ 0",
+      "x ∈ ℤ"
+    ],
+    "answerIndex": 0,
+    "marks": 2.0833333333333335,
+    "explanation": "A polynomial is defined for every real input, so the domain is ℝ."
+  },
+  {
+    "prompt": "Find the points of intersection of the line x = 0 with the circle x² + y² = 16.",
+    "options": [
+      "(1, 5) and (0, −5)",
+      "(0, 4) only",
+      "(4, 0) and (−4, 0)",
+      "(0, 4) and (0, −4)"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "Substitute x = 0 into x² + y² = 16: y² = 16, so y = ±4. The points are (0, 4) and (0, −4)."
+  },
+  {
+    "prompt": "The distance between P(−2, −1) and Q(1, 3) is:",
+    "options": [
+      "√9",
+      "25",
+      "√7",
+      "5"
+    ],
+    "answerIndex": 3,
+    "marks": 2.0833333333333335,
+    "explanation": "The distance is √[(1 + 2)² + (3 + 1)²] = √(9 + 16) = 5."
+  },
+  {
+    "prompt": "Given f(x) = 3x − 1 and g(x) = x², the formula for f(g(x)) is:",
+    "options": [
+      "9x² − 6x + 1",
+      "3x² − 3",
+      "3x² − 1",
+      "x² − 1"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Substitute g(x) = x² into f: f(g(x)) = 3(x²) − 1 = 3x² − 1."
+  },
+  {
+    "prompt": "Find the limit of the sequence uₙ = (4n + 7)/(2n + 1) as n → ∞.",
+    "options": [
+      "7",
+      "1/2",
+      "2",
+      "0"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "Divide numerator and denominator by n. The limit is 4/2 = 2."
+  },
+  {
+    "prompt": "The domain of f(x) = ln(x² − 81) is:",
+    "options": [
+      "−9 < x < 9",
+      "x > 9",
+      "x < −9 or x > 9",
+      "x ≠ ±9"
+    ],
+    "answerIndex": 2,
+    "marks": 2.0833333333333335,
+    "explanation": "The logarithm requires x² − 81 > 0. Thus (x − 9)(x + 9) > 0, giving x < −9 or x > 9."
+  }
+]
+};
+
+export const MOCK_EXAMS: Record<string,MockExam> = { "mathematics-1": mathematics1, "mathematics-2": mathematics2, "mathematics-3": mathematics3, "mathematics-4": mathematics4, "mathematics-5": mathematics5 };
 export function getMockExam(key:string):MockExam|undefined { const exam=MOCK_EXAMS[key]; return exam && exam.questions.length>0 ? exam : undefined; }
