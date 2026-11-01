@@ -14,7 +14,7 @@ export const MOCK_TEST_NUMBERS = Array.from({ length: 20 }, (_, index) => index 
  * are not needed. This file contains no questions, answers, or explanations.
  */
 export const RELEASED_MOCKS: Record<MockSubject, number[]> = {
- mathematics: [1, 2],
+ mathematics: [1, 2, 3, 4, 5],
  physics: [],
  chemistry: [],
 };
