@@ -1,4 +1,9 @@
 import type { MockSubject } from "./mocktest-public";
+import { mathematics6 } from "./mocktest-math-6";
+import { mathematics7 } from "./mocktest-math-7";
+import { mathematics8 } from "./mocktest-math-8";
+import { mathematics9 } from "./mocktest-math-9";
+import { mathematics10 } from "./mocktest-math-10";
 export type MockQuestion = { prompt:string; options:string[]; answerIndex:number; explanation?:string; marks?:number };
 export type MockExam = { subject:MockSubject; testNumber:number; title:string; durationMinutes:number; totalMarks:number; instructions:string[]; questions:MockQuestion[] };
 // Corrected Mathematics Mock 1: source questions reviewed, corrected, and scored server-side.
@@ -2964,5 +2969,5 @@ const mathematics5: MockExam = {
 ]
 };
 
-export const MOCK_EXAMS: Record<string,MockExam> = { "mathematics-1": mathematics1, "mathematics-2": mathematics2, "mathematics-3": mathematics3, "mathematics-4": mathematics4, "mathematics-5": mathematics5 };
+export const MOCK_EXAMS: Record<string,MockExam> = { "mathematics-1": mathematics1, "mathematics-2": mathematics2, "mathematics-3": mathematics3, "mathematics-4": mathematics4, "mathematics-5": mathematics5, "mathematics-6": mathematics6, "mathematics-7": mathematics7, "mathematics-8": mathematics8, "mathematics-9": mathematics9, "mathematics-10": mathematics10 };
 export function getMockExam(key:string):MockExam|undefined { const exam=MOCK_EXAMS[key]; return exam && exam.questions.length>0 ? exam : undefined; }
